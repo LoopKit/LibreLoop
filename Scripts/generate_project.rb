@@ -157,6 +157,29 @@ libreloop = add_framework_target(proj, 'LibreLoop', 'LibreLoop', nil, [loopkit_r
 libreloop_product_ref = libreloop.product_reference
 
 # ---------------------------------------------------------------------------
+# SwiftPM dependency: LibreCRKit (reverse-engineered Libre 3 NFC/BLE stack)
+# Pin to a commit SHA since the upstream has no tags yet. Bump as needed.
+# ---------------------------------------------------------------------------
+librecrkit_pkg = proj.new(Xcodeproj::Project::Object::XCRemoteSwiftPackageReference)
+librecrkit_pkg.repositoryURL = 'https://github.com/airedev326/LibreCRKit.git'
+librecrkit_pkg.requirement = {
+  'kind' => 'revision',
+  'revision' => 'd58ffdc3a7810e34ee85ddec702a92f83811bcf7',
+}
+proj.root_object.package_references << librecrkit_pkg
+
+librecrkit_product = proj.new(Xcodeproj::Project::Object::XCSwiftPackageProductDependency)
+librecrkit_product.package = librecrkit_pkg
+librecrkit_product.product_name = 'LibreCRKit'
+
+# Link LibreCRKit into LibreLoop's binary (static linkage; framework stays
+# self-contained for the plugin).
+libreloop.package_product_dependencies << librecrkit_product
+librecrkit_build_file = proj.new(Xcodeproj::Project::Object::PBXBuildFile)
+librecrkit_build_file.product_ref = librecrkit_product
+libreloop.frameworks_build_phase.files << librecrkit_build_file
+
+# ---------------------------------------------------------------------------
 # Target: LibreLoopUI (UI framework — depends on LibreLoop, LoopKitUI)
 # ---------------------------------------------------------------------------
 libreloop_ui = add_framework_target(proj, 'LibreLoopUI', 'LibreLoopUI', nil, [libreloop_product_ref, loopkit_ref, loopkitui_ref])
