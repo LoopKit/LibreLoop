@@ -71,9 +71,38 @@ final class LibreLoopUICoordinator: UINavigationController, CGMManagerOnboarding
     }
 
     private func startScan() {
-        // TODO: trigger CoreNFC reader session + LibreCRKit PairingFlow.firstPair.
-        // For now this just completes onboarding so the rest of the wiring stays exercised.
-        completeSetup()
+        // Create the manager up front so the pairing view model has something
+        // to write into; if the user cancels we tear it back down.
+        let manager = LibreLoopCGMManager()
+        self.cgmManager = manager
+        let viewModel = LibreLoopPairingViewModel(cgmManager: manager)
+        let view = LibreLoopPairingProgressView(
+            viewModel: viewModel,
+            onDone: { [weak self] in self?.completeSetupWithExistingManager() },
+            onCancel: { [weak self] in self?.abortPairing() },
+            onRetry: { [weak self] in self?.retryPairing() }
+        )
+        let host = DismissibleHostingController(content: view, colorPalette: colorPalette)
+        pushViewController(host, animated: true)
+    }
+
+    private func completeSetupWithExistingManager() {
+        guard let manager = cgmManager else {
+            cancelOnboarding()
+            return
+        }
+        cgmManagerOnboardingDelegate?.cgmManagerOnboarding(didCreateCGMManager: manager)
+        cgmManagerOnboardingDelegate?.cgmManagerOnboarding(didOnboardCGMManager: manager)
+        completionDelegate?.completionNotifyingDidComplete(self)
+    }
+
+    private func abortPairing() {
+        cgmManager = nil
+        completionDelegate?.completionNotifyingDidComplete(self)
+    }
+
+    private func retryPairing() {
+        popViewController(animated: true)
     }
 
     private func showRecoveryPlaceholder() {

@@ -12,7 +12,7 @@ public final class LibreLoopCGMManager: CGMManager {
     public weak var cgmManagerDelegate: CGMManagerDelegate?
     public var delegateQueue: DispatchQueue!
 
-    public private(set) var state: LibreLoopCGMManagerState
+    public internal(set) var state: LibreLoopCGMManagerState
     public var rawState: CGMManager.RawStateValue { state.rawValue }
 
     public let isOnboarded = true

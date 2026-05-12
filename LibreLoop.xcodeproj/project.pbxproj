@@ -7,75 +7,80 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0BB10611EB92E04677C22A44 /* LibreLoopUI.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 67298D9E33656D9BCAE6C539 /* LibreLoopUI.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		0E6FECA17A58E98CDF0F0F56 /* LibreLoopApplySensorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33A23CFFE498B5B0952A1F77 /* LibreLoopApplySensorView.swift */; };
-		0F47E8C597490AFC5D79DC3B /* LibreLoop.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EA788B8D8A4038C94B4220B7 /* LibreLoop.framework */; };
-		0FC0B110A4698CDDD5AC2561 /* LoopKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B9E36EDBCC4B17A02C93225 /* LoopKitUI.framework */; };
-		1CE86B17360919B016EEEB8D /* LibreLoop.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EA788B8D8A4038C94B4220B7 /* LibreLoop.framework */; };
-		21D75672559589E2D6FECF80 /* LibreLoopCGMManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162EBB398A6F8A9EE7C15211 /* LibreLoopCGMManager.swift */; };
-		2D4F1EB7876B0E88C4E1DECD /* LibreLoop.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = EA788B8D8A4038C94B4220B7 /* LibreLoop.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		5F17057FB1B7E3AD57A197E3 /* LibreLoop.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EA788B8D8A4038C94B4220B7 /* LibreLoop.framework */; };
-		5F647714B7027757D4E99D57 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 30CEF40AA0B469C3EA6D5761 /* Foundation.framework */; };
-		5FDCBF736C97B0E494C4145D /* LibreLoopCGMManagerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE474AEAEA2D54F2BC43B4F0 /* LibreLoopCGMManagerState.swift */; };
-		77845F247E2671F577DF1BAB /* LibreLoopApplyHelpPagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 848C4729A05FC65464C8FFBE /* LibreLoopApplyHelpPagerView.swift */; };
-		7918FA199E0D2542118FFB34 /* LibreLoopCGMManager+UI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24B5EEA62367C0B36841B76A /* LibreLoopCGMManager+UI.swift */; };
-		92DF60DEF59FF2617D445176 /* LoopKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25E09886933A617F578EC8A1 /* LoopKit.framework */; };
-		98D70E157FE7C8108779CC4F /* LibreLoopPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88ACD9340CB9B79BD102A98F /* LibreLoopPlugin.swift */; };
-		9D2C6AF4451A092A0BA17B22 /* LibreCRKit in Frameworks */ = {isa = PBXBuildFile; productRef = CFCEBBF7A1C441E0D4BD7DCE /* LibreCRKit */; };
-		A460598FF4C4052FC43B5359 /* LibreLoopUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 67298D9E33656D9BCAE6C539 /* LibreLoopUI.framework */; };
-		A7CFD86C7B62F2711F6C4D22 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 30CEF40AA0B469C3EA6D5761 /* Foundation.framework */; };
-		AC5CD756DA3F0A5429F7D5AC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 30CEF40AA0B469C3EA6D5761 /* Foundation.framework */; };
-		B02DC1BBE5F0D3A77F4B7EDE /* LibreLoopCGMManagerStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC97AA18A5629B15501321CF /* LibreLoopCGMManagerStateTests.swift */; };
-		B55F4B416714181804D942AD /* LoopKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B9E36EDBCC4B17A02C93225 /* LoopKitUI.framework */; };
-		BE419A37C74DC486AFE59CD9 /* LibreLoopScanHelpPagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E5D511155F737EE7B82D4AE /* LibreLoopScanHelpPagerView.swift */; };
-		C514093224DF5296198F3C87 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 30CEF40AA0B469C3EA6D5761 /* Foundation.framework */; };
-		DB7D4B1232FA5E0A340079AD /* LoopKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25E09886933A617F578EC8A1 /* LoopKit.framework */; };
-		E3A285EAE0C9F91DF5E2E341 /* LibreLoopUICoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17BF688F89135AFF2866480B /* LibreLoopUICoordinator.swift */; };
-		F4AD85AB40DEDFFCD281DE48 /* LibreLoopSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46A3C6A1D17D4BABA6976B37 /* LibreLoopSettingsView.swift */; };
-		FAA100A257AEFC11BA8012BA /* LoopKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25E09886933A617F578EC8A1 /* LoopKit.framework */; };
-		FC24FE3032B4526353969F54 /* LibreLoopScanSensorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 509C42AC5D9E7362B3FFA35E /* LibreLoopScanSensorView.swift */; };
+		09A921FAFFE12FA0CA31610F /* LibreLoopUI.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 740EC643579CE34ED6434F1D /* LibreLoopUI.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		196DA40F6C13DD49530D32FC /* LibreLoopCGMManagerStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8117C94E09FDCB39DF00B86D /* LibreLoopCGMManagerStateTests.swift */; };
+		1B5A07E6F7A317229D6CCCB2 /* LibreLoopCGMManager+Pairing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A37126CFB288C0CC6BEE44A /* LibreLoopCGMManager+Pairing.swift */; };
+		25BCE26176B69EE7156EC94A /* LibreLoopUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 740EC643579CE34ED6434F1D /* LibreLoopUI.framework */; };
+		25FE064908BA5531432BB3FB /* LibreLoopScanHelpPagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8324DF468FD9688EEE59C98 /* LibreLoopScanHelpPagerView.swift */; };
+		2904E72873AC74587B6F7CC4 /* LibreLoopSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D225FF7662B725F7FB4B95DF /* LibreLoopSettingsView.swift */; };
+		2D9C7351893310F2726C9DCB /* LibreLoopCGMManagerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60C214A029A9AF7467BF0990 /* LibreLoopCGMManagerState.swift */; };
+		36B67F14D79A290DD899E0E7 /* LibreLoopPairingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 721485A8AF7BF5E0E9D75B7F /* LibreLoopPairingViewModel.swift */; };
+		3CC78F4A924BE684C5A7C01D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B678D00D00E0FFC2BAF9DB5 /* Foundation.framework */; };
+		462835593293C583E9640D2B /* LibreLoop.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 13119B652BDC052CF8DFD141 /* LibreLoop.framework */; };
+		4E3D0F8440C91931C3500284 /* LoopKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 329646F7CD1D38ADB25B3702 /* LoopKitUI.framework */; };
+		4E7E9403904FF9E2F32D1744 /* LibreLoopApplySensorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C4CE7A5C34707DBE81460D3 /* LibreLoopApplySensorView.swift */; };
+		53ACF95E235371485F77B7F6 /* LibreLoop.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 13119B652BDC052CF8DFD141 /* LibreLoop.framework */; };
+		56A14C448B23508D555B42D4 /* LoopKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73BE204082B3EA61613E5382 /* LoopKit.framework */; };
+		5DA7EF053E3AED16C2797255 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B678D00D00E0FFC2BAF9DB5 /* Foundation.framework */; };
+		6116A3D3538F1D4E0011C0F6 /* LibreLoopKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81A5D710EE6798A1B763842E /* LibreLoopKeychain.swift */; };
+		6795C9AD3FB2480A6813076E /* LibreLoopPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F9A73ADEBA168FAE1B78719 /* LibreLoopPlugin.swift */; };
+		6AF3E8636C2FFA462FE3D44C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B678D00D00E0FFC2BAF9DB5 /* Foundation.framework */; };
+		78294307A3ABD5D335770903 /* LibreLoopPairingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C81AE23F0284CF1D9D490DE /* LibreLoopPairingService.swift */; };
+		832D6085114738B82D4DF0C0 /* LibreLoop.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 13119B652BDC052CF8DFD141 /* LibreLoop.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		84EFBA4E55EE92DD75BBD272 /* LibreLoopApplyHelpPagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB868A7EC64ABD11BFDFACD /* LibreLoopApplyHelpPagerView.swift */; };
+		96D6561395A2FE6CBE64B52C /* LoopKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73BE204082B3EA61613E5382 /* LoopKit.framework */; };
+		A5EC92861078358DF2625D99 /* LoopKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 329646F7CD1D38ADB25B3702 /* LoopKitUI.framework */; };
+		A6D4476BB1FF507C5102B780 /* LibreLoop.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 13119B652BDC052CF8DFD141 /* LibreLoop.framework */; };
+		B3905E1AE300C709F903C6B6 /* LibreLoopCGMManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9DC29F76F6A7EACBAFA8A52 /* LibreLoopCGMManager.swift */; };
+		B90ABADD0F0D85E3CCCC9C48 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B678D00D00E0FFC2BAF9DB5 /* Foundation.framework */; };
+		C5672A97FF5EB613EA24437E /* LibreLoopCGMManager+UI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 228D1C604E81CCC877A01E48 /* LibreLoopCGMManager+UI.swift */; };
+		CF11B72C364BA56BAE101FFC /* LibreLoopPairingProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 558A60DCE91EBDF558DC3727 /* LibreLoopPairingProgressView.swift */; };
+		DAF5A7EC78971083E4C0B617 /* LibreLoopScanSensorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F8CC962A7CB22495B7712CB /* LibreLoopScanSensorView.swift */; };
+		E223087251C6B1BF6AF36076 /* LoopKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73BE204082B3EA61613E5382 /* LoopKit.framework */; };
+		E93BFCDEB11D89BF1812F49E /* LibreCRKit in Frameworks */ = {isa = PBXBuildFile; productRef = 38D8EF190264EE598668F5CD /* LibreCRKit */; };
+		ED9ED095637C1CCEB84FE820 /* LibreLoopUICoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A857EC03FCCAD6BBC167FCF /* LibreLoopUICoordinator.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		18281E27687B54B3F7D7BD7B /* PBXContainerItemProxy */ = {
+		23B36D9EBFABF3604B9791D4 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 40A997EF3B83E6AB54CBDA75 /* Project object */;
+			containerPortal = C2CEF66209AB9053283C931B /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 5B2638D9F24511BEC20B2FE4;
+			remoteGlobalIDString = DE221628E7BEC519CDF457AE;
 			remoteInfo = LibreLoop;
 		};
-		1D908FF44B7A39B8616D4A1C /* PBXContainerItemProxy */ = {
+		30CC877315FEDD7E1E0AFCF6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 40A997EF3B83E6AB54CBDA75 /* Project object */;
+			containerPortal = C2CEF66209AB9053283C931B /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 5B2638D9F24511BEC20B2FE4;
-			remoteInfo = LibreLoop;
-		};
-		B3153ACF3198BC614E0140C3 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 40A997EF3B83E6AB54CBDA75 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 5CA8260B44C29A77136AF9D4;
+			remoteGlobalIDString = 003A64061D9F3DC4747EA26D;
 			remoteInfo = LibreLoopUI;
 		};
-		E60E1BDBC50BD44E3DF5B047 /* PBXContainerItemProxy */ = {
+		32090240817FE423E3347B0C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 40A997EF3B83E6AB54CBDA75 /* Project object */;
+			containerPortal = C2CEF66209AB9053283C931B /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 5B2638D9F24511BEC20B2FE4;
+			remoteGlobalIDString = DE221628E7BEC519CDF457AE;
+			remoteInfo = LibreLoop;
+		};
+		CCDCFFC49809592327CF397F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C2CEF66209AB9053283C931B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DE221628E7BEC519CDF457AE;
 			remoteInfo = LibreLoop;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		DA4DB626A2088BCA14B80333 /* Embed Frameworks */ = {
+		DE1696734A508D99D3E23502 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				2D4F1EB7876B0E88C4E1DECD /* LibreLoop.framework in Embed Frameworks */,
-				0BB10611EB92E04677C22A44 /* LibreLoopUI.framework in Embed Frameworks */,
+				832D6085114738B82D4DF0C0 /* LibreLoop.framework in Embed Frameworks */,
+				09A921FAFFE12FA0CA31610F /* LibreLoopUI.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -83,209 +88,237 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		162EBB398A6F8A9EE7C15211 /* LibreLoopCGMManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopCGMManager.swift; sourceTree = "<group>"; };
-		17BF688F89135AFF2866480B /* LibreLoopUICoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopUICoordinator.swift; sourceTree = "<group>"; };
-		24B5EEA62367C0B36841B76A /* LibreLoopCGMManager+UI.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "LibreLoopCGMManager+UI.swift"; sourceTree = "<group>"; };
-		25E09886933A617F578EC8A1 /* LoopKit.framework */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.framework; path = LoopKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		29F9C6142534281796DEDBEB /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		2B9305559F7547364360B2C9 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Platforms/iPhoneOS.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
-		2CD915339A09904550E94559 /* LibreLoopPlugin.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LibreLoopPlugin.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		2E5D511155F737EE7B82D4AE /* LibreLoopScanHelpPagerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopScanHelpPagerView.swift; sourceTree = "<group>"; };
-		30CEF40AA0B469C3EA6D5761 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
-		33A23CFFE498B5B0952A1F77 /* LibreLoopApplySensorView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopApplySensorView.swift; sourceTree = "<group>"; };
-		3B9E36EDBCC4B17A02C93225 /* LoopKitUI.framework */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.framework; path = LoopKitUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		46A3C6A1D17D4BABA6976B37 /* LibreLoopSettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopSettingsView.swift; sourceTree = "<group>"; };
-		509C42AC5D9E7362B3FFA35E /* LibreLoopScanSensorView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopScanSensorView.swift; sourceTree = "<group>"; };
-		67298D9E33656D9BCAE6C539 /* LibreLoopUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LibreLoopUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		848C4729A05FC65464C8FFBE /* LibreLoopApplyHelpPagerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopApplyHelpPagerView.swift; sourceTree = "<group>"; };
-		88ACD9340CB9B79BD102A98F /* LibreLoopPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopPlugin.swift; sourceTree = "<group>"; };
-		94A50C437E5B893BBA4A403D /* LibreLoopTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LibreLoopTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		9BEB3297274DA1DBE17243BF /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; path = README.md; sourceTree = "<group>"; };
-		BC97AA18A5629B15501321CF /* LibreLoopCGMManagerStateTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopCGMManagerStateTests.swift; sourceTree = "<group>"; };
-		CE474AEAEA2D54F2BC43B4F0 /* LibreLoopCGMManagerState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopCGMManagerState.swift; sourceTree = "<group>"; };
-		DBA663939C9D04A3A6FF67D4 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; path = LICENSE; sourceTree = "<group>"; };
-		EA788B8D8A4038C94B4220B7 /* LibreLoop.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LibreLoop.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		0A37126CFB288C0CC6BEE44A /* LibreLoopCGMManager+Pairing.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "LibreLoopCGMManager+Pairing.swift"; sourceTree = "<group>"; };
+		13119B652BDC052CF8DFD141 /* LibreLoop.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LibreLoop.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		193770EC4C5D462E1DD2A3E2 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Platforms/iPhoneOS.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
+		1C81AE23F0284CF1D9D490DE /* LibreLoopPairingService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopPairingService.swift; sourceTree = "<group>"; };
+		228D1C604E81CCC877A01E48 /* LibreLoopCGMManager+UI.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "LibreLoopCGMManager+UI.swift"; sourceTree = "<group>"; };
+		2B678D00D00E0FFC2BAF9DB5 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		329646F7CD1D38ADB25B3702 /* LoopKitUI.framework */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.framework; path = LoopKitUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		3F8CC962A7CB22495B7712CB /* LibreLoopScanSensorView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopScanSensorView.swift; sourceTree = "<group>"; };
+		42556106D417702DF82E97C7 /* LibreLoopTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LibreLoopTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		46DF96501492AC3103B0D735 /* LibreLoopPlugin.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LibreLoopPlugin.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		558A60DCE91EBDF558DC3727 /* LibreLoopPairingProgressView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopPairingProgressView.swift; sourceTree = "<group>"; };
+		5626C819BC00D9E98C55FB14 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		5CB868A7EC64ABD11BFDFACD /* LibreLoopApplyHelpPagerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopApplyHelpPagerView.swift; sourceTree = "<group>"; };
+		5F9A73ADEBA168FAE1B78719 /* LibreLoopPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopPlugin.swift; sourceTree = "<group>"; };
+		60C214A029A9AF7467BF0990 /* LibreLoopCGMManagerState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopCGMManagerState.swift; sourceTree = "<group>"; };
+		6A857EC03FCCAD6BBC167FCF /* LibreLoopUICoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopUICoordinator.swift; sourceTree = "<group>"; };
+		6C4CE7A5C34707DBE81460D3 /* LibreLoopApplySensorView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopApplySensorView.swift; sourceTree = "<group>"; };
+		721485A8AF7BF5E0E9D75B7F /* LibreLoopPairingViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopPairingViewModel.swift; sourceTree = "<group>"; };
+		73BE204082B3EA61613E5382 /* LoopKit.framework */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.framework; path = LoopKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		740EC643579CE34ED6434F1D /* LibreLoopUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LibreLoopUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		8117C94E09FDCB39DF00B86D /* LibreLoopCGMManagerStateTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopCGMManagerStateTests.swift; sourceTree = "<group>"; };
+		81A5D710EE6798A1B763842E /* LibreLoopKeychain.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopKeychain.swift; sourceTree = "<group>"; };
+		91129B7BD6ADF35F82467E85 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; path = README.md; sourceTree = "<group>"; };
+		AEB050F19A952B4B495A487F /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; path = LICENSE; sourceTree = "<group>"; };
+		C8324DF468FD9688EEE59C98 /* LibreLoopScanHelpPagerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopScanHelpPagerView.swift; sourceTree = "<group>"; };
+		D225FF7662B725F7FB4B95DF /* LibreLoopSettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopSettingsView.swift; sourceTree = "<group>"; };
+		E9DC29F76F6A7EACBAFA8A52 /* LibreLoopCGMManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopCGMManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		4777132BC8258762C72E7058 /* Frameworks */ = {
+		41ACED635C9ADD7C4E88EA83 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5F647714B7027757D4E99D57 /* Foundation.framework in Frameworks */,
-				0F47E8C597490AFC5D79DC3B /* LibreLoop.framework in Frameworks */,
-				A460598FF4C4052FC43B5359 /* LibreLoopUI.framework in Frameworks */,
-				DB7D4B1232FA5E0A340079AD /* LoopKit.framework in Frameworks */,
-				0FC0B110A4698CDDD5AC2561 /* LoopKitUI.framework in Frameworks */,
+				6AF3E8636C2FFA462FE3D44C /* Foundation.framework in Frameworks */,
+				56A14C448B23508D555B42D4 /* LoopKit.framework in Frameworks */,
+				E93BFCDEB11D89BF1812F49E /* LibreCRKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		95916ACA968248030FDE8DA7 /* Frameworks */ = {
+		440521E7478C6A14D1AE6A88 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A7CFD86C7B62F2711F6C4D22 /* Foundation.framework in Frameworks */,
-				5F17057FB1B7E3AD57A197E3 /* LibreLoop.framework in Frameworks */,
+				3CC78F4A924BE684C5A7C01D /* Foundation.framework in Frameworks */,
+				53ACF95E235371485F77B7F6 /* LibreLoop.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		99BD08BFAA5F224036B8C6CF /* Frameworks */ = {
+		4A36D1487C0317D50341A47B /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AC5CD756DA3F0A5429F7D5AC /* Foundation.framework in Frameworks */,
-				1CE86B17360919B016EEEB8D /* LibreLoop.framework in Frameworks */,
-				92DF60DEF59FF2617D445176 /* LoopKit.framework in Frameworks */,
-				B55F4B416714181804D942AD /* LoopKitUI.framework in Frameworks */,
+				5DA7EF053E3AED16C2797255 /* Foundation.framework in Frameworks */,
+				A6D4476BB1FF507C5102B780 /* LibreLoop.framework in Frameworks */,
+				25BCE26176B69EE7156EC94A /* LibreLoopUI.framework in Frameworks */,
+				E223087251C6B1BF6AF36076 /* LoopKit.framework in Frameworks */,
+				A5EC92861078358DF2625D99 /* LoopKitUI.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		E9CC27E45972EC8775D93A20 /* Frameworks */ = {
+		AEC796D4DFE47312E1E5BDF9 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C514093224DF5296198F3C87 /* Foundation.framework in Frameworks */,
-				FAA100A257AEFC11BA8012BA /* LoopKit.framework in Frameworks */,
-				9D2C6AF4451A092A0BA17B22 /* LibreCRKit in Frameworks */,
+				B90ABADD0F0D85E3CCCC9C48 /* Foundation.framework in Frameworks */,
+				462835593293C583E9640D2B /* LibreLoop.framework in Frameworks */,
+				96D6561395A2FE6CBE64B52C /* LoopKit.framework in Frameworks */,
+				4E3D0F8440C91931C3500284 /* LoopKitUI.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		3E2D0BDAEC958424D4162447 /* LibreLoop */ = {
+		1799BA7B839C7334A518E408 /* LibreLoopCGMManager */ = {
 			isa = PBXGroup;
 			children = (
-				DEB754364CD84AD63D158961 /* LibreLoopCGMManager */,
+				228D1C604E81CCC877A01E48 /* LibreLoopCGMManager+UI.swift */,
+				6A857EC03FCCAD6BBC167FCF /* LibreLoopUICoordinator.swift */,
 			);
-			name = LibreLoop;
-			path = LibreLoop;
+			name = LibreLoopCGMManager;
+			path = LibreLoopCGMManager;
 			sourceTree = "<group>";
 		};
-		876D6A6D4CB8DAE524CC0DF7 /* Views */ = {
+		2CA42E1F0D2895D5A6A9A81B /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				848C4729A05FC65464C8FFBE /* LibreLoopApplyHelpPagerView.swift */,
-				33A23CFFE498B5B0952A1F77 /* LibreLoopApplySensorView.swift */,
-				2E5D511155F737EE7B82D4AE /* LibreLoopScanHelpPagerView.swift */,
-				509C42AC5D9E7362B3FFA35E /* LibreLoopScanSensorView.swift */,
-				46A3C6A1D17D4BABA6976B37 /* LibreLoopSettingsView.swift */,
-			);
-			name = Views;
-			path = Views;
-			sourceTree = "<group>";
-		};
-		8AC963B2360E1C76FC06BDD2 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				EA788B8D8A4038C94B4220B7 /* LibreLoop.framework */,
-				67298D9E33656D9BCAE6C539 /* LibreLoopUI.framework */,
-				2CD915339A09904550E94559 /* LibreLoopPlugin.framework */,
-				94A50C437E5B893BBA4A403D /* LibreLoopTests.xctest */,
+				13119B652BDC052CF8DFD141 /* LibreLoop.framework */,
+				740EC643579CE34ED6434F1D /* LibreLoopUI.framework */,
+				46DF96501492AC3103B0D735 /* LibreLoopPlugin.framework */,
+				42556106D417702DF82E97C7 /* LibreLoopTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		C4FF46E3521A1AFB78BAFAC5 /* Frameworks */ = {
+		56A079E003AF0EEFB8AA05BA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				25E09886933A617F578EC8A1 /* LoopKit.framework */,
-				3B9E36EDBCC4B17A02C93225 /* LoopKitUI.framework */,
-				2B9305559F7547364360B2C9 /* XCTest.framework */,
-				FE6D18CC36434BE419A49A20 /* iOS */,
+				73BE204082B3EA61613E5382 /* LoopKit.framework */,
+				329646F7CD1D38ADB25B3702 /* LoopKitUI.framework */,
+				193770EC4C5D462E1DD2A3E2 /* XCTest.framework */,
+				88951FEAC44AFC2313A93DAA /* iOS */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		C70BF898798507971278F954 /* LibreLoopPlugin */ = {
+		5AD75BE4CE200C813E2D4DDF /* Pairing */ = {
 			isa = PBXGroup;
 			children = (
-				88ACD9340CB9B79BD102A98F /* LibreLoopPlugin.swift */,
-				29F9C6142534281796DEDBEB /* Info.plist */,
+				558A60DCE91EBDF558DC3727 /* LibreLoopPairingProgressView.swift */,
+				721485A8AF7BF5E0E9D75B7F /* LibreLoopPairingViewModel.swift */,
+			);
+			name = Pairing;
+			path = Pairing;
+			sourceTree = "<group>";
+		};
+		6A9BB5F96823819DC8C8F2B6 /* LibreLoopCGMManager */ = {
+			isa = PBXGroup;
+			children = (
+				E9DC29F76F6A7EACBAFA8A52 /* LibreLoopCGMManager.swift */,
+				60C214A029A9AF7467BF0990 /* LibreLoopCGMManagerState.swift */,
+			);
+			name = LibreLoopCGMManager;
+			path = LibreLoopCGMManager;
+			sourceTree = "<group>";
+		};
+		88951FEAC44AFC2313A93DAA /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				2B678D00D00E0FFC2BAF9DB5 /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+		89E50C158E955207C818D83C /* Pairing */ = {
+			isa = PBXGroup;
+			children = (
+				0A37126CFB288C0CC6BEE44A /* LibreLoopCGMManager+Pairing.swift */,
+				81A5D710EE6798A1B763842E /* LibreLoopKeychain.swift */,
+				1C81AE23F0284CF1D9D490DE /* LibreLoopPairingService.swift */,
+			);
+			name = Pairing;
+			path = Pairing;
+			sourceTree = "<group>";
+		};
+		96E9A727C0B89D2D62AAE29F = {
+			isa = PBXGroup;
+			children = (
+				2CA42E1F0D2895D5A6A9A81B /* Products */,
+				56A079E003AF0EEFB8AA05BA /* Frameworks */,
+				B631C2387881771F909F6C1F /* LibreLoop */,
+				FDB6F231C8871495636DCD61 /* LibreLoopUI */,
+				B1534DB77B85F5BAE88DF82C /* LibreLoopPlugin */,
+				CED6E38EF0AA4F4AF17DC288 /* LibreLoopTests */,
+				AEB050F19A952B4B495A487F /* LICENSE */,
+				91129B7BD6ADF35F82467E85 /* README.md */,
+			);
+			sourceTree = "<group>";
+		};
+		B1534DB77B85F5BAE88DF82C /* LibreLoopPlugin */ = {
+			isa = PBXGroup;
+			children = (
+				5F9A73ADEBA168FAE1B78719 /* LibreLoopPlugin.swift */,
+				5626C819BC00D9E98C55FB14 /* Info.plist */,
 			);
 			name = LibreLoopPlugin;
 			path = LibreLoopPlugin;
 			sourceTree = "<group>";
 		};
-		CEAAAA55DA11A909E2A346C2 /* LibreLoopTests */ = {
+		B631C2387881771F909F6C1F /* LibreLoop */ = {
 			isa = PBXGroup;
 			children = (
-				BC97AA18A5629B15501321CF /* LibreLoopCGMManagerStateTests.swift */,
+				6A9BB5F96823819DC8C8F2B6 /* LibreLoopCGMManager */,
+				89E50C158E955207C818D83C /* Pairing */,
+			);
+			name = LibreLoop;
+			path = LibreLoop;
+			sourceTree = "<group>";
+		};
+		CED6E38EF0AA4F4AF17DC288 /* LibreLoopTests */ = {
+			isa = PBXGroup;
+			children = (
+				8117C94E09FDCB39DF00B86D /* LibreLoopCGMManagerStateTests.swift */,
 			);
 			name = LibreLoopTests;
 			path = LibreLoopTests;
 			sourceTree = "<group>";
 		};
-		D654D2C005905F488A76C16F = {
+		EA2727F95B67E28C55AE1EC4 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				8AC963B2360E1C76FC06BDD2 /* Products */,
-				C4FF46E3521A1AFB78BAFAC5 /* Frameworks */,
-				3E2D0BDAEC958424D4162447 /* LibreLoop */,
-				F3FD809568CC5F8250B60423 /* LibreLoopUI */,
-				C70BF898798507971278F954 /* LibreLoopPlugin */,
-				CEAAAA55DA11A909E2A346C2 /* LibreLoopTests */,
-				DBA663939C9D04A3A6FF67D4 /* LICENSE */,
-				9BEB3297274DA1DBE17243BF /* README.md */,
+				5CB868A7EC64ABD11BFDFACD /* LibreLoopApplyHelpPagerView.swift */,
+				6C4CE7A5C34707DBE81460D3 /* LibreLoopApplySensorView.swift */,
+				C8324DF468FD9688EEE59C98 /* LibreLoopScanHelpPagerView.swift */,
+				3F8CC962A7CB22495B7712CB /* LibreLoopScanSensorView.swift */,
+				D225FF7662B725F7FB4B95DF /* LibreLoopSettingsView.swift */,
 			);
+			name = Views;
+			path = Views;
 			sourceTree = "<group>";
 		};
-		DEB754364CD84AD63D158961 /* LibreLoopCGMManager */ = {
+		FDB6F231C8871495636DCD61 /* LibreLoopUI */ = {
 			isa = PBXGroup;
 			children = (
-				162EBB398A6F8A9EE7C15211 /* LibreLoopCGMManager.swift */,
-				CE474AEAEA2D54F2BC43B4F0 /* LibreLoopCGMManagerState.swift */,
-			);
-			name = LibreLoopCGMManager;
-			path = LibreLoopCGMManager;
-			sourceTree = "<group>";
-		};
-		F158874E4683C7BD7DB1A1BA /* LibreLoopCGMManager */ = {
-			isa = PBXGroup;
-			children = (
-				24B5EEA62367C0B36841B76A /* LibreLoopCGMManager+UI.swift */,
-				17BF688F89135AFF2866480B /* LibreLoopUICoordinator.swift */,
-			);
-			name = LibreLoopCGMManager;
-			path = LibreLoopCGMManager;
-			sourceTree = "<group>";
-		};
-		F3FD809568CC5F8250B60423 /* LibreLoopUI */ = {
-			isa = PBXGroup;
-			children = (
-				F158874E4683C7BD7DB1A1BA /* LibreLoopCGMManager */,
-				876D6A6D4CB8DAE524CC0DF7 /* Views */,
+				1799BA7B839C7334A518E408 /* LibreLoopCGMManager */,
+				5AD75BE4CE200C813E2D4DDF /* Pairing */,
+				EA2727F95B67E28C55AE1EC4 /* Views */,
 			);
 			name = LibreLoopUI;
 			path = LibreLoopUI;
 			sourceTree = "<group>";
 		};
-		FE6D18CC36434BE419A49A20 /* iOS */ = {
-			isa = PBXGroup;
-			children = (
-				30CEF40AA0B469C3EA6D5761 /* Foundation.framework */,
-			);
-			name = iOS;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
-		0039750DC0C8FECA276F2409 /* Headers */ = {
+		35630F1DB7079866B1CC5655 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		1CF0A6A6544C6C2E515B5B93 /* Headers */ = {
+		B758CD7B1AFA8B97859862BF /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		3CE5DF5625C1B9F83C05EE9E /* Headers */ = {
+		D7C06CD18A7C43E4656FBEF0 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -295,53 +328,51 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		3EBD5A1486C2E27B21234729 /* LibreLoopPlugin */ = {
+		003A64061D9F3DC4747EA26D /* LibreLoopUI */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = AF6B2060CA793888440BD817 /* Build configuration list for PBXNativeTarget "LibreLoopPlugin" */;
+			buildConfigurationList = A2FDFF5DC8289DA540CC9AC3 /* Build configuration list for PBXNativeTarget "LibreLoopUI" */;
 			buildPhases = (
-				0039750DC0C8FECA276F2409 /* Headers */,
-				6E76FE5D1B2932F0C4652241 /* Sources */,
-				4777132BC8258762C72E7058 /* Frameworks */,
-				AB012E32645A493F814CA45C /* Resources */,
-				DA4DB626A2088BCA14B80333 /* Embed Frameworks */,
+				D7C06CD18A7C43E4656FBEF0 /* Headers */,
+				4639AC8C864CF9AE157C45AA /* Sources */,
+				AEC796D4DFE47312E1E5BDF9 /* Frameworks */,
+				E2CCC69B3E3E7A60912FC285 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				725E4784D7452FF030E9BBEF /* PBXTargetDependency */,
-				B1255CBFA2748BEFC47B6AA5 /* PBXTargetDependency */,
+				BA755C65718C4F49E3B37827 /* PBXTargetDependency */,
 			);
-			name = LibreLoopPlugin;
-			productName = LibreLoopPlugin;
-			productReference = 2CD915339A09904550E94559 /* LibreLoopPlugin.framework */;
+			name = LibreLoopUI;
+			productName = LibreLoopUI;
+			productReference = 740EC643579CE34ED6434F1D /* LibreLoopUI.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		57BA603A93D46B9BC8C3E52D /* LibreLoopTests */ = {
+		5BDD4B01EB7989C9B50649B2 /* LibreLoopTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1B8D429C6AAB6BB63A3F24D5 /* Build configuration list for PBXNativeTarget "LibreLoopTests" */;
+			buildConfigurationList = 9A5617D675AD80479979D6AD /* Build configuration list for PBXNativeTarget "LibreLoopTests" */;
 			buildPhases = (
-				5CE0B9B0F4DEAC8EBE46853B /* Sources */,
-				95916ACA968248030FDE8DA7 /* Frameworks */,
-				157D23AC61CD80FD2E36C85F /* Resources */,
+				85760646DE2693A381BF78A0 /* Sources */,
+				440521E7478C6A14D1AE6A88 /* Frameworks */,
+				780007D684987D0789CD62FA /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				E5EC0A52343EAE93E373956E /* PBXTargetDependency */,
+				9935F4306EFC68FF9D6FF2C8 /* PBXTargetDependency */,
 			);
 			name = LibreLoopTests;
 			productName = LibreLoopTests;
-			productReference = 94A50C437E5B893BBA4A403D /* LibreLoopTests.xctest */;
+			productReference = 42556106D417702DF82E97C7 /* LibreLoopTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		5B2638D9F24511BEC20B2FE4 /* LibreLoop */ = {
+		DE221628E7BEC519CDF457AE /* LibreLoop */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4978D53034F480913665F0DE /* Build configuration list for PBXNativeTarget "LibreLoop" */;
+			buildConfigurationList = 34A6C0041AEA3A980814637E /* Build configuration list for PBXNativeTarget "LibreLoop" */;
 			buildPhases = (
-				3CE5DF5625C1B9F83C05EE9E /* Headers */,
-				A5CCBDB84B3E3896FB20EED5 /* Sources */,
-				E9CC27E45972EC8775D93A20 /* Frameworks */,
-				43D1766403B44D9BCCD4FC9F /* Resources */,
+				B758CD7B1AFA8B97859862BF /* Headers */,
+				6B3C72E66F79309D8F33B70B /* Sources */,
+				41ACED635C9ADD7C4E88EA83 /* Frameworks */,
+				905D269979AC649F10CA88F6 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -349,41 +380,43 @@
 			);
 			name = LibreLoop;
 			packageProductDependencies = (
-				CFCEBBF7A1C441E0D4BD7DCE /* LibreCRKit */,
+				38D8EF190264EE598668F5CD /* LibreCRKit */,
 			);
 			productName = LibreLoop;
-			productReference = EA788B8D8A4038C94B4220B7 /* LibreLoop.framework */;
+			productReference = 13119B652BDC052CF8DFD141 /* LibreLoop.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		5CA8260B44C29A77136AF9D4 /* LibreLoopUI */ = {
+		E93B1A2B24D9824D25C2A27C /* LibreLoopPlugin */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 10E9D3DDACF49E5A89D9AD4E /* Build configuration list for PBXNativeTarget "LibreLoopUI" */;
+			buildConfigurationList = C91A10584B3909A6B16D07F8 /* Build configuration list for PBXNativeTarget "LibreLoopPlugin" */;
 			buildPhases = (
-				1CF0A6A6544C6C2E515B5B93 /* Headers */,
-				DAFB06A5C3FEBDAA84C7EC92 /* Sources */,
-				99BD08BFAA5F224036B8C6CF /* Frameworks */,
-				CF44DB7C9AC9426801769928 /* Resources */,
+				35630F1DB7079866B1CC5655 /* Headers */,
+				5C8C4205E768387ED9B66CF9 /* Sources */,
+				4A36D1487C0317D50341A47B /* Frameworks */,
+				BDB993D0B4B1B85105E97F05 /* Resources */,
+				DE1696734A508D99D3E23502 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				DDE2BF9CE587A0935CF93BA4 /* PBXTargetDependency */,
+				16DBFB9534B8A7D07EAC3CEC /* PBXTargetDependency */,
+				AE2133F21A5A4FBE67903BC7 /* PBXTargetDependency */,
 			);
-			name = LibreLoopUI;
-			productName = LibreLoopUI;
-			productReference = 67298D9E33656D9BCAE6C539 /* LibreLoopUI.framework */;
+			name = LibreLoopPlugin;
+			productName = LibreLoopPlugin;
+			productReference = 46DF96501492AC3103B0D735 /* LibreLoopPlugin.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		40A997EF3B83E6AB54CBDA75 /* Project object */ = {
+		C2CEF66209AB9053283C931B /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1600;
 				LastUpgradeCheck = 1600;
 			};
-			buildConfigurationList = 90A485555E6BAB5DCF85A469 /* Build configuration list for PBXProject "LibreLoop" */;
+			buildConfigurationList = 7B1A8220FCCF5C96D924F314 /* Build configuration list for PBXProject "LibreLoop" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -391,47 +424,47 @@
 				en,
 				Base,
 			);
-			mainGroup = D654D2C005905F488A76C16F;
+			mainGroup = 96E9A727C0B89D2D62AAE29F;
 			minimizedProjectReferenceProxies = 0;
 			packageReferences = (
-				6223C9ED19D8E788D0197234 /* XCRemoteSwiftPackageReference "LibreCRKit" */,
+				10CB8816E5772961F7FECB49 /* XCRemoteSwiftPackageReference "LibreCRKit" */,
 			);
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 8AC963B2360E1C76FC06BDD2 /* Products */;
+			productRefGroup = 2CA42E1F0D2895D5A6A9A81B /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				5B2638D9F24511BEC20B2FE4 /* LibreLoop */,
-				5CA8260B44C29A77136AF9D4 /* LibreLoopUI */,
-				3EBD5A1486C2E27B21234729 /* LibreLoopPlugin */,
-				57BA603A93D46B9BC8C3E52D /* LibreLoopTests */,
+				DE221628E7BEC519CDF457AE /* LibreLoop */,
+				003A64061D9F3DC4747EA26D /* LibreLoopUI */,
+				E93B1A2B24D9824D25C2A27C /* LibreLoopPlugin */,
+				5BDD4B01EB7989C9B50649B2 /* LibreLoopTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		157D23AC61CD80FD2E36C85F /* Resources */ = {
+		780007D684987D0789CD62FA /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		43D1766403B44D9BCCD4FC9F /* Resources */ = {
+		905D269979AC649F10CA88F6 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		AB012E32645A493F814CA45C /* Resources */ = {
+		BDB993D0B4B1B85105E97F05 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		CF44DB7C9AC9426801769928 /* Resources */ = {
+		E2CCC69B3E3E7A60912FC285 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -441,76 +474,142 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		5CE0B9B0F4DEAC8EBE46853B /* Sources */ = {
+		4639AC8C864CF9AE157C45AA /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B02DC1BBE5F0D3A77F4B7EDE /* LibreLoopCGMManagerStateTests.swift in Sources */,
+				C5672A97FF5EB613EA24437E /* LibreLoopCGMManager+UI.swift in Sources */,
+				ED9ED095637C1CCEB84FE820 /* LibreLoopUICoordinator.swift in Sources */,
+				CF11B72C364BA56BAE101FFC /* LibreLoopPairingProgressView.swift in Sources */,
+				36B67F14D79A290DD899E0E7 /* LibreLoopPairingViewModel.swift in Sources */,
+				84EFBA4E55EE92DD75BBD272 /* LibreLoopApplyHelpPagerView.swift in Sources */,
+				4E7E9403904FF9E2F32D1744 /* LibreLoopApplySensorView.swift in Sources */,
+				25FE064908BA5531432BB3FB /* LibreLoopScanHelpPagerView.swift in Sources */,
+				DAF5A7EC78971083E4C0B617 /* LibreLoopScanSensorView.swift in Sources */,
+				2904E72873AC74587B6F7CC4 /* LibreLoopSettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		6E76FE5D1B2932F0C4652241 /* Sources */ = {
+		5C8C4205E768387ED9B66CF9 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				98D70E157FE7C8108779CC4F /* LibreLoopPlugin.swift in Sources */,
+				6795C9AD3FB2480A6813076E /* LibreLoopPlugin.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A5CCBDB84B3E3896FB20EED5 /* Sources */ = {
+		6B3C72E66F79309D8F33B70B /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				21D75672559589E2D6FECF80 /* LibreLoopCGMManager.swift in Sources */,
-				5FDCBF736C97B0E494C4145D /* LibreLoopCGMManagerState.swift in Sources */,
+				B3905E1AE300C709F903C6B6 /* LibreLoopCGMManager.swift in Sources */,
+				2D9C7351893310F2726C9DCB /* LibreLoopCGMManagerState.swift in Sources */,
+				1B5A07E6F7A317229D6CCCB2 /* LibreLoopCGMManager+Pairing.swift in Sources */,
+				6116A3D3538F1D4E0011C0F6 /* LibreLoopKeychain.swift in Sources */,
+				78294307A3ABD5D335770903 /* LibreLoopPairingService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		DAFB06A5C3FEBDAA84C7EC92 /* Sources */ = {
+		85760646DE2693A381BF78A0 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7918FA199E0D2542118FFB34 /* LibreLoopCGMManager+UI.swift in Sources */,
-				E3A285EAE0C9F91DF5E2E341 /* LibreLoopUICoordinator.swift in Sources */,
-				77845F247E2671F577DF1BAB /* LibreLoopApplyHelpPagerView.swift in Sources */,
-				0E6FECA17A58E98CDF0F0F56 /* LibreLoopApplySensorView.swift in Sources */,
-				BE419A37C74DC486AFE59CD9 /* LibreLoopScanHelpPagerView.swift in Sources */,
-				FC24FE3032B4526353969F54 /* LibreLoopScanSensorView.swift in Sources */,
-				F4AD85AB40DEDFFCD281DE48 /* LibreLoopSettingsView.swift in Sources */,
+				196DA40F6C13DD49530D32FC /* LibreLoopCGMManagerStateTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		725E4784D7452FF030E9BBEF /* PBXTargetDependency */ = {
+		16DBFB9534B8A7D07EAC3CEC /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = LibreLoop;
-			target = 5B2638D9F24511BEC20B2FE4 /* LibreLoop */;
-			targetProxy = E60E1BDBC50BD44E3DF5B047 /* PBXContainerItemProxy */;
+			target = DE221628E7BEC519CDF457AE /* LibreLoop */;
+			targetProxy = CCDCFFC49809592327CF397F /* PBXContainerItemProxy */;
 		};
-		B1255CBFA2748BEFC47B6AA5 /* PBXTargetDependency */ = {
+		9935F4306EFC68FF9D6FF2C8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = LibreLoop;
+			target = DE221628E7BEC519CDF457AE /* LibreLoop */;
+			targetProxy = 32090240817FE423E3347B0C /* PBXContainerItemProxy */;
+		};
+		AE2133F21A5A4FBE67903BC7 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = LibreLoopUI;
-			target = 5CA8260B44C29A77136AF9D4 /* LibreLoopUI */;
-			targetProxy = B3153ACF3198BC614E0140C3 /* PBXContainerItemProxy */;
+			target = 003A64061D9F3DC4747EA26D /* LibreLoopUI */;
+			targetProxy = 30CC877315FEDD7E1E0AFCF6 /* PBXContainerItemProxy */;
 		};
-		DDE2BF9CE587A0935CF93BA4 /* PBXTargetDependency */ = {
+		BA755C65718C4F49E3B37827 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = LibreLoop;
-			target = 5B2638D9F24511BEC20B2FE4 /* LibreLoop */;
-			targetProxy = 1D908FF44B7A39B8616D4A1C /* PBXContainerItemProxy */;
-		};
-		E5EC0A52343EAE93E373956E /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = LibreLoop;
-			target = 5B2638D9F24511BEC20B2FE4 /* LibreLoop */;
-			targetProxy = 18281E27687B54B3F7D7BD7B /* PBXContainerItemProxy */;
+			target = DE221628E7BEC519CDF457AE /* LibreLoop */;
+			targetProxy = 23B36D9EBFABF3604B9791D4 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		5F1E1B49EFB10B09E1B8B5BF /* Debug */ = {
+		222E22392EE5C6C1D71448FF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				LOCALIZED_STRING_MACRO_NAMES = "NSLocalizedString CFCopyLocalizedString LocalizedString";
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		512E6C8DA41D35BB3867618E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
@@ -531,28 +630,14 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = 1;
+				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 				WRAPPER_EXTENSION = loopplugin;
 			};
-			name = Debug;
+			name = Release;
 		};
-		62B269181021D710AE650D03 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ENABLE_OBJC_WEAK = NO;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = org.loopkit.LibreLoopTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
-			};
-			name = Debug;
-		};
-		68D7F47C9A58740E6DDEB420 /* Debug */ = {
+		69C444FE17C4008F7CBFD2D2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
@@ -572,12 +657,13 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = 1;
+				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
-			name = Debug;
+			name = Release;
 		};
-		78EA8C99613D86EB61E1E43C /* Release */ = {
+		706A8457E64B4C9D0E4C0088 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
@@ -603,7 +689,7 @@
 			};
 			name = Release;
 		};
-		A5152722A9AC09226435DC0F /* Debug */ = {
+		7E61CC15715582F32E22849D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -671,33 +757,23 @@
 			};
 			name = Debug;
 		};
-		AB5134FF41A80FA235BF232E /* Release */ = {
+		85ED365C4A56C765A5EC1B22 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
-				CURRENT_PROJECT_VERSION = 1;
-				DEFINES_MODULE = YES;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026 LoopKit Authors. All rights reserved.";
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = org.loopkit.LibreLoopUI;
-				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = org.loopkit.LibreLoopTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 				VALIDATE_PRODUCT = YES;
-				VERSIONING_SYSTEM = "apple-generic";
-				VERSION_INFO_PREFIX = "";
 			};
 			name = Release;
 		};
-		BE5F0EA43BEFA12A74F9FE15 /* Debug */ = {
+		A19BE61BB5E1B1B3C212735C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
@@ -722,68 +798,7 @@
 			};
 			name = Debug;
 		};
-		C37E7B550575558004F44296 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				LOCALIZED_STRING_MACRO_NAMES = "NSLocalizedString CFCopyLocalizedString LocalizedString";
-				MTL_ENABLE_DEBUG_INFO = NO;
-				MTL_FAST_MATH = YES;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
-				SWIFT_VERSION = 5.0;
-				VALIDATE_PRODUCT = YES;
-				VERSIONING_SYSTEM = "apple-generic";
-				VERSION_INFO_PREFIX = "";
-			};
-			name = Release;
-		};
-		C3E56E7A82B04B2861BBFF5A /* Release */ = {
+		AD12E1EB8E4A26194C6B8FB4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
@@ -795,11 +810,35 @@
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
-				VALIDATE_PRODUCT = YES;
 			};
-			name = Release;
+			name = Debug;
 		};
-		CB45F2AD0A8970BAB2DCE493 /* Release */ = {
+		C9645FD9FA28EC8447C89472 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026 LoopKit Authors. All rights reserved.";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.loopkit.LibreLoopUI;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		D053CC2FFF581A46CA7F8AF4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
@@ -820,57 +859,56 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = 1;
-				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 				WRAPPER_EXTENSION = loopplugin;
 			};
-			name = Release;
+			name = Debug;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		10E9D3DDACF49E5A89D9AD4E /* Build configuration list for PBXNativeTarget "LibreLoopUI" */ = {
+		34A6C0041AEA3A980814637E /* Build configuration list for PBXNativeTarget "LibreLoop" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				AB5134FF41A80FA235BF232E /* Release */,
-				68D7F47C9A58740E6DDEB420 /* Debug */,
+				706A8457E64B4C9D0E4C0088 /* Release */,
+				A19BE61BB5E1B1B3C212735C /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1B8D429C6AAB6BB63A3F24D5 /* Build configuration list for PBXNativeTarget "LibreLoopTests" */ = {
+		7B1A8220FCCF5C96D924F314 /* Build configuration list for PBXProject "LibreLoop" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				C3E56E7A82B04B2861BBFF5A /* Release */,
-				62B269181021D710AE650D03 /* Debug */,
+				7E61CC15715582F32E22849D /* Debug */,
+				222E22392EE5C6C1D71448FF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4978D53034F480913665F0DE /* Build configuration list for PBXNativeTarget "LibreLoop" */ = {
+		9A5617D675AD80479979D6AD /* Build configuration list for PBXNativeTarget "LibreLoopTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				78EA8C99613D86EB61E1E43C /* Release */,
-				BE5F0EA43BEFA12A74F9FE15 /* Debug */,
+				85ED365C4A56C765A5EC1B22 /* Release */,
+				AD12E1EB8E4A26194C6B8FB4 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		90A485555E6BAB5DCF85A469 /* Build configuration list for PBXProject "LibreLoop" */ = {
+		A2FDFF5DC8289DA540CC9AC3 /* Build configuration list for PBXNativeTarget "LibreLoopUI" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				A5152722A9AC09226435DC0F /* Debug */,
-				C37E7B550575558004F44296 /* Release */,
+				69C444FE17C4008F7CBFD2D2 /* Release */,
+				C9645FD9FA28EC8447C89472 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		AF6B2060CA793888440BD817 /* Build configuration list for PBXNativeTarget "LibreLoopPlugin" */ = {
+		C91A10584B3909A6B16D07F8 /* Build configuration list for PBXNativeTarget "LibreLoopPlugin" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				CB45F2AD0A8970BAB2DCE493 /* Release */,
-				5F1E1B49EFB10B09E1B8B5BF /* Debug */,
+				512E6C8DA41D35BB3867618E /* Release */,
+				D053CC2FFF581A46CA7F8AF4 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -878,7 +916,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		6223C9ED19D8E788D0197234 /* XCRemoteSwiftPackageReference "LibreCRKit" */ = {
+		10CB8816E5772961F7FECB49 /* XCRemoteSwiftPackageReference "LibreCRKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/airedev326/LibreCRKit.git";
 			requirement = {
@@ -889,12 +927,12 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		CFCEBBF7A1C441E0D4BD7DCE /* LibreCRKit */ = {
+		38D8EF190264EE598668F5CD /* LibreCRKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 6223C9ED19D8E788D0197234 /* XCRemoteSwiftPackageReference "LibreCRKit" */;
+			package = 10CB8816E5772961F7FECB49 /* XCRemoteSwiftPackageReference "LibreCRKit" */;
 			productName = LibreCRKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
-	rootObject = 40A997EF3B83E6AB54CBDA75 /* Project object */;
+	rootObject = C2CEF66209AB9053283C931B /* Project object */;
 }
