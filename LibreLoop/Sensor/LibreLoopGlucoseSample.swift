@@ -45,3 +45,69 @@ public struct LibreLoopGlucoseSample: Equatable, Sendable {
         self.qualityIssue = qualityIssue
     }
 }
+
+// MARK: - Compact dictionary serialization
+//
+// rawState is plist-backed by Loop; we encode samples as plain Dicts of
+// AnyObject-compatible types so they round-trip without needing a Codable
+// JSON blob. Keys kept short to keep rawState small.
+
+extension LibreLoopGlucoseSample {
+    init?(rawValue: [String: Any]) {
+        guard let date = rawValue["d"] as? Date,
+              let valueMgDL = rawValue["v"] as? Double,
+              let lifeCount = (rawValue["lc"] as? Int).map({ UInt16(clamping: $0) }),
+              let temp = (rawValue["t"] as? Int).map({ UInt16(clamping: $0) }),
+              let isActionable = rawValue["a"] as? Bool,
+              let trendRaw = rawValue["tr"] as? String,
+              let trend = Trend(rawString: trendRaw)
+        else { return nil }
+        self.date = date
+        self.valueMgDL = valueMgDL
+        self.trend = trend
+        self.rateOfChangeMgDLPerMinute = rawValue["r"] as? Double
+        self.lifeCount = lifeCount
+        self.sensorTemperatureRaw = temp
+        self.isActionable = isActionable
+        self.qualityIssue = rawValue["q"] as? String
+    }
+
+    var rawValue: [String: Any] {
+        var raw: [String: Any] = [
+            "d": date,
+            "v": valueMgDL,
+            "lc": Int(lifeCount),
+            "t": Int(sensorTemperatureRaw),
+            "a": isActionable,
+            "tr": trend.rawString,
+        ]
+        raw["r"] = rateOfChangeMgDLPerMinute
+        raw["q"] = qualityIssue
+        return raw
+    }
+}
+
+extension LibreLoopGlucoseSample.Trend {
+    var rawString: String {
+        switch self {
+        case .notDetermined:  return "u"
+        case .fallingQuickly: return "ff"
+        case .falling:        return "f"
+        case .stable:         return "s"
+        case .rising:         return "r"
+        case .risingQuickly:  return "rr"
+        }
+    }
+
+    init?(rawString: String) {
+        switch rawString {
+        case "u":  self = .notDetermined
+        case "ff": self = .fallingQuickly
+        case "f":  self = .falling
+        case "s":  self = .stable
+        case "r":  self = .rising
+        case "rr": self = .risingQuickly
+        default:   return nil
+        }
+    }
+}

@@ -267,6 +267,7 @@ extension LibreLoopCGMManager {
         }
         do {
             let outcome = try await LibreLoopPairingService().reconnect(
+                scanner: scanner,
                 blePIN: blePIN,
                 expectedPeripheralID: expectedPeripheral
             ) { [weak self] stage in

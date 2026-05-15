@@ -31,6 +31,16 @@ public struct LibreLoopCGMManagerState: RawRepresentable, Equatable {
     /// reconnect we request `historicalBackfillGreaterEqual(this+1)` to
     /// pull only the missed window; nil = first session, request from 0.
     public var lastHistoricalLifeCount: UInt16?
+    /// Most-recent realtime sample, persisted so the Last Reading card
+    /// stays populated across app kills until the next BLE notification
+    /// arrives. Loop's own glucose store is the source of truth for
+    /// long-term history; this is purely for UI continuity.
+    public var latestSample: LibreLoopGlucoseSample?
+    /// Short tail of recent realtime samples, capped at 12 (≈1h at the
+    /// 5-min realtime cadence). Sufficient to show recent context in the
+    /// settings table without bloating rawState.
+    public var recentSamples: [LibreLoopGlucoseSample] = []
+    public static let recentSamplesPersistenceCap = 12
 
     public init() {}
 
@@ -45,6 +55,12 @@ public struct LibreLoopCGMManagerState: RawRepresentable, Equatable {
         self.firstActionableReadingAt = rawValue["firstActionableReadingAt"] as? Date
         self.lastPairedAt = rawValue["lastPairedAt"] as? Date
         self.lastHistoricalLifeCount = (rawValue["lastHistoricalLifeCount"] as? Int).map { UInt16(clamping: $0) }
+        if let latestRaw = rawValue["latestSample"] as? [String: Any] {
+            self.latestSample = LibreLoopGlucoseSample(rawValue: latestRaw)
+        }
+        if let recentRaw = rawValue["recentSamples"] as? [[String: Any]] {
+            self.recentSamples = recentRaw.compactMap(LibreLoopGlucoseSample.init(rawValue:))
+        }
     }
 
     public var rawValue: RawValue {
@@ -59,6 +75,10 @@ public struct LibreLoopCGMManagerState: RawRepresentable, Equatable {
         raw["firstActionableReadingAt"] = firstActionableReadingAt
         raw["lastPairedAt"] = lastPairedAt
         raw["lastHistoricalLifeCount"] = lastHistoricalLifeCount.map { Int($0) }
+        raw["latestSample"] = latestSample?.rawValue
+        if !recentSamples.isEmpty {
+            raw["recentSamples"] = recentSamples.prefix(Self.recentSamplesPersistenceCap).map { $0.rawValue }
+        }
         return raw
     }
 }

@@ -43,6 +43,7 @@ final class LibreLoopPairingViewModel: ObservableObject {
         do {
             let outcome = try await service.pair(
                 mode: mode,
+                scanner: cgmManager.scanner,
                 onNFCResponse: { [cgmManager] response in
                     Task { @MainActor in
                         cgmManager.applyNFCResponse(response)

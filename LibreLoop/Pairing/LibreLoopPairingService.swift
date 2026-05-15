@@ -1,4 +1,5 @@
 import Foundation
+import CoreBluetooth
 import Security
 import LibreCRKit
 
@@ -81,47 +82,42 @@ public final class LibreLoopPairingService {
     /// accepts the same PIN until another A8 burns it. Each reconnect
     /// produces fresh kEnc/ivEnc, which the caller must persist.
     public func reconnect(
+        scanner: SensorScanner,
         blePIN: Data,
         expectedPeripheralID: UUID? = nil,
         scanTimeout: TimeInterval = 120,
         onStage: @Sendable @escaping (Stage) -> Void = { _ in }
     ) async throws -> ReconnectOutcome {
         onStage(.bleSearching)
-        let scanner = SensorScanner(configuration: .foreground)
         try await scanner.waitUntilReady()
 
-        // Per-attempt scan timeout. CB keeps a healthy persistent scan
-        // running, but it can silently stop yielding -- iOS background
-        // throttling, scanner state staleness, weird race during teardown.
-        // Bounding each attempt at 2 minutes lets the outer reconnect loop
-        // discard a dead scanner and spin up a fresh one if needed; the
-        // loop's own 2s delay between attempts is what keeps overall
-        // pressure low.
-        let sensor: DiscoveredSensor = try await withThrowingTaskGroup(of: DiscoveredSensor?.self) { group in
-            group.addTask {
-                for await found in scanner.startScan() {
-                    if expectedPeripheralID == nil || found.id == expectedPeripheralID {
-                        return found
-                    }
-                }
-                return nil
-            }
-            group.addTask {
-                try await Task.sleep(nanoseconds: UInt64(scanTimeout * 1_000_000_000))
-                return nil
-            }
-            for try await result in group {
-                group.cancelAll()
-                if let result { return result }
-                throw Failure.bleNoSensorDiscovered
-            }
-            throw Failure.bleNoSensorDiscovered
+        // Fast path: when we have a peripheralID from a prior pair, ask iOS
+        // for the peripheral directly. CB will deliver the connection when
+        // the peripheral is in range -- no active scanning needed, which
+        // avoids the long-running-scan throttling that breaks reconnect
+        // after several hours. Scanning is reserved for initial pair only.
+        var peripheral: CBPeripheral?
+        if let id = expectedPeripheralID {
+            let retrieved = await scanner.retrievePeripherals(withIdentifiers: [id])
+            peripheral = retrieved.first
         }
+
+        // Fallback: no saved peripheralID or iOS doesn't know it (BLE
+        // state wiped, sensor never paired with this device). Fall back
+        // to a bounded scan.
+        if peripheral == nil {
+            peripheral = try await Self.scanForPeripheral(
+                scanner: scanner,
+                matching: expectedPeripheralID,
+                timeout: scanTimeout
+            )
+        }
+        guard let peripheral else { throw Failure.bleNoSensorDiscovered }
 
         onStage(.bleConnecting)
         let session: SensorSession
         do {
-            session = try await scanner.connect(sensor.peripheral, timeout: 120)
+            session = try await scanner.connect(peripheral, timeout: 120)
         } catch {
             throw Failure.underlying("BLE connection failed: \(error.localizedDescription)")
         }
@@ -189,6 +185,7 @@ public final class LibreLoopPairingService {
 
     public func pair(
         mode: Mode = .fresh,
+        scanner: SensorScanner,
         onNFCResponse: @Sendable @escaping (NFCResponse) -> Void = { _ in },
         onStage: @Sendable @escaping (Stage) -> Void = { _ in }
     ) async throws -> PairOutcome {
@@ -237,7 +234,6 @@ public final class LibreLoopPairingService {
 
         // 2. BLE scan + connect
         onStage(.bleSearching)
-        let scanner = SensorScanner(configuration: .foreground)
         try await scanner.waitUntilReady()
 
         var discovered: DiscoveredSensor?
@@ -314,6 +310,34 @@ public final class LibreLoopPairingService {
             ivEnc: material.ivEnc
         )
         return PairOutcome(result: result, monitor: monitor, peripheralID: sensor.id)
+    }
+
+    private static func scanForPeripheral(
+        scanner: SensorScanner,
+        matching expectedPeripheralID: UUID?,
+        timeout: TimeInterval
+    ) async throws -> CBPeripheral {
+        let sensor: DiscoveredSensor = try await withThrowingTaskGroup(of: DiscoveredSensor?.self) { group in
+            group.addTask {
+                for await found in scanner.startScan() {
+                    if expectedPeripheralID == nil || found.id == expectedPeripheralID {
+                        return found
+                    }
+                }
+                return nil
+            }
+            group.addTask {
+                try await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
+                return nil
+            }
+            for try await result in group {
+                group.cancelAll()
+                if let result { return result }
+                throw Failure.bleNoSensorDiscovered
+            }
+            throw Failure.bleNoSensorDiscovered
+        }
+        return sensor.peripheral
     }
 
     private static func secureRandomBytes(count: Int) throws -> Data {

@@ -1,6 +1,10 @@
 import Foundation
 import HealthKit
+import LibreCRKit
 import LoopKit
+import os.log
+
+private let log = Logger(subsystem: "org.loopkit.LibreLoop", category: "CGMManager")
 
 public final class LibreLoopCGMManager: CGMManager {
     public static let pluginIdentifier = "LibreLoopCGMManager"
@@ -42,10 +46,17 @@ public final class LibreLoopCGMManager: CGMManager {
         case disconnected
     }
 
-    /// Most recent glucose sample (in-memory only; not persisted across launches).
-    public private(set) var latestSample: LibreLoopGlucoseSample?
+    /// Most recent glucose sample. Snapshot-restored from rawState at init
+    /// so the Last Reading card stays populated across app kills; updated
+    /// in `recordSample` as new readings arrive.
+    public var latestSample: LibreLoopGlucoseSample? {
+        get { state.latestSample }
+    }
 
-    /// Ring buffer of recently received samples, newest first, capped at 100.
+    /// Ring buffer of recently received samples, newest first.
+    /// In-memory list is capped at 100 for the "Recent Readings" table;
+    /// the rawState-persisted subset is shorter (see
+    /// LibreLoopCGMManagerState.recentSamplesPersistenceCap).
     public private(set) var recentSamples: [LibreLoopGlucoseSample] = []
     private static let recentSamplesCap = 100
 
@@ -103,11 +114,16 @@ public final class LibreLoopCGMManager: CGMManager {
     }
 
     func recordSample(_ sample: LibreLoopGlucoseSample) {
-        latestSample = sample
         recentSamples.insert(sample, at: 0)
         if recentSamples.count > Self.recentSamplesCap {
             recentSamples.removeLast(recentSamples.count - Self.recentSamplesCap)
         }
+        // Mirror the sample (and a trimmed tail) into rawState so the next
+        // app launch can repopulate the Last Reading card immediately.
+        var updated = state
+        updated.latestSample = sample
+        updated.recentSamples = Array(recentSamples.prefix(LibreLoopCGMManagerState.recentSamplesPersistenceCap))
+        setState(updated)
     }
 
     /// Wipe everything sensor-specific so the user can pair a new sensor while
@@ -124,7 +140,6 @@ public final class LibreLoopCGMManager: CGMManager {
         monitor?.stop()
         monitor = nil
         isReconnecting = false
-        latestSample = nil
         recentSamples = []
         var blank = state
         blank.receiverID = nil
@@ -134,6 +149,10 @@ public final class LibreLoopCGMManager: CGMManager {
         blank.peripheralID = nil
         blank.activatedAt = nil
         blank.latestReadingTimestamp = nil
+        blank.firstActionableReadingAt = nil
+        blank.lastHistoricalLifeCount = nil
+        blank.latestSample = nil
+        blank.recentSamples = []
         setState(blank)
     }
 
@@ -172,10 +191,85 @@ public final class LibreLoopCGMManager: CGMManager {
     }
 
     private var noDataWatchdog: Task<Void, Never>?
+    private var restorationTask: Task<Void, Never>?
 
     /// True once we've issued a backfill request for the current BLE session.
     /// Reset when the monitor is cleared so the next session re-requests.
     var hasRequestedBackfillThisSession: Bool = false
+
+    /// Single long-lived BLE scanner. Created with
+    /// CBCentralManagerOptionRestoreIdentifierKey so iOS can preserve the
+    /// connected peripheral + subscriptions across app terminations and
+    /// hand them back to us on relaunch via `restorationEvents()`. The same
+    /// scanner is used for pair, reconnect, and ongoing monitoring -- the
+    /// restoration identifier must stay stable for restoration to work.
+    private static let restorationIdentifier = "org.loopkit.LibreLoop.central"
+    public lazy var scanner: SensorScanner = {
+        let scanner = SensorScanner(configuration: .background(restorationIdentifier: Self.restorationIdentifier))
+        startRestorationListener(on: scanner)
+        return scanner
+    }()
+
+    private func startRestorationListener(on scanner: SensorScanner) {
+        restorationTask?.cancel()
+        restorationTask = Task { [weak self] in
+            for await event in scanner.restorationEvents() {
+                guard let self else { return }
+                await MainActor.run {
+                    self.handleRestorationEvent(event)
+                }
+                if Task.isCancelled { break }
+            }
+        }
+        // Tell iOS to wake us when our peripheral comes into range or
+        // disconnects, so we don't have to actively scan to notice. Combined
+        // with retrievePeripherals(withIdentifiers:) in reconnect, this
+        // replaces the "scan forever and hope" model that gets throttled
+        // after a few hours of failures.
+        if let id = state.peripheralID {
+            scanner.registerForConnectionEvents(peripheralIDs: [id])
+            log.notice("registered for connection events on peripheral \(id.uuidString)")
+        }
+        startConnectionEventListener(on: scanner)
+    }
+
+    private var connectionEventTask: Task<Void, Never>?
+
+    private func startConnectionEventListener(on scanner: SensorScanner) {
+        connectionEventTask?.cancel()
+        connectionEventTask = Task { [weak self] in
+            for await event in scanner.connectionEvents() {
+                guard let self else { return }
+                log.notice("connection event: \(String(describing: event.event)) peripheral=\(event.peripheral.identifier.uuidString)")
+                if event.peripheral.identifier == self.state.peripheralID {
+                    await MainActor.run {
+                        // Any event for our peripheral is a hint to attempt
+                        // reconnect. Idempotent if loop is running.
+                        self.scheduleInitialReconnect()
+                    }
+                }
+                if Task.isCancelled { break }
+            }
+        }
+    }
+
+    private func handleRestorationEvent(_ event: SensorRestorationEvent) {
+        log.notice("BLE restoration event: \(event.peripherals.count) peripheral(s)")
+        guard let expected = state.peripheralID else {
+            log.notice("BLE restoration: no saved peripheralID, ignoring")
+            return
+        }
+        guard let restored = event.peripherals.first(where: { $0.identifier == expected }) else {
+            log.notice("BLE restoration: saved peripheral not in restored set")
+            return
+        }
+        log.notice("BLE restoration: matched \(restored.identifier.uuidString); scheduling reconnect")
+        // We have a CBPeripheral handle from iOS that may already be
+        // connected. Easiest path: drop into the same reconnect loop --
+        // it'll see the peripheral via scan (or CB short-circuit because
+        // it's already known) and run the handshake.
+        scheduleInitialReconnect()
+    }
 
     public init() {
         self.state = LibreLoopCGMManagerState()
@@ -183,6 +277,8 @@ public final class LibreLoopCGMManager: CGMManager {
 
     deinit {
         noDataWatchdog?.cancel()
+        restorationTask?.cancel()
+        connectionEventTask?.cancel()
     }
 
     /// Watchdog: if a monitor is alive but no glucose readings have arrived
@@ -221,11 +317,18 @@ public final class LibreLoopCGMManager: CGMManager {
         self.init()
         if let parsed = LibreLoopCGMManagerState(rawValue: rawState) {
             self.state = parsed
+            // Repopulate in-memory recent samples from the persisted tail so
+            // the settings UI has context immediately after relaunch.
+            self.recentSamples = parsed.recentSamples
         }
         // Saved sensor state restored -> kick off a connect attempt so we
         // start receiving glucose without waiting for Loop's next poll.
         // Same disconnect path is reused; gated on having a saved blePIN.
         if state.blePIN != nil && state.sensorSerial != nil {
+            // Touch the lazy scanner so its central manager is created
+            // before iOS expects to deliver willRestoreState. The
+            // restoration listener is wired in the scanner accessor.
+            _ = scanner
             scheduleInitialReconnect()
         }
     }
