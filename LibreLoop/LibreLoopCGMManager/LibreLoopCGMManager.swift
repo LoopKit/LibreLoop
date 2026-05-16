@@ -332,9 +332,14 @@ public final class LibreLoopCGMManager: CGMManager {
             let last = self.state.latestReadingTimestamp
             let stale = last.map { Date().timeIntervalSince($0) > Self.noDataThreshold } ?? true
             if stale {
+                llog("no-data watchdog fired: \(Int(Self.noDataThreshold))s without a reading on a monitor we believe is connected; dropping monitor and re-arming reconnect")
                 await MainActor.run {
                     self.monitor?.stop()
                     self.monitor = nil
+                    // Setting monitor=nil alone doesn't start the reconnect
+                    // loop; kick it off explicitly. Idempotent if a loop is
+                    // already running.
+                    self.scheduleInitialReconnect()
                 }
             }
         }

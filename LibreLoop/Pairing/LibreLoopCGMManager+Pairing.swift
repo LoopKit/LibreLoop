@@ -107,7 +107,11 @@ extension LibreLoopCGMManager {
 
     func ingest(_ sample: LibreLoopGlucoseSample) {
         recordSample(sample)
-        cancelNoDataWatchdog()
+        // Restart the watchdog after every reading so it always reflects the
+        // most recent silence window. Previously we only cancelled it on the
+        // first reading, which meant a silent-disconnect (BLE link "open"
+        // but no data flowing) had nothing watching for it after that point.
+        startNoDataWatchdog()
 
         // Now that we have a confirmed realtime reading, we know the
         // sensor's current lifecount and can issue a sensible-range backfill
@@ -283,6 +287,7 @@ extension LibreLoopCGMManager {
         llog("monitor reported disconnect; clearing and reconnecting")
         self.monitor = nil
         self.hasRequestedBackfillThisSession = false
+        cancelNoDataWatchdog()
         cancelReconnect()
         startReconnectLoop()
     }

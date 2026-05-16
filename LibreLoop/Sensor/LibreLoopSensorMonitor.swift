@@ -81,7 +81,23 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
             guard let self else { return }
             llog("monitor starting; refreshing post-auth notifications")
             self.emitStatus("Refreshing notifications")
-            await self.refreshPostAuthNotifications()
+            let refreshOK = await self.refreshPostAuthNotifications()
+            // If CCCD refresh failed because the BLE link died between
+            // handshake-complete and our first CCCD write, the session is
+            // already dead. session.notifications() on a dead session
+            // doesn't terminate in a useful timeframe — without this short-
+            // circuit we'd sit silently in the consume loop indefinitely
+            // (verified: 55-minute hang in field log after a 14:23 CCCD
+            // failure that wasn't propagated). Fire disconnect immediately
+            // so the CGMManager re-enters the reconnect loop.
+            if !refreshOK {
+                llog("CCCD refresh failed; treating session as disconnected and not consuming notifications")
+                self.lock.lock()
+                let handler = self.disconnectHandler
+                self.lock.unlock()
+                handler?()
+                return
+            }
             // Fire ready BEFORE consuming notifications so consumers (e.g.
             // backfill request) can race ahead of the first realtime packet
             // and not miss notifications. Both are on the same session queue
@@ -118,13 +134,15 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
     /// Delegated to LibreCRKit's `SensorSession.refreshDataPlaneNotifications()`
     /// (added in the refresh-data-plane-notifications branch); LibreLoop
     /// previously implemented this inline.
-    private func refreshPostAuthNotifications() async {
+    private func refreshPostAuthNotifications() async -> Bool {
         do {
             llog("CCCD refresh starting")
             try await session.refreshDataPlaneNotifications()
             llog("CCCD refresh complete")
+            return true
         } catch {
             llog("CCCD refresh failed: \(String(describing: error))")
+            return false
         }
     }
 
