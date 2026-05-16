@@ -226,9 +226,22 @@ extension LibreLoopCGMManager {
             return
         }
         let serial = state.sensorSerial ?? "unknown"
+        // Build the set of lifeCounts we've already forwarded as realtime.
+        // Backfill samples for those lifeCounts use the sensor's smoothed/
+        // historical pipeline and disagree with realtime by up to ±20 mg/dL
+        // (verified in field logs). They land in Loop under a different
+        // syncIdentifier, so without this filter Loop stores both values for
+        // the same timestamp -- visible as two independent dots that disagree.
+        // Only forward backfill samples that fill an actual gap.
+        let realtimeLifeCounts = Set(recentSamples.map { $0.lifeCount })
         var newSamples: [NewGlucoseSample] = []
+        var droppedDuplicates = 0
         for sample in page.samples {
             guard let mgdl = sample.glucoseMgDL else { continue }
+            if realtimeLifeCounts.contains(sample.lifeCount) {
+                droppedDuplicates += 1
+                continue
+            }
             let date = activatedAt.addingTimeInterval(TimeInterval(sample.lifeCount) * 60)
             newSamples.append(NewGlucoseSample(
                 date: date,
@@ -251,7 +264,10 @@ extension LibreLoopCGMManager {
             let firstDate = newSamples.first?.date.timeIntervalSince1970 ?? 0
             let lastDate = newSamples.last?.date.timeIntervalSince1970 ?? 0
             let values = newSamples.map { Int($0.quantity.doubleValue(for: .milligramsPerDeciliter)) }
-            llog("forwarded \(newSamples.count) backfill samples to Loop: lifeCount \(page.startLifeCount)..\(page.endLifeCount), dates \(firstDate)..\(lastDate), mgdl=\(values)")
+            let suffix = droppedDuplicates > 0 ? " (dropped \(droppedDuplicates) realtime-duplicate sample(s))" : ""
+            llog("forwarded \(newSamples.count) backfill samples to Loop: lifeCount \(page.startLifeCount)..\(page.endLifeCount), dates \(firstDate)..\(lastDate), mgdl=\(values)\(suffix)")
+        } else if droppedDuplicates > 0 {
+            llog("dropped all \(droppedDuplicates) backfill sample(s) in page lifeCount \(page.startLifeCount)..\(page.endLifeCount) — all overlap with realtime")
         }
         // Advance the watermark to the page's end, even if no usable samples
         // -- skipping unusable samples shouldn't cause us to re-request them.
