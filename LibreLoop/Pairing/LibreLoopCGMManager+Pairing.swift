@@ -197,17 +197,32 @@ extension LibreLoopCGMManager {
     private static var reconnectTasks: [ObjectIdentifier: Task<Void, Never>] = [:]
 
     /// Wraps `work` in a UIApplication background task so iOS keeps us alive
-    /// long enough to finish even when the app is backgrounded. We always end
-    /// the task — either when `work` returns, or in the expiration handler if
-    /// iOS pulls the rug out at ~30s. Failure to end leads to a force-quit.
-    static func withBackgroundTask<T: Sendable>(name: String, _ work: @Sendable @escaping () async -> T) async -> T {
+    /// long enough to finish even when the app is backgrounded.
+    ///
+    /// Returns true if the work completed before the bg window expired;
+    /// false on expiration. On expiration, the work Task is cancelled and
+    /// we return WITHOUT waiting for it. Field log captured a 6h36m stall
+    /// when the bg task expired mid-BLE handshake: LibreCRKit's
+    /// continuation-based awaits don't honor cooperative cancellation, so a
+    /// stuck workTask never resolves and `await workTask.value` would park
+    /// indefinitely too. By bailing on expiration we let the reconnect
+    /// loop's outer iterate to a fresh attempt next time iOS gives us
+    /// runtime. The orphaned workTask is harmless — it'll either complete
+    /// naturally or stay parked; the next reconnect's scanner.connect
+    /// handles an already-connected peripheral.
+    @discardableResult
+    static func withBackgroundTask(name: String, _ work: @Sendable @escaping () async -> Void) async -> Bool {
         let app = await MainActor.run { UIApplication.shared }
+        let workTask = Task { await work() }
         let idBox = TaskIdentifierBox()
+        let expirationBox = ExpirationBox()
         let id = await MainActor.run {
             app.beginBackgroundTask(withName: name) {
+                expirationBox.expired = true
                 let taskID = idBox.value
                 if taskID != .invalid {
-                    llog("background task '\(name)' expired before work completed")
+                    llog("background task '\(name)' expired before work completed; abandoning in-flight work")
+                    workTask.cancel()
                     app.endBackgroundTask(taskID)
                     idBox.value = .invalid
                 }
@@ -219,7 +234,22 @@ extension LibreLoopCGMManager {
         } else {
             llog("background task '\(name)' started id=\(id.rawValue)")
         }
-        let result = await work()
+        // Race work completion vs. bg-expiration. Whichever flips first wins.
+        let completed: Bool = await withTaskGroup(of: Bool.self) { group in
+            group.addTask {
+                await workTask.value
+                return true
+            }
+            group.addTask {
+                while !Task.isCancelled, !expirationBox.expired {
+                    try? await Task.sleep(nanoseconds: 250_000_000)
+                }
+                return false
+            }
+            let first = await group.next() ?? false
+            group.cancelAll()
+            return first
+        }
         await MainActor.run {
             let taskID = idBox.value
             if taskID != .invalid {
@@ -228,7 +258,11 @@ extension LibreLoopCGMManager {
                 llog("background task '\(name)' ended id=\(taskID.rawValue)")
             }
         }
-        return result
+        return completed
+    }
+
+    private final class ExpirationBox: @unchecked Sendable {
+        var expired: Bool = false
     }
 
     /// Reference container so the expiration handler and the post-work cleanup
