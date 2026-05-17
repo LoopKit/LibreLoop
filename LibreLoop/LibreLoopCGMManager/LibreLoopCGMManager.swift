@@ -227,6 +227,12 @@ public final class LibreLoopCGMManager: CGMManager {
     /// restoration identifier must stay stable for restoration to work.
     private static let restorationIdentifier = "org.loopkit.LibreLoop.central"
     public lazy var scanner: SensorScanner = {
+        // Route BLE-layer per-step timing from the patched local LibreCRKit
+        // checkout into our file logger. The fork-local BLETiming helper
+        // doesn't exist in upstream LibreCRKit; if SwiftPM re-resolves the
+        // package this call will fail to compile and we'll know to re-apply
+        // the patch (or accept that the instrumentation is gone).
+        BLETiming.setLogger { llog("ble: \($0)") }
         let scanner = SensorScanner(configuration: .background(restorationIdentifier: Self.restorationIdentifier))
         startRestorationListener(on: scanner)
         return scanner

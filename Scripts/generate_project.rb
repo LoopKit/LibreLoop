@@ -168,10 +168,10 @@ librecrkit_pkg = proj.new(Xcodeproj::Project::Object::XCRemoteSwiftPackageRefere
 # Back on upstream main after the refresh-data-plane-notifications PR
 # landed (as e9f8b21), plus the f690013 quality-assessment API we now
 # consume in LibreLoopSensorMonitor.
-librecrkit_pkg.repositoryURL = 'https://github.com/airedev326/LibreCRKit.git'
+librecrkit_pkg.repositoryURL = 'https://github.com/loopkitdev/LibreCRKit.git'
 librecrkit_pkg.requirement = {
   'kind' => 'revision',
-  'revision' => '60df7ec88441f43fb1105199666072e4567973e7',
+  'revision' => '2082321c86cdbcc2231bdd212d6a992bd8b111fe',
 }
 proj.root_object.package_references << librecrkit_pkg
 
