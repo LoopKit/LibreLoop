@@ -129,7 +129,16 @@ public final class LibreLoopPairingService {
         onStage(.bleConnecting)
         let session: SensorSession
         do {
-            session = try await scanner.connect(peripheral, timeout: 120)
+            // No timeout on reconnect: iOS will hold the pending connect
+            // and call didConnect when the peripheral comes back in range,
+            // including waking us from suspension (bluetooth-central +
+            // state restoration). Our previous 120s timeout fought iOS by
+            // tearing down the queued connect and retrying from scratch,
+            // which produced churn in the BLE stack and burned bg-task
+            // budget. Initial pair (above) keeps its 120s timeout because
+            // the user is staring at a UI and we need to surface a clear
+            // failure if the sensor isn't reachable.
+            session = try await scanner.connect(peripheral, timeout: 0)
         } catch {
             throw Failure.underlying("BLE connection failed: \(error.localizedDescription)")
         }
