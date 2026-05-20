@@ -7,6 +7,14 @@ import os.log
 
 
 extension LibreLoopCGMManager {
+    static func receiverIDFromState(_ data: Data?) -> UInt32? {
+        guard let data, data.count == 4 else { return nil }
+        return UInt32(data[0])
+            | (UInt32(data[1]) << 8)
+            | (UInt32(data[2]) << 16)
+            | (UInt32(data[3]) << 24)
+    }
+
     /// Saves the NFC half of pairing the instant it completes successfully,
     /// before any BLE work. Per LibreCRKit author guidance: a successful A8
     /// burns the previous BLE PIN and issues a new one in the response, so
@@ -33,7 +41,8 @@ extension LibreLoopCGMManager {
             LibreLoopKeychain.SessionKeys(
                 kEnc: outcome.result.kEnc,
                 ivEnc: outcome.result.ivEnc,
-                phase5RawKey: outcome.result.phase5RawKey
+                phase5RawKey: outcome.result.phase5RawKey,
+                receiverID: Self.receiverIDFromState(state.receiverID)
             ),
             forSensorSerial: outcome.result.sensorSerial
         )
@@ -444,7 +453,8 @@ extension LibreLoopCGMManager {
                 LibreLoopKeychain.SessionKeys(
                     kEnc: outcome.kEnc,
                     ivEnc: outcome.ivEnc,
-                    phase5RawKey: phase5ToPersist
+                    phase5RawKey: phase5ToPersist,
+                    receiverID: Self.receiverIDFromState(state.receiverID)
                 ),
                 forSensorSerial: serial
             )

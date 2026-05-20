@@ -300,17 +300,31 @@ public final class LibreLoopPairingService {
         let nfcReader = Libre3NFCActivationReader()
         let scanResult: Libre3NFCScanResult
         let receiverID: UInt32
-        let scanMode: Libre3NFCScanMode
-        switch mode {
-        case .fresh:
-            receiverID = UInt32.random(in: 1...UInt32.max)
-            scanMode = .activateFreshSensor(receiverID: receiverID, timeSeconds: nil)
-        case .recovery(let id):
-            receiverID = id
-            scanMode = .switchReceiver(receiverID: id, timeSeconds: nil)
-        }
         do {
-            scanResult = try await nfcReader.scan(mode: scanMode)
+            switch mode {
+            case .fresh:
+                let freshID = UInt32.random(in: 1...UInt32.max)
+                // Auto-recover: if the sensor is already activated and we
+                // have a stored receiverID in Keychain for its serial, the
+                // NFC reader will issue switchReceiver with the stored ID
+                // instead of failing. Capture which ID actually got used.
+                let actualReceiverID = ReceiverIDBox(initial: freshID)
+                scanResult = try await nfcReader.scan(
+                    activateReceiverID: freshID,
+                    recoverReceiverIDForSerial: { serial in
+                        guard let keys = try? LibreLoopKeychain.load(forSensorSerial: serial),
+                              let stored = keys.receiverID else {
+                            return nil
+                        }
+                        actualReceiverID.value = stored
+                        return stored
+                    }
+                )
+                receiverID = actualReceiverID.value
+            case .recovery(let id):
+                receiverID = id
+                scanResult = try await nfcReader.scan(mode: .switchReceiver(receiverID: id, timeSeconds: nil))
+            }
         } catch {
             throw Failure.underlying("NFC scan failed: \(error.localizedDescription)")
         }
@@ -460,5 +474,18 @@ public final class LibreLoopPairingService {
             throw Failure.underlying("phone_cert_162b.bin missing from LibreLoop.framework. Rebuild required.")
         }
         return try PhoneCert(raw: try Data(contentsOf: url))
+    }
+}
+
+/// Reference cell for capturing which receiverID the NFC reader ended up
+/// using, since the recovery lookup closure can override the caller's
+/// initial guess at scan time.
+private final class ReceiverIDBox: @unchecked Sendable {
+    private let lock = NSLock()
+    private var _value: UInt32
+    init(initial: UInt32) { _value = initial }
+    var value: UInt32 {
+        get { lock.lock(); defer { lock.unlock() }; return _value }
+        set { lock.lock(); _value = newValue; lock.unlock() }
     }
 }

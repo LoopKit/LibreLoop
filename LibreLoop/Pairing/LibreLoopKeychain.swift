@@ -10,11 +10,17 @@ import Security
 ///                           No phase5RawKey; cached/direct reconnect path
 ///                           cannot run for these sensors, so they keep
 ///                           using the full handshake until next re-pair.
-///   v2 (current):           `0x02 || kEnc(16) || ivEnc(8) || phase5RawKey(16)`
+///   v2:                     `0x02 || kEnc(16) || ivEnc(8) || phase5RawKey(16)`
 ///                           — 41 bytes.
+///   v3 (current):           `0x03 || kEnc(16) || ivEnc(8) || phase5RawKey(16)
+///                            || receiverID(4 LE)` — 45 bytes. The receiverID
+///                           is what the sensor remembers as its current
+///                           receiver; needed to issue switchReceiver after
+///                           a CGMManager rawState wipe.
 enum LibreLoopKeychain {
     private static let service = "org.loopkit.LibreLoop.sessionKeys"
     private static let v2Magic: UInt8 = 0x02
+    private static let v3Magic: UInt8 = 0x03
 
     struct SessionKeys: Equatable {
         let kEnc: Data
@@ -23,12 +29,26 @@ enum LibreLoopKeychain {
         /// reconnect flow can use LibreCRKit's `runCachedReconnectHandshake`
         /// fast path. Nil for sensors paired before this field was persisted.
         let phase5RawKey: Data?
+        /// Receiver ID this sensor was last paired under. Persisting it here
+        /// (in addition to CGMManager rawState) lets onboarding auto-recover
+        /// after a rawState wipe by issuing switchReceiver with the stored
+        /// ID. Nil for sensors paired before this field was persisted.
+        let receiverID: UInt32?
     }
 
     static func save(_ keys: SessionKeys, forSensorSerial serial: String) throws {
         let payload: Data
         if let phase5RawKey = keys.phase5RawKey, phase5RawKey.count == 16 {
-            payload = Data([v2Magic]) + keys.kEnc + keys.ivEnc + phase5RawKey
+            if let receiverID = keys.receiverID {
+                var ridLE = Data(count: 4)
+                ridLE[0] = UInt8(truncatingIfNeeded: receiverID)
+                ridLE[1] = UInt8(truncatingIfNeeded: receiverID >> 8)
+                ridLE[2] = UInt8(truncatingIfNeeded: receiverID >> 16)
+                ridLE[3] = UInt8(truncatingIfNeeded: receiverID >> 24)
+                payload = Data([v3Magic]) + keys.kEnc + keys.ivEnc + phase5RawKey + ridLE
+            } else {
+                payload = Data([v2Magic]) + keys.kEnc + keys.ivEnc + phase5RawKey
+            }
         } else {
             // Legacy-shaped record. Still readable by old binaries.
             payload = keys.kEnc + Data([0xff]) + keys.ivEnc
@@ -63,12 +83,24 @@ enum LibreLoopKeychain {
         guard status == errSecSuccess, let data = item as? Data else {
             throw LibreLoopKeychainError.osStatus(status)
         }
+        if data.count == 45 && data.first == v3Magic {
+            // v3: 0x03 || kEnc(16) || ivEnc(8) || phase5RawKey(16) || receiverID(4 LE)
+            let kEnc = data.subdata(in: 1..<17)
+            let ivEnc = data.subdata(in: 17..<25)
+            let phase5RawKey = data.subdata(in: 25..<41)
+            let ridLE = data.subdata(in: 41..<45)
+            let receiverID = UInt32(ridLE[0])
+                | (UInt32(ridLE[1]) << 8)
+                | (UInt32(ridLE[2]) << 16)
+                | (UInt32(ridLE[3]) << 24)
+            return SessionKeys(kEnc: kEnc, ivEnc: ivEnc, phase5RawKey: phase5RawKey, receiverID: receiverID)
+        }
         if data.count == 41 && data.first == v2Magic {
             // v2: 0x02 || kEnc(16) || ivEnc(8) || phase5RawKey(16)
             let kEnc = data.subdata(in: 1..<17)
             let ivEnc = data.subdata(in: 17..<25)
             let phase5RawKey = data.subdata(in: 25..<41)
-            return SessionKeys(kEnc: kEnc, ivEnc: ivEnc, phase5RawKey: phase5RawKey)
+            return SessionKeys(kEnc: kEnc, ivEnc: ivEnc, phase5RawKey: phase5RawKey, receiverID: nil)
         }
         // v1 fallback: kEnc(16) || 0xff || ivEnc(8). No phase5RawKey.
         guard let sep = data.firstIndex(of: 0xff), data.count >= sep + 1 else {
@@ -76,7 +108,7 @@ enum LibreLoopKeychain {
         }
         let kEnc = data[..<sep]
         let ivEnc = data[(sep + 1)...]
-        return SessionKeys(kEnc: Data(kEnc), ivEnc: Data(ivEnc), phase5RawKey: nil)
+        return SessionKeys(kEnc: Data(kEnc), ivEnc: Data(ivEnc), phase5RawKey: nil, receiverID: nil)
     }
 
     static func delete(forSensorSerial serial: String) throws {
