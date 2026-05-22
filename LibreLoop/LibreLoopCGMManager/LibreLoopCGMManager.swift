@@ -131,6 +131,30 @@ public final class LibreLoopCGMManager: CGMManager {
         setState(updated)
     }
 
+    /// Update the most recently recorded sample with its forwarding
+    /// outcome (sent vs throttled vs non-actionable). Matched by
+    /// lifeCount, which is unique within a sensor session. No-op if the
+    /// sample isn't in `recentSamples` (shouldn't happen — `recordSample`
+    /// runs immediately before this).
+    func recordForwardingOutcome(
+        forLifeCount lifeCount: UInt16,
+        wasForwarded: Bool,
+        skipReason: String?
+    ) {
+        guard let idx = recentSamples.firstIndex(where: { $0.lifeCount == lifeCount }) else { return }
+        let updatedSample = recentSamples[idx].withForwardingOutcome(
+            wasForwarded: wasForwarded,
+            skipReason: skipReason
+        )
+        recentSamples[idx] = updatedSample
+        var updated = state
+        if state.latestSample?.lifeCount == lifeCount {
+            updated.latestSample = updatedSample
+        }
+        updated.recentSamples = Array(recentSamples.prefix(LibreLoopCGMManagerState.recentSamplesPersistenceCap))
+        setState(updated)
+    }
+
     /// Wipe everything sensor-specific so the user can pair a new sensor while
     /// keeping the CGM configured with Loop. Stops the BLE monitor, kills the
     /// reconnect loop, clears in-memory samples, and zeros the per-sensor

@@ -31,6 +31,7 @@
 		8DC93AFF5F34A0AA0F038227 /* phone_cert_162b.bin in Resources */ = {isa = PBXBuildFile; fileRef = 56F71C37682F841B83230171 /* phone_cert_162b.bin */; };
 		BBFA712380AAB1FC572D3EFE /* FSL3-sensor.png in Resources */ = {isa = PBXBuildFile; fileRef = BBFA712375B13A9543390BC5 /* FSL3-sensor.png */; };
 		9137EBA4DC7FD73B578C6D33 /* LibreLoopRecoveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98F6F316D7DD35C1D94191DD /* LibreLoopRecoveryView.swift */; };
+		CCD413A480AAB1FC572D3EFE /* LibreLoopSampleDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD413A475B13A9543390BC5 /* LibreLoopSampleDetailView.swift */; };
 		92428FA387488BD4EDFBF83D /* LibreLoopLifecycleBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56336E1AA92D6D8AD1335F44 /* LibreLoopLifecycleBar.swift */; };
 		93AC995063491BFA4B6D22C3 /* LibreLoopKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = D912C6E4A9CF07D06EEF98BA /* LibreLoopKeychain.swift */; };
 		9925F5B9222D204B7AAFD76E /* LibreLoopCGMManager+UI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CAF97214C4FCEF2FEF8F859 /* LibreLoopCGMManager+UI.swift */; };
@@ -127,6 +128,7 @@
 		8F8206F06769ED487520AF80 /* LibreLoopCGMManagerState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopCGMManagerState.swift; sourceTree = "<group>"; };
 		92A9E11E7F5AC7116C0961CC /* LibreLoopApplySensorView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopApplySensorView.swift; sourceTree = "<group>"; };
 		98F6F316D7DD35C1D94191DD /* LibreLoopRecoveryView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopRecoveryView.swift; sourceTree = "<group>"; };
+		CCD413A475B13A9543390BC5 /* LibreLoopSampleDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopSampleDetailView.swift; sourceTree = "<group>"; };
 		B556C4EB4504CA4CFCF51EA2 /* LibreLoop.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LibreLoop.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C28EA778E3C9C6EEDC638766 /* LibreCRKit_LibreCRKit.bundle */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LibreCRKit_LibreCRKit.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		C367DA0B62B4695409E25B11 /* LoopKitUI.framework */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.framework; path = LoopKitUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -194,6 +196,7 @@
 				92A9E11E7F5AC7116C0961CC /* LibreLoopApplySensorView.swift */,
 				56336E1AA92D6D8AD1335F44 /* LibreLoopLifecycleBar.swift */,
 				98F6F316D7DD35C1D94191DD /* LibreLoopRecoveryView.swift */,
+				CCD413A475B13A9543390BC5 /* LibreLoopSampleDetailView.swift */,
 				DB7D98A40E47D0CE6460DA77 /* LibreLoopScanHelpPagerView.swift */,
 				0FA01C45F49004939175846B /* LibreLoopScanSensorView.swift */,
 				1DC2CFAC1896058703D91850 /* LibreLoopSettingsView.swift */,
@@ -587,6 +590,7 @@
 				E2D9E490D4E0353E19EA8101 /* LibreLoopApplySensorView.swift in Sources */,
 				92428FA387488BD4EDFBF83D /* LibreLoopLifecycleBar.swift in Sources */,
 				9137EBA4DC7FD73B578C6D33 /* LibreLoopRecoveryView.swift in Sources */,
+				CCD413A480AAB1FC572D3EFE /* LibreLoopSampleDetailView.swift in Sources */,
 				CFB3698FB7B5CABE9B970196 /* LibreLoopScanHelpPagerView.swift in Sources */,
 				6C46C21E7598A4B841635874 /* LibreLoopScanSensorView.swift in Sources */,
 				5FD2DEE062A70E7BC5ABAB10 /* LibreLoopSettingsView.swift in Sources */,

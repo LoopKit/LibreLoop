@@ -206,7 +206,11 @@ struct LibreLoopSettingsView: View {
                 LibreLoopReadingHeaderRow()
                 let visible = showingAllReadings ? viewModel.recentSamples : Array(viewModel.recentSamples.prefix(8))
                 ForEach(visible.indices, id: \.self) { idx in
-                    LibreLoopReadingRow(sample: visible[idx])
+                    NavigationLink {
+                        LibreLoopSampleDetailView(sample: visible[idx])
+                    } label: {
+                        LibreLoopReadingRow(sample: visible[idx])
+                    }
                 }
                 if viewModel.recentSamples.count > 8 {
                     Button(showingAllReadings ? "Show fewer" : "Show all \(viewModel.recentSamples.count)") {

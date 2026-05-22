@@ -13,6 +13,17 @@ public struct LibreLoopGlucoseSample: Equatable, Sendable {
         case risingQuickly
     }
 
+    public enum Source: Equatable, Sendable {
+        /// Live BLE notification from the sensor (the normal path).
+        case realtime
+        /// Pulled from the sensor's historical-page memory after a
+        /// reconnect, covering the gap window.
+        case historicalBackfill
+        /// Single-timepoint clinical-record backfill (fine-grained
+        /// minute-resolution recovery for missed realtime ticks).
+        case clinicalBackfill
+    }
+
     public let date: Date
     public let valueMgDL: Double
     public let trend: Trend
@@ -24,6 +35,18 @@ public struct LibreLoopGlucoseSample: Equatable, Sendable {
     /// reading actionable (e.g. "Warming up: 18 min remaining",
     /// "Sensor condition: invalid"). nil when the reading IS actionable.
     public let qualityIssue: String?
+    /// How this sample reached LibreLoop. Currently `recentSamples` only
+    /// contains `.realtime` entries; the field exists so backfill samples
+    /// can be surfaced in the same list later without a schema bump.
+    public let source: Source
+    /// True iff this sample was actually handed off to Loop's CGMManager
+    /// delegate. Updated in place after the throttle/actionability gate
+    /// runs in `ingest(_:)`.
+    public let wasForwarded: Bool
+    /// Short reason the sample was NOT forwarded, when `wasForwarded` is
+    /// false (e.g. "Throttled (4.5 min)", "Not actionable: warming up").
+    /// nil when forwarded or before the gate has run.
+    public let forwardSkipReason: String?
 
     public init(
         date: Date,
@@ -33,7 +56,10 @@ public struct LibreLoopGlucoseSample: Equatable, Sendable {
         lifeCount: UInt16,
         sensorTemperatureRaw: UInt16,
         isActionable: Bool,
-        qualityIssue: String? = nil
+        qualityIssue: String? = nil,
+        source: Source = .realtime,
+        wasForwarded: Bool = false,
+        forwardSkipReason: String? = nil
     ) {
         self.date = date
         self.valueMgDL = valueMgDL
@@ -43,6 +69,30 @@ public struct LibreLoopGlucoseSample: Equatable, Sendable {
         self.sensorTemperatureRaw = sensorTemperatureRaw
         self.isActionable = isActionable
         self.qualityIssue = qualityIssue
+        self.source = source
+        self.wasForwarded = wasForwarded
+        self.forwardSkipReason = forwardSkipReason
+    }
+
+    /// Return a copy with the forwarding outcome filled in. Called from
+    /// `ingest(_:)` after the throttle/actionability gate decides.
+    public func withForwardingOutcome(
+        wasForwarded: Bool,
+        skipReason: String?
+    ) -> LibreLoopGlucoseSample {
+        LibreLoopGlucoseSample(
+            date: date,
+            valueMgDL: valueMgDL,
+            trend: trend,
+            rateOfChangeMgDLPerMinute: rateOfChangeMgDLPerMinute,
+            lifeCount: lifeCount,
+            sensorTemperatureRaw: sensorTemperatureRaw,
+            isActionable: isActionable,
+            qualityIssue: qualityIssue,
+            source: source,
+            wasForwarded: wasForwarded,
+            forwardSkipReason: skipReason
+        )
     }
 }
 
@@ -70,6 +120,9 @@ extension LibreLoopGlucoseSample {
         self.sensorTemperatureRaw = temp
         self.isActionable = isActionable
         self.qualityIssue = rawValue["q"] as? String
+        self.source = (rawValue["s"] as? String).flatMap(Source.init(rawString:)) ?? .realtime
+        self.wasForwarded = rawValue["fw"] as? Bool ?? false
+        self.forwardSkipReason = rawValue["fr"] as? String
     }
 
     var rawValue: [String: Any] {
@@ -83,7 +136,29 @@ extension LibreLoopGlucoseSample {
         ]
         raw["r"] = rateOfChangeMgDLPerMinute
         raw["q"] = qualityIssue
+        if source != .realtime { raw["s"] = source.rawString }
+        if wasForwarded { raw["fw"] = true }
+        raw["fr"] = forwardSkipReason
         return raw
+    }
+}
+
+extension LibreLoopGlucoseSample.Source {
+    var rawString: String {
+        switch self {
+        case .realtime:           return "rt"
+        case .historicalBackfill: return "hb"
+        case .clinicalBackfill:   return "cb"
+        }
+    }
+
+    init?(rawString: String) {
+        switch rawString {
+        case "rt": self = .realtime
+        case "hb": self = .historicalBackfill
+        case "cb": self = .clinicalBackfill
+        default:   return nil
+        }
     }
 }
 

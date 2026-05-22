@@ -232,6 +232,8 @@ extension LibreLoopCGMManager {
         if !sample.isActionable {
             updateStatusDetail("Reading received (not actionable)")
             llog("ingested non-actionable sample (\(Int(sample.valueMgDL)) mg/dL); not forwarding to Loop")
+            let reason = sample.qualityIssue.map { "Not actionable: \($0)" } ?? "Not actionable"
+            recordForwardingOutcome(forLifeCount: sample.lifeCount, wasForwarded: false, skipReason: reason)
             return
         }
         updateStatusDetail(nil)
@@ -248,6 +250,11 @@ extension LibreLoopCGMManager {
            sample.date.timeIntervalSince(last) < 270 {
             let age = Int(sample.date.timeIntervalSince(last))
             llog("throttled: \(Int(sample.valueMgDL)) mg/dL lifeCount=\(sample.lifeCount) (only \(age)s since last forward; experimental minute-by-minute mode is off)")
+            recordForwardingOutcome(
+                forLifeCount: sample.lifeCount,
+                wasForwarded: false,
+                skipReason: "Throttled (\(age)s since last forward)"
+            )
             return
         }
 
@@ -270,6 +277,7 @@ extension LibreLoopCGMManager {
         var stamped = state
         stamped.latestForwardedToLoopAt = sample.date
         setState(stamped)
+        recordForwardingOutcome(forLifeCount: sample.lifeCount, wasForwarded: true, skipReason: nil)
 
         delegateQueue?.async { [weak self] in
             guard let self else { return }
