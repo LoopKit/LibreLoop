@@ -1005,10 +1005,10 @@
 /* Begin XCRemoteSwiftPackageReference section */
 		830716FE330C1EE3A3796BFF /* XCRemoteSwiftPackageReference "LibreCRKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/loopkitdev/LibreCRKit.git";
+			repositoryURL = "https://github.com/airedev326/LibreCRKit.git";
 			requirement = {
 				kind = revision;
-				revision = ae52535fbdfe332898b14fe4815a721a812f35eb;
+				revision = e358a87c59418546e14432bdaf0f45b39e8b4a87;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
