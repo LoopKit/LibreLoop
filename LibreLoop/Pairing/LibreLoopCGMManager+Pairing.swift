@@ -268,6 +268,24 @@ extension LibreLoopCGMManager {
             activatedAt: updated.activatedAt,
             currentTracker: updated.expiryAlertsScheduledForActivatedAt
         )
+        // If the sensor is still sending actionable readings past what we
+        // stored as its wear duration (or our 14-day default for state
+        // persisted before NFC wear-duration capture was added), the sensor
+        // has a longer rated duration than we have on record. Extend
+        // wearDurationMinutes 1 day beyond the observed lifeCount so the
+        // lifecycle bar and expiry alerts stay accurate. This self-corrects
+        // for Libre 3 Plus (15-day) sensors paired before the fix landed,
+        // and for any future longer-duration variant.
+        if sample.isActionable {
+            let knownWear = updated.wearDurationMinutes
+                ?? Int(LibreLoopSensorLifecycle.activeDuration / 60)
+            if Int(sample.lifeCount) >= knownWear {
+                let extended = Int(sample.lifeCount) + 24 * 60
+                llog("lifeCount=\(sample.lifeCount) >= wearDuration=\(knownWear); sensor still actionable — extending wearDurationMinutes to \(extended)")
+                updated.wearDurationMinutes = extended
+            }
+        }
+
         // First time the sensor flags a reading actionable post-pair tells
         // us warmup is done. Pin it so the lifecycle bar can leave warmup.
         if sample.isActionable, updated.firstActionableReadingAt == nil {
