@@ -64,15 +64,13 @@ struct LibreLoopLifecycleBar: View {
             return statusDetail ?? "Waiting for first reading"
         case .warmup(_, let remaining):
             return "\(formatRemaining(remaining)) until ready"
-        case .pairingWarmup(let pairedAt):
-            // pairedAt is the real `state.lastPairedAt` only when we have
-            // one persisted; otherwise compute() passed back `now` as a
-            // placeholder and we shouldn't claim "0s ago".
-            let elapsed = Date().timeIntervalSince(pairedAt)
-            if elapsed < 1 {
-                return "Awaiting first actionable reading"
-            }
-            return "Paired \(formatElapsed(elapsed)) ago"
+        case .pairingWarmup:
+            // Brief window between BLE pair complete and the first
+            // realtime frame arriving (~minute or less). Any reading
+            // ends this state -- the actionability flag is surfaced
+            // per-sample via isDisplayOnly, not held against the
+            // lifecycle.
+            return "Awaiting first reading"
         case .active(let remaining, _):
             return "\(formatRemaining(remaining)) remaining"
         case .expired:

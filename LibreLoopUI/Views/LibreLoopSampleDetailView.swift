@@ -24,11 +24,14 @@ struct LibreLoopSampleDetailView: View {
             }
 
             Section("Quality") {
-                LabeledContent("Actionable") {
+                LabeledContent("Sent to Loop") {
                     HStack(spacing: 6) {
-                        Image(systemName: sample.isActionable ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                            .foregroundStyle(sample.isActionable ? .green : .orange)
-                        Text(sample.isActionable ? "Yes" : "No")
+                        // Actionable readings flow into Loop's dosing math;
+                        // non-actionable readings still go to Loop but as
+                        // display-only. Show as info, not warning.
+                        Image(systemName: sample.isActionable ? "checkmark.circle.fill" : "info.circle")
+                            .foregroundStyle(sample.isActionable ? .green : .secondary)
+                        Text(sample.isActionable ? "Yes" : "Display only")
                     }
                 }
                 if let issue = sample.qualityIssue {

@@ -35,14 +35,49 @@ extension LibreLoopCGMManager: CGMManagerUI {
     }
 
     public var cgmStatusHighlight: DeviceStatusHighlight? {
+        // States are aligned with G7's conventions: .normalCGM for benign
+        // "no data yet / sensor is doing its thing" cases (initializing,
+        // warmup, expired); .warning for situations that hint at a real
+        // problem (signal loss).
         switch sensorLifecycle {
-        case .warmup(_, let remaining):
-            let minutes = Int(remaining / 60)
-            let text = minutes > 0 ? "Warming up — \(minutes)m" : "Warming up"
-            return LibreLoopStatusHighlight(localizedMessage: text, imageName: "timer", state: .warning)
+        case .initializing:
+            // No icon -- the empty image name resolves to no UIImage and
+            // keeps the pill text-only.
+            return LibreLoopStatusHighlight(
+                localizedMessage: "Initializing",
+                imageName: "",
+                state: .normalCGM
+            )
+        case .warmup:
+            // Match G7: pill is two-line state only, no countdown.
+            // Countdown lives on the lifecycle bar / status page.
+            return LibreLoopStatusHighlight(
+                localizedMessage: "Sensor\nWarmup",
+                imageName: "clock",
+                state: .normalCGM
+            )
         case .pairingWarmup:
-            return LibreLoopStatusHighlight(localizedMessage: "Warming up", imageName: "timer", state: .warning)
-        default:
+            // Initial warmup complete; sensor still flagging readings as
+            // not actionable. Distinct label from .warmup so users past
+            // the 60-min mark don't see "Warmup" indefinitely.
+            return LibreLoopStatusHighlight(
+                localizedMessage: "Sensor\nStabilizing",
+                imageName: "clock",
+                state: .normalCGM
+            )
+        case .expired:
+            return LibreLoopStatusHighlight(
+                localizedMessage: "Sensor\nExpired",
+                imageName: "clock",
+                state: .normalCGM
+            )
+        case .signalLost:
+            return LibreLoopStatusHighlight(
+                localizedMessage: "Signal\nLoss",
+                imageName: "exclamationmark.circle.fill",
+                state: .warning
+            )
+        case .noSensor, .active:
             return nil
         }
     }

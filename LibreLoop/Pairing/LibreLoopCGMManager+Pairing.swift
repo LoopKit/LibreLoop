@@ -77,6 +77,9 @@ extension LibreLoopCGMManager {
         if let wear = response.wearDurationMinutes, wear > 0 {
             newState.wearDurationMinutes = wear
         }
+        if let warmup = response.warmupDurationMinutes, warmup > 0 {
+            newState.warmupDurationMinutes = warmup
+        }
         if let gen = response.generation {
             newState.generation = gen
         }
@@ -104,7 +107,7 @@ extension LibreLoopCGMManager {
         // Switch-receiver re-arms sensor stabilization; clear the prior
         // actionable timestamp so the lifecycle bar correctly reports
         // "Warming up" until the new pairing produces an actionable reading.
-        newState.firstActionableReadingAt = nil
+        newState.firstReadingAt = nil
         setState(newState)
 
         adopt(monitor: outcome.monitor)
@@ -124,7 +127,9 @@ extension LibreLoopCGMManager {
             onClinicalRecord: { [weak self] record in self?.handleClinicalRecord(record) },
             onEmbeddedHistorical: { [weak self] lifeCount, mgdl in
                 self?.handleEmbeddedHistorical(lifeCount: lifeCount, mgdl: mgdl)
-            }
+            },
+            onPatchStatus: { [weak self] status in self?.handlePatchStatus(status) },
+            onLifeCount: { [weak self] lifeCount in self?.handleLifeCount(lifeCount) }
         )
         monitor.start()
         // Start the no-data watchdog immediately after adoption -- if the
@@ -232,6 +237,45 @@ extension LibreLoopCGMManager {
         }
     }
 
+    /// Handle a sensor-broadcast PatchStatus frame. Field observation shows
+    /// the Libre 3 doesn't reliably broadcast patchStatus during initial
+    /// warmup; this path stays as a fallback but in practice the
+    /// onLifeCount handler is what fills activatedAt during that window.
+    func handlePatchStatus(_ status: PatchStatus) {
+        seedActivatedAtIfNeeded(currentLifeCount: status.currentLifeCount, source: "patch status")
+    }
+
+    /// Handle the per-minute lifeCount surfaced by every realtime glucose
+    /// frame -- including warmup frames whose mgdl is nil. Two jobs:
+    ///
+    /// 1. Back-derive activatedAt before the first actionable reading
+    ///    lands (warmup can be 60 min on a fresh sensor).
+    /// 2. Push a status update to Loop's CGMManagerStatusObservers so the
+    ///    HUD progress bar advances every minute during warmup. Without
+    ///    this, the HUD only refreshes on Loop's 5-min cycle.
+    func handleLifeCount(_ lifeCount: UInt16) {
+        seedActivatedAtIfNeeded(currentLifeCount: Int16(clamping: Int(lifeCount)), source: "realtime lifeCount")
+        notifyStatusObservers()
+    }
+
+    /// Set `activatedAt` from a sensor-reported lifeCount if (and only if)
+    /// it isn't already pinned. We never shift the anchor mid-session --
+    /// later frames with later lifeCounts would otherwise jitter the
+    /// lifecycle bar by a minute or two.
+    private func seedActivatedAtIfNeeded(currentLifeCount: Int16, source: String) {
+        guard state.activatedAt == nil else { return }
+        let now = Date()
+        let activatedAt = now.addingTimeInterval(-TimeInterval(currentLifeCount) * 60)
+        llog("\(source): deriving activatedAt from lifeCount=\(currentLifeCount) -> \(activatedAt)")
+        var updated = state
+        updated.activatedAt = activatedAt
+        updated.expiryAlertsScheduledForActivatedAt = scheduleExpiryAlertsIfNeeded(
+            activatedAt: activatedAt,
+            currentTracker: updated.expiryAlertsScheduledForActivatedAt
+        )
+        setState(updated)
+    }
+
     func ingest(_ sample: LibreLoopGlucoseSample) {
         recordSample(sample)
         // Restart the watchdog after every reading so it always reflects the
@@ -289,10 +333,12 @@ extension LibreLoopCGMManager {
             }
         }
 
-        // First time the sensor flags a reading actionable post-pair tells
-        // us warmup is done. Pin it so the lifecycle bar can leave warmup.
-        if sample.isActionable, updated.firstActionableReadingAt == nil {
-            updated.firstActionableReadingAt = sample.date
+        // First reading post-pair tells us the sensor is talking; that's
+        // enough to leave the .pairingWarmup ("Stabilizing") state. The
+        // actionability flag still gates dosing via isDisplayOnly per
+        // forwarded sample -- the lifecycle doesn't need to wait on it.
+        if updated.firstReadingAt == nil {
+            updated.firstReadingAt = sample.date
         }
         setState(updated)
 
@@ -301,24 +347,47 @@ extension LibreLoopCGMManager {
         // Status detail moves out of "Waiting for first reading" the instant
         // any reading arrives, even unactionable ones -- the link is proven.
         if !sample.isActionable {
-            updateStatusDetail("Reading received (not actionable)")
-            llog("ingested non-actionable sample (\(Int(sample.valueMgDL)) mg/dL); not forwarding to Loop")
-            let reason = sample.qualityIssue.map { "Not actionable: \($0)" } ?? "Not actionable"
-            recordForwardingOutcome(forLifeCount: sample.lifeCount, wasForwarded: false, skipReason: reason)
+            updateStatusDetail("Reading received (display only)")
+        } else {
+            updateStatusDetail(nil)
+        }
+
+        // Non-actionable samples are forwarded as isDisplayOnly so Loop
+        // shows them on the chart/HUD but excludes them from dosing math.
+        // We also skip the dosing-cadence throttle for them -- it exists
+        // to keep Loop's 5-min algorithm from jittering on minute-by-
+        // minute updates, but display-only samples don't enter dosing.
+        // This lets the user watch readings flow in during the post-
+        // warmup stabilization window instead of seeing a frozen chart.
+        //
+        // BUT: when the sensor itself reports a hardware/data fault
+        // (DQ or sensor condition issue), the value is unreliable at
+        // the source -- forwarding it as display-only would still draw
+        // a point on Loop's chart that the sensor said not to trust.
+        // Drop those entirely; the badge on the Last Reading card and
+        // the file log still record what the sensor sent us.
+        if sample.hasBlockingIssue {
+            llog("blocking issue \(sample.qualityIssue ?? "unknown"): \(Int(sample.valueMgDL)) mg/dL lifeCount=\(sample.lifeCount); not forwarding to Loop")
+            recordForwardingOutcome(
+                forLifeCount: sample.lifeCount,
+                wasForwarded: false,
+                skipReason: sample.qualityIssue ?? "Sensor reported fault"
+            )
             return
         }
-        updateStatusDetail(nil)
 
-        // Default-mode throttle: Loop's algorithm is paced around the
-        // 5-minute CGM cadence other plugins emit, and per-minute updates
-        // can shift dosing decisions in ways the cadence wasn't tuned for.
-        // Only forward when at least 4.5 minutes (a 30-second slop under
-        // 5 min, so the natural 5-min wall-clock cadence isn't blocked by
-        // jitter) have passed since the last forwarded sample. Opt-out is
-        // experimentalMinuteByMinuteForwarding, gated behind a warning UI.
-        if !state.experimentalMinuteByMinuteForwarding,
+        let isDisplayOnly = !sample.isActionable
+
+        if sample.isActionable,
+           !state.experimentalMinuteByMinuteForwarding,
            let last = state.latestForwardedToLoopAt,
            sample.date.timeIntervalSince(last) < 270 {
+            // Default-mode throttle: Loop's algorithm is paced around the
+            // 5-minute CGM cadence other plugins emit, and per-minute
+            // updates can shift dosing decisions in ways the cadence
+            // wasn't tuned for. 4.5 min gives a 30-second slop under
+            // 5 min so the natural cadence isn't blocked by jitter.
+            // Opt-out is experimentalMinuteByMinuteForwarding.
             let age = Int(sample.date.timeIntervalSince(last))
             llog("throttled: \(Int(sample.valueMgDL)) mg/dL lifeCount=\(sample.lifeCount) (only \(age)s since last forward; experimental minute-by-minute mode is off)")
             recordForwardingOutcome(
@@ -329,25 +398,38 @@ extension LibreLoopCGMManager {
             return
         }
 
+        let loopCondition: GlucoseCondition?
+        switch sample.condition {
+        case .belowRange?: loopCondition = .belowRange
+        case .aboveRange?: loopCondition = .aboveRange
+        case nil:          loopCondition = nil
+        }
+
         let newSample = NewGlucoseSample(
             date: sample.date,
             quantity: LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: sample.valueMgDL),
-            condition: nil,
+            condition: loopCondition,
             trend: Self.mapTrend(sample.trend),
             trendRate: sample.rateOfChangeMgDLPerMinute.map {
                 LoopQuantity(unit: .milligramsPerDeciliterPerMinute, doubleValue: $0)
             },
-            isDisplayOnly: false,
+            isDisplayOnly: isDisplayOnly,
             wasUserEntered: false,
             syncIdentifier: "libreloop-\(state.sensorSerial ?? "unknown")-\(sample.lifeCount)",
             syncVersion: 1,
             device: device
         )
 
-        llog("forwarding to Loop: \(Int(sample.valueMgDL)) mg/dL lifeCount=\(sample.lifeCount) sampleDate=\(sample.date.timeIntervalSince1970)")
-        var stamped = state
-        stamped.latestForwardedToLoopAt = sample.date
-        setState(stamped)
+        let displayTag = isDisplayOnly ? " (display-only)" : ""
+        llog("forwarding to Loop\(displayTag): \(Int(sample.valueMgDL)) mg/dL lifeCount=\(sample.lifeCount) sampleDate=\(sample.date.timeIntervalSince1970)")
+        if sample.isActionable {
+            // Only advance the throttle clock on actionable samples so a
+            // run of display-only forwards doesn't push out the next
+            // actionable forward.
+            var stamped = state
+            stamped.latestForwardedToLoopAt = sample.date
+            setState(stamped)
+        }
         recordForwardingOutcome(forLifeCount: sample.lifeCount, wasForwarded: true, skipReason: nil)
 
         delegateQueue?.async { [weak self] in
@@ -645,6 +727,8 @@ extension LibreLoopCGMManager {
             )
             await MainActor.run {
                 self.lastReconnectError = nil
+                self.consecutiveReconnectFailures = 0
+                self.consecutiveReconnectFailuresStartedAt = nil
                 self.adopt(monitor: outcome.monitor)
             }
             llog("reconnect: succeeded via \(outcome.path == .cached ? "cached/direct" : "full") path")
@@ -653,7 +737,21 @@ extension LibreLoopCGMManager {
                 ?? error.localizedDescription
             llog("reconnect: attempt failed: \(message)")
             await MainActor.run {
-                self.lastReconnectError = message
+                self.consecutiveReconnectFailures += 1
+                if self.consecutiveReconnectFailuresStartedAt == nil {
+                    self.consecutiveReconnectFailuresStartedAt = Date()
+                }
+                // Only surface the error to the UI once the failure run
+                // is long-running enough that the user would actually
+                // want to know -- either many consecutive failures or
+                // failures spanning beyond the recovery window.
+                let count = self.consecutiveReconnectFailures
+                let elapsed = self.consecutiveReconnectFailuresStartedAt
+                    .map { Date().timeIntervalSince($0) } ?? 0
+                if count >= Self.reconnectErrorDisplayThresholdCount
+                    || elapsed >= Self.reconnectErrorDisplayThresholdInterval {
+                    self.lastReconnectError = message
+                }
             }
         }
     }

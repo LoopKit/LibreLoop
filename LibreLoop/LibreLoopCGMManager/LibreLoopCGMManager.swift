@@ -72,10 +72,11 @@ public final class LibreLoopCGMManager: CGMManager {
             sensorPaired: state.sensorSerial != nil,
             activatedAt: state.activatedAt,
             latestReadingAt: state.latestReadingTimestamp,
-            firstActionableReadingAt: state.firstActionableReadingAt,
+            firstReadingAt: state.firstReadingAt,
             lastPairedAt: state.lastPairedAt,
             hasLiveMonitor: monitor != nil,
-            wearDurationMinutes: state.wearDurationMinutes
+            wearDurationMinutes: state.wearDurationMinutes,
+            warmupDurationMinutes: state.warmupDurationMinutes
         )
     }
 
@@ -108,8 +109,11 @@ public final class LibreLoopCGMManager: CGMManager {
     }
 
     /// Last reconnect-attempt failure message, surfaced in the UI under the
-    /// Bluetooth row so failures are visible without diving into Console.app.
-    /// Cleared on successful reconnect.
+    /// Bluetooth row so persistent failures are visible without diving into
+    /// Console.app. Set only after the reconnect loop has failed
+    /// consistently -- transient single-attempt failures don't flash UI
+    /// because the link usually recovers on the next attempt. Cleared on
+    /// successful reconnect.
     public internal(set) var lastReconnectError: String? {
         didSet { notifyStateObservers() }
     }
@@ -119,6 +123,25 @@ public final class LibreLoopCGMManager: CGMManager {
     public internal(set) var lastReconnectAttemptAt: Date? {
         didSet { notifyStateObservers() }
     }
+
+    /// Number of reconnect attempts that have failed since the last success.
+    /// Resets to 0 on each successful reconnect. Used to gate UI display of
+    /// `lastReconnectError` -- field experience shows ~30-50% of cached
+    /// reconnects fail phase 6 verification and the next attempt succeeds,
+    /// so a single failure isn't worth alarming the user about.
+    var consecutiveReconnectFailures: Int = 0
+    /// Wall-clock time of the first failure in the current consecutive run.
+    /// Nil when no failures since last success. Used as a time-based gate
+    /// (in addition to count) so the error surfaces if the loop has been
+    /// down for a while even if attempts are infrequent.
+    var consecutiveReconnectFailuresStartedAt: Date?
+
+    /// How many consecutive reconnect failures, OR how long the failure run
+    /// must persist, before we surface the error in the UI. Tuned so a
+    /// single phase 6 verification failure that recovers on retry stays
+    /// silent.
+    static let reconnectErrorDisplayThresholdCount = 3
+    static let reconnectErrorDisplayThresholdInterval: TimeInterval = 2 * 60
 
     func recordSample(_ sample: LibreLoopGlucoseSample) {
         recentSamples.insert(sample, at: 0)
@@ -181,7 +204,7 @@ public final class LibreLoopCGMManager: CGMManager {
         blank.peripheralID = nil
         blank.activatedAt = nil
         blank.latestReadingTimestamp = nil
-        blank.firstActionableReadingAt = nil
+        blank.firstReadingAt = nil
         blank.lastHistoricalLifeCount = nil
         blank.latestSample = nil
         blank.recentSamples = []
@@ -218,9 +241,16 @@ public final class LibreLoopCGMManager: CGMManager {
     public var isInoperable: Bool { false }
 
     public var cgmManagerStatus: CGMManagerStatus {
-        CGMManagerStatus(hasValidSensorSession: state.sensorSerial != nil,
-                         lastCommunicationDate: state.latestReadingTimestamp,
-                         device: device)
+        let lifecycle = sensorLifecycle
+        let inWarmup: Bool
+        switch lifecycle {
+        case .warmup, .pairingWarmup: inWarmup = true
+        default: inWarmup = false
+        }
+        return CGMManagerStatus(hasValidSensorSession: state.sensorSerial != nil,
+                                inSensorWarmup: inWarmup,
+                                lastCommunicationDate: state.latestReadingTimestamp,
+                                device: device)
     }
 
     public var device: HKDevice? {
@@ -498,6 +528,17 @@ public final class LibreLoopCGMManager: CGMManager {
 
     public func removeStatusObserver(_ observer: CGMManagerStatusObserver) {
         statusObservers.removeElement(observer)
+    }
+
+    /// Push the current `cgmManagerStatus` to every observer. Used during
+    /// warmup to keep the HUD progress bar updating once per minute --
+    /// otherwise the HUD only refreshes on Loop's 5-min cycle and the
+    /// progress bar visibly lags wall clock by up to 5 minutes.
+    func notifyStatusObservers() {
+        let status = cgmManagerStatus
+        statusObservers.forEach { observer in
+            observer.cgmManager(self, didUpdate: status)
+        }
     }
 
     public func delete(completion: @escaping () -> Void) {

@@ -190,10 +190,13 @@ struct LibreLoopSettingsView: View {
                 }
                 .font(.footnote)
                 if !sample.isActionable {
-                    Label(sample.qualityIssue ?? "Not sent to Loop",
-                          systemImage: "exclamationmark.triangle.fill")
+                    // Informational, not a warning: the sensor sent a
+                    // value that's forwarded to Loop as isDisplayOnly --
+                    // shown on the chart but not used for dosing math.
+                    Label(sample.qualityIssue ?? "Display only",
+                          systemImage: "info.circle")
                         .font(.footnote)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(.secondary)
                 }
             } else {
                 Text("Waiting for first reading…")

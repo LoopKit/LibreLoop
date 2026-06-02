@@ -13,6 +13,16 @@ public struct LibreLoopGlucoseSample: Equatable, Sendable {
         case risingQuickly
     }
 
+    /// Range-censoring marker. The Libre 3 caps display at 39 (low) and
+    /// 501 (high); when the sensor reports a raw value outside the
+    /// displayable range, `valueMgDL` is the cap and `condition` records
+    /// which direction the true value lies in. Maps 1:1 to Loop's
+    /// `GlucoseCondition` for forwarding.
+    public enum Condition: Equatable, Sendable {
+        case belowRange
+        case aboveRange
+    }
+
     public enum Source: Equatable, Sendable {
         /// Live BLE notification from the sensor (the normal path).
         case realtime
@@ -31,6 +41,21 @@ public struct LibreLoopGlucoseSample: Equatable, Sendable {
     public let lifeCount: UInt16
     public let sensorTemperatureRaw: UInt16
     public let isActionable: Bool
+    /// True when the sensor is reporting a hardware/data fault that
+    /// makes this value untrustworthy at the source -- DQ errors
+    /// (sensorTooHot, sensorTooCold, notDisplayable, raw) or a
+    /// non-OK sensor condition. Distinct from `!isActionable`,
+    /// which the sensor sets for *any* reason it doesn't want a
+    /// reading vetted (including the post-warmup stabilization
+    /// window where the value itself is fine). The forward path
+    /// drops samples with `hasBlockingIssue == true` rather than
+    /// sending them to Loop as display-only -- showing a value
+    /// the sensor itself called bad would be misleading.
+    public let hasBlockingIssue: Bool
+    /// Range-censoring marker -- nil when `valueMgDL` is a normal in-range
+    /// reading, `.belowRange` when the sensor pegged display at the low
+    /// cap (39 mg/dL), `.aboveRange` at the high cap (501 mg/dL).
+    public let condition: Condition?
     /// Short human-readable reason when the sensor refuses to flag the
     /// reading actionable (e.g. "Warming up: 18 min remaining",
     /// "Sensor condition: invalid"). nil when the reading IS actionable.
@@ -56,6 +81,8 @@ public struct LibreLoopGlucoseSample: Equatable, Sendable {
         lifeCount: UInt16,
         sensorTemperatureRaw: UInt16,
         isActionable: Bool,
+        hasBlockingIssue: Bool = false,
+        condition: Condition? = nil,
         qualityIssue: String? = nil,
         source: Source = .realtime,
         wasForwarded: Bool = false,
@@ -68,6 +95,8 @@ public struct LibreLoopGlucoseSample: Equatable, Sendable {
         self.lifeCount = lifeCount
         self.sensorTemperatureRaw = sensorTemperatureRaw
         self.isActionable = isActionable
+        self.hasBlockingIssue = hasBlockingIssue
+        self.condition = condition
         self.qualityIssue = qualityIssue
         self.source = source
         self.wasForwarded = wasForwarded
@@ -88,6 +117,8 @@ public struct LibreLoopGlucoseSample: Equatable, Sendable {
             lifeCount: lifeCount,
             sensorTemperatureRaw: sensorTemperatureRaw,
             isActionable: isActionable,
+            hasBlockingIssue: hasBlockingIssue,
+            condition: condition,
             qualityIssue: qualityIssue,
             source: source,
             wasForwarded: wasForwarded,
@@ -123,6 +154,8 @@ extension LibreLoopGlucoseSample {
         self.source = (rawValue["s"] as? String).flatMap(Source.init(rawString:)) ?? .realtime
         self.wasForwarded = rawValue["fw"] as? Bool ?? false
         self.forwardSkipReason = rawValue["fr"] as? String
+        self.condition = (rawValue["c"] as? String).flatMap(Condition.init(rawString:))
+        self.hasBlockingIssue = rawValue["bi"] as? Bool ?? false
     }
 
     var rawValue: [String: Any] {
@@ -139,7 +172,26 @@ extension LibreLoopGlucoseSample {
         if source != .realtime { raw["s"] = source.rawString }
         if wasForwarded { raw["fw"] = true }
         raw["fr"] = forwardSkipReason
+        raw["c"] = condition?.rawString
+        if hasBlockingIssue { raw["bi"] = true }
         return raw
+    }
+}
+
+extension LibreLoopGlucoseSample.Condition {
+    var rawString: String {
+        switch self {
+        case .belowRange: return "lo"
+        case .aboveRange: return "hi"
+        }
+    }
+
+    init?(rawString: String) {
+        switch rawString {
+        case "lo": self = .belowRange
+        case "hi": self = .aboveRange
+        default:   return nil
+        }
     }
 }
 

@@ -31,10 +31,11 @@ public enum LibreLoopSensorLifecycle: Equatable {
         sensorPaired: Bool,
         activatedAt: Date?,
         latestReadingAt: Date?,
-        firstActionableReadingAt: Date?,
+        firstReadingAt: Date?,
         lastPairedAt: Date?,
         hasLiveMonitor: Bool,
         wearDurationMinutes: Int? = nil,
+        warmupDurationMinutes: Int? = nil,
         now: Date = Date()
     ) -> LibreLoopSensorLifecycle {
         guard sensorPaired else { return .noSensor }
@@ -45,20 +46,24 @@ public enum LibreLoopSensorLifecycle: Equatable {
             .map { TimeInterval($0) * 60 }
             ?? activeDuration
 
+        let sensorWarmupDuration: TimeInterval = warmupDurationMinutes
+            .map { TimeInterval($0) * 60 }
+            ?? warmupDuration
+
         if age >= sensorWearDuration {
             return .expired
         }
-        // True initial warmup -- first hour after sensor activation. We
-        // know the remaining time exactly.
-        if age < warmupDuration {
-            return .warmup(progress: age / warmupDuration, remaining: warmupDuration - age)
+        // True initial warmup -- the sensor's own reported warmup window
+        // from NFC patch info, falling back to the 60-min spec default.
+        if age < sensorWarmupDuration {
+            return .warmup(progress: age / sensorWarmupDuration, remaining: sensorWarmupDuration - age)
         }
-        // Switch-receiver re-arms a sensor-side stabilization window the
-        // library doesn't yet expose a duration for. Show time since pair
-        // and let the actionable-flag transition end this state. When we
-        // don't have a recorded pair time (state was deserialized from an
-        // older build), pass `now` and let the UI suppress the duration.
-        if firstActionableReadingAt == nil {
+        // Post-pair stabilization: we know warmup is done by wall clock
+        // but we haven't received any reading yet (first reading post-
+        // pair lands within ~1 min over BLE). As soon as that arrives
+        // we treat the sensor as active; per-reading actionability is
+        // surfaced via the forwarded sample's isDisplayOnly flag.
+        if firstReadingAt == nil {
             return .pairingWarmup(pairedAt: lastPairedAt ?? now)
         }
         let stale = latestReadingAt.map { now.timeIntervalSince($0) > signalLostThreshold } ?? !hasLiveMonitor
@@ -73,7 +78,10 @@ public enum LibreLoopSensorLifecycle: Equatable {
         case .noSensor:       return "No sensor"
         case .initializing:   return "Initializing"
         case .warmup:         return "Warming up"
-        case .pairingWarmup:  return "Warming up"
+        // Distinct from .warmup: initial wall-clock warmup is complete but
+        // the sensor is still flagging readings as not-actionable. "Warming
+        // up" here is confusing past the 60-min mark.
+        case .pairingWarmup:  return "Stabilizing"
         case .active:         return "Active"
         case .expired:        return "Expired"
         case .signalLost:     return "Signal loss"

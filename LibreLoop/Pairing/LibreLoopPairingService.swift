@@ -44,7 +44,11 @@ public final class LibreLoopPairingService {
         /// Distinguishes Libre 3 (14-day) from Libre 3 Plus (15-day) and
         /// any future variants without hardcoding sensor-family durations.
         public let wearDurationMinutes: Int?
-        /// NFC patch-info `generation` field (bytes 4–5). 0 = Libre 3,
+        /// Sensor-reported warmup duration in minutes from the NFC patch
+        /// info (byte 16 × 5). Replaces the hardcoded 60-min default and
+        /// is what we count down from on the lifecycle bar.
+        public let warmupDurationMinutes: Int?
+        /// NFC patch-info `generation` field. 0 = Libre 3,
         /// 1 = Libre 3 Plus / Instinct. Direct sensor-family discriminator.
         public let generation: UInt16?
     }
@@ -327,17 +331,28 @@ public final class LibreLoopPairingService {
         // and (new) blePIN. Losing the blePIN after a successful A8 strands
         // the sensor until another A8 burns yet another PIN.
         //
-        // activatedAt is intentionally nil here. patchInfo.wearDurationMinutes
-        // turned out to be sensor *lifetime capacity*, not current age. The
-        // real activation timestamp is derived from the first glucose
-        // reading's lifeCount (sample.date - lifeCount minutes).
+        // For .fresh mode, the sensor was just activated by us, so we know
+        // activatedAt = now to within a few seconds. Seed it so the lifecycle
+        // drops straight into .warmup once BLE pair completes instead of
+        // showing .initializing for the ~minute it takes the first realtime
+        // reading to arrive. The first reading (lifeCount 0 or 1) is then
+        // suppressed by the nil-guard in ingest(), avoiding any jitter.
+        //
+        // For .recovery (switch-receiver), the sensor was activated some
+        // unknown time ago; we still rely on the first reading's lifeCount.
+        let activatedAtFromNFC: Date?
+        switch mode {
+        case .fresh:    activatedAtFromNFC = Date()
+        case .recovery: activatedAtFromNFC = nil
+        }
         let nfcResponse = NFCResponse(
             receiverID: receiverID,
             sensorSerial: scanResult.patchInfo.serialNumber,
             bleAddress: activation.bleAddressDisplay,
             blePIN: activation.blePIN,
-            activatedAt: nil,
+            activatedAt: activatedAtFromNFC,
             wearDurationMinutes: Int(scanResult.patchInfo.wearDurationMinutes),
+            warmupDurationMinutes: Int(scanResult.patchInfo.warmupMinutes),
             generation: scanResult.patchInfo.generation
         )
         onNFCResponse(nfcResponse)

@@ -25,6 +25,19 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
     /// needs to cover the actual outage window — not the sensor's
     /// ~15-min commit lag on top.
     public typealias EmbeddedHistoricalHandler = @Sendable (UInt16, UInt16) -> Void
+    /// Patch-status frames arrive on their own characteristic ~once per
+    /// minute *independent of glucose data*. Field observation shows the
+    /// sensor doesn't reliably broadcast on this channel during initial
+    /// warmup -- it sends realtime-glucose frames with nil mgdl instead
+    /// (see LifeCountHandler). Kept as a fallback if a sensor variant
+    /// behaves differently.
+    public typealias PatchStatusHandler = @Sendable (PatchStatus) -> Void
+    /// Fires on every realtime-glucose frame, including warmup frames
+    /// that carry no mgdl. We can't form a glucose sample yet (no value),
+    /// but the lifeCount lets us back-derive activatedAt before warmup
+    /// completes -- which is the only signal we get during the first
+    /// hour of a fresh sensor's life.
+    public typealias LifeCountHandler = @Sendable (UInt16) -> Void
     /// Fires once the post-auth CCCD refresh completes and the monitor is
     /// ready to accept commands (backfill, etc) and stream data. Use this
     /// instead of a fixed-delay Task — CCCD refresh duration varies with
@@ -48,6 +61,8 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
     private var historicalPageHandler: HistoricalPageHandler?
     private var clinicalRecordHandler: ClinicalRecordHandler?
     private var embeddedHistoricalHandler: EmbeddedHistoricalHandler?
+    private var patchStatusHandler: PatchStatusHandler?
+    private var lifeCountHandler: LifeCountHandler?
     private var readyHandler: ReadyHandler?
     /// Per-session outbound write sequence counter, used for AES-CCM nonce
     /// construction on PatchControl writes.
@@ -67,6 +82,8 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
                             onHistoricalPage: @escaping HistoricalPageHandler = { _ in },
                             onClinicalRecord: @escaping ClinicalRecordHandler = { _ in },
                             onEmbeddedHistorical: @escaping EmbeddedHistoricalHandler = { _, _ in },
+                            onPatchStatus: @escaping PatchStatusHandler = { _ in },
+                            onLifeCount: @escaping LifeCountHandler = { _ in },
                             onReady: @escaping ReadyHandler = {}) {
         lock.lock()
         defer { lock.unlock() }
@@ -76,6 +93,8 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
         self.historicalPageHandler = onHistoricalPage
         self.clinicalRecordHandler = onClinicalRecord
         self.embeddedHistoricalHandler = onEmbeddedHistorical
+        self.patchStatusHandler = onPatchStatus
+        self.lifeCountHandler = onLifeCount
         self.readyHandler = onReady
     }
 
@@ -245,6 +264,17 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
             let frame = try DataFrame.parse(fullFrame)
             let packet = try decoder.decrypt(frame: frame, channel: channel)
             switch packet.payload {
+            case .patchStatus(let status):
+                // currentLifeCount is the sensor's age in minutes, broadcast
+                // every minute on the patchStatus characteristic. Critical
+                // during initial warmup, where the realtime glucose stream
+                // is silent for ~60 min after activation -- without this
+                // path activatedAt stays nil for the entire warmup window.
+                llog("patch status currentLC=\(status.currentLifeCount) lifeCount=\(status.lifeCount) state=\(status.patchStateKind)")
+                lock.lock()
+                let handler = patchStatusHandler
+                lock.unlock()
+                handler?(status)
             case .historicalReadingPage(let page):
                 llog("historical page startLC=\(page.startLifeCount) endLC=\(page.endLifeCount) samples=\(page.samples.count)")
                 lock.lock()
@@ -265,12 +295,33 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
                 // to warmup when applicable (and report remaining warmup minutes).
                 let lifecycle = SensorLifecycle(currentLifeCountMinutes: Int(reading.lifeCount))
                 let assessment = reading.currentGlucoseQualityAssessment(lifecycle: lifecycle)
+                // Log trendAndStatusByte (byte 14 of the realtime frame)
+                // alongside the decoded fields. LibreCRKit's live-capture
+                // fixture shows 0x0b for a stable+actionable reading on
+                // Libre 3 (trend=3 | bit3 actionable | rest=0). If we
+                // see byte 14 with bit 3 clear but other upper bits set,
+                // it would suggest a sensor variant has the flag in a
+                // different position than the test data assumed.
+                //
+                // Also log the full 29-byte decrypted plaintext as hex --
+                // dropped straight into RealtimeGlucoseReading(plaintext:)
+                // it reproduces the exact frame for the LibreCRKit
+                // developer to inspect.
+                let byte14 = String(format: "0x%02x", reading.trendAndStatusByte)
+                let plaintextHex = packet.plaintext.map { String(format: "%02x", $0) }.joined()
                 if assessment.issues.isEmpty {
-                    llog("glucose mgdl=\(reading.currentGlucoseMgDL.map(String.init) ?? "nil") lifeCount=\(reading.lifeCount) trend=\(String(describing: reading.trendKind))")
+                    llog("glucose mgdl=\(reading.currentGlucoseMgDL.map(String.init) ?? "nil") lifeCount=\(reading.lifeCount) trend=\(String(describing: reading.trendKind)) byte14=\(byte14) rest=\(reading.rest) plaintext=\(plaintextHex)")
                 } else {
                     let issueText = assessment.issues.map { String(describing: $0) }.joined(separator: ", ")
-                    llog("glucose mgdl=\(reading.currentGlucoseMgDL.map(String.init) ?? "nil") lifeCount=\(reading.lifeCount) issues=[\(issueText)]")
+                    llog("glucose mgdl=\(reading.currentGlucoseMgDL.map(String.init) ?? "nil") lifeCount=\(reading.lifeCount) byte14=\(byte14) rest=\(reading.rest) issues=[\(issueText)] plaintext=\(plaintextHex)")
                 }
+                // Surface lifeCount unconditionally -- warmup readings have
+                // valid lifeCount but nil mgdl, and that's still enough to
+                // pin activatedAt.
+                lock.lock()
+                let lcHandler = lifeCountHandler
+                lock.unlock()
+                lcHandler?(reading.lifeCount)
                 if let sample = Self.makeSample(from: reading, assessment: assessment, receivedAt: event.receivedAt) {
                     lock.lock()
                     let handler = readingHandler
@@ -310,6 +361,27 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
         receivedAt: Date
     ) -> LibreLoopGlucoseSample? {
         guard let mgdl = reading.currentGlucoseMgDL else { return nil }
+        // mgdl from currentGlucoseMgDL is the *display* value: capped at
+        // 39 / 501 when the sensor pegs out. We surface that censoring
+        // via `condition` so downstream consumers (chart, NS upload) can
+        // mark these distinctly from in-range readings.
+        let condition: LibreLoopGlucoseSample.Condition?
+        switch reading.currentGlucoseStatus {
+        case .belowDisplayRange: condition = .belowRange
+        case .aboveDisplayRange: condition = .aboveRange
+        case .valid, .unavailable: condition = nil
+        }
+        // LibreCRKit 88508ae classified issues as advisory vs. usability-
+        // blocking. `.notActionable` is advisory (Abbott's own app still
+        // displays the value, the bit only drives an icon overlay); DQ
+        // errors, sensor condition faults, expiry, warmup, and value-
+        // unavailable are usability-blocking. We forward sample state
+        // accordingly:
+        //   isActionable = no issues at all (clean reading)
+        //   hasBlockingIssue = sensor-reported fault, skip forwarding
+        //   else (advisories only) = forward as isDisplayOnly
+        let isActionable = assessment.issues.isEmpty
+        let hasBlockingIssue = !assessment.blockingIssues.isEmpty
         return LibreLoopGlucoseSample(
             date: receivedAt,
             valueMgDL: Double(mgdl),
@@ -317,7 +389,9 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
             rateOfChangeMgDLPerMinute: reading.rateOfChangeMgDLPerMinute.map(Double.init),
             lifeCount: reading.lifeCount,
             sensorTemperatureRaw: reading.temperature,
-            isActionable: assessment.isUsable,
+            isActionable: isActionable,
+            hasBlockingIssue: hasBlockingIssue,
+            condition: condition,
             qualityIssue: describeIssues(assessment.issues)
         )
     }
@@ -339,6 +413,9 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
             }
         }
         // No warmup/expired; describe the first remaining issue compactly.
+        // Use Loop terminology ("Display only") for the actionability flag
+        // since it maps directly to NewGlucoseSample.isDisplayOnly on the
+        // forwarded sample.
         switch issues[0] {
         case .currentGlucoseUnavailable:
             return "Glucose unavailable"
@@ -347,9 +424,9 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
         case .sensorCondition(let cond):
             return "Sensor condition: \(cond)"
         case .notActionable:
-            return "Not actionable"
+            return "Display only"
         default:
-            return "Reading not actionable"
+            return "Display only"
         }
     }
 

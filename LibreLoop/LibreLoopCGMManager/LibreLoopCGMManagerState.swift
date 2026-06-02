@@ -17,12 +17,13 @@ public struct LibreLoopCGMManagerState: RawRepresentable, Equatable {
     public var peripheralID: UUID?
     public var activatedAt: Date?
     public var latestReadingTimestamp: Date?
-    /// Timestamp of the first reading the sensor flagged as actionable for
-    /// the current receiver. Switch-receiver puts the sensor into a
-    /// stabilization window during which every reading comes through with
-    /// `actionability == .notActionable`; using this as the lifecycle-bar
-    /// "warmup complete" signal is more reliable than wall-clock heuristics.
-    public var firstActionableReadingAt: Date?
+    /// Timestamp of the first realtime reading received post-pair for the
+    /// current receiver. We leave the .pairingWarmup ("Stabilizing")
+    /// lifecycle state as soon as any reading arrives -- the sensor's
+    /// own actionability flag is surfaced per-reading via isDisplayOnly
+    /// on the forwarded sample, so the lifecycle bar doesn't need to
+    /// wait on it.
+    public var firstReadingAt: Date?
     /// Set on successful pairing (fresh or switch-receiver). Anchors the
     /// "time elapsed since pair" display while we're warming up, since we
     /// don't have a reliable sensor-side warmup-remaining signal yet.
@@ -55,9 +56,13 @@ public struct LibreLoopCGMManagerState: RawRepresentable, Equatable {
     /// field was added; callers fall back to the 14-day spec default in
     /// that case. Libre 3 Plus sensors report a longer duration.
     public var wearDurationMinutes: Int?
-    /// NFC patch-info `generation` field (bytes 4–5 of the patch-info
-    /// frame). 0 = Libre 3, 1 = Libre 3 Plus / Instinct. Nil for state
-    /// paired before this field was captured.
+    /// Sensor-reported warmup duration in minutes from the NFC patch info.
+    /// Replaces the hardcoded 60-min default for the lifecycle countdown.
+    /// Nil for state persisted before this field was captured -- the
+    /// lifecycle falls back to the 60-min spec default in that case.
+    public var warmupDurationMinutes: Int?
+    /// NFC patch-info `generation` field. 0 = Libre 3, 1 = Libre 3 Plus /
+    /// Instinct. Nil for state paired before this field was captured.
     public var generation: UInt16?
     /// `activatedAt` value for which we last issued sensor-expiry alerts
     /// via Loop's AlertManager. When this matches the current
@@ -86,7 +91,12 @@ public struct LibreLoopCGMManagerState: RawRepresentable, Equatable {
         self.peripheralID = (rawValue["peripheralID"] as? String).flatMap(UUID.init(uuidString:))
         self.activatedAt = rawValue["activatedAt"] as? Date
         self.latestReadingTimestamp = rawValue["latestReadingTimestamp"] as? Date
-        self.firstActionableReadingAt = rawValue["firstActionableReadingAt"] as? Date
+        // Read the new key first; fall back to the legacy
+        // `firstActionableReadingAt` key for state written by builds
+        // before this field was renamed. Either way it just means "first
+        // reading we know about post-pair".
+        self.firstReadingAt = (rawValue["firstReadingAt"] as? Date)
+            ?? (rawValue["firstActionableReadingAt"] as? Date)
         self.lastPairedAt = rawValue["lastPairedAt"] as? Date
         self.lastHistoricalLifeCount = (rawValue["lastHistoricalLifeCount"] as? Int).map { UInt16(clamping: $0) }
         if let latestRaw = rawValue["latestSample"] as? [String: Any] {
@@ -98,6 +108,7 @@ public struct LibreLoopCGMManagerState: RawRepresentable, Equatable {
         self.latestForwardedToLoopAt = rawValue["latestForwardedToLoopAt"] as? Date
         self.experimentalMinuteByMinuteForwarding = rawValue["experimentalMinuteByMinuteForwarding"] as? Bool ?? false
         self.wearDurationMinutes = rawValue["wearDurationMinutes"] as? Int
+        self.warmupDurationMinutes = rawValue["warmupDurationMinutes"] as? Int
         self.generation = (rawValue["generation"] as? Int).map { UInt16(clamping: $0) }
         self.expiryAlertsScheduledForActivatedAt = rawValue["expiryAlertsScheduledForActivatedAt"] as? Date
     }
@@ -111,7 +122,7 @@ public struct LibreLoopCGMManagerState: RawRepresentable, Equatable {
         raw["peripheralID"] = peripheralID?.uuidString
         raw["activatedAt"] = activatedAt
         raw["latestReadingTimestamp"] = latestReadingTimestamp
-        raw["firstActionableReadingAt"] = firstActionableReadingAt
+        raw["firstReadingAt"] = firstReadingAt
         raw["lastPairedAt"] = lastPairedAt
         raw["lastHistoricalLifeCount"] = lastHistoricalLifeCount.map { Int($0) }
         raw["latestSample"] = latestSample?.rawValue
@@ -123,6 +134,7 @@ public struct LibreLoopCGMManagerState: RawRepresentable, Equatable {
             raw["experimentalMinuteByMinuteForwarding"] = true
         }
         raw["wearDurationMinutes"] = wearDurationMinutes
+        raw["warmupDurationMinutes"] = warmupDurationMinutes
         raw["generation"] = generation.map { Int($0) }
         raw["expiryAlertsScheduledForActivatedAt"] = expiryAlertsScheduledForActivatedAt
         return raw
