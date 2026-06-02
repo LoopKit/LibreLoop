@@ -668,8 +668,9 @@ extension LibreLoopCGMManager {
             // we re-arm via scheduleReconnect directly to avoid being
             // stuck (no didDisconnect coming).
             if await MainActor.run(body: { self.monitor == nil }) {
-                if let peripheralID {
-                    await scanner.cancelPeripheralConnection(peripheralID: peripheralID)
+                if let peripheralID,
+                   let peripheral = scanner.retrievePeripherals(withIdentifiers: [peripheralID]).first {
+                    scanner.cancelConnection(peripheral)
                 }
                 // Belt-and-braces: if no didDisconnect arrived (e.g.,
                 // peripheral was already disconnected), schedule another

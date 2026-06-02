@@ -283,7 +283,6 @@ public final class LibreLoopCGMManager: CGMManager {
     }
 
     private var noDataWatchdog: Task<Void, Never>?
-    private var restorationTask: Task<Void, Never>?
 
     /// True once we've issued a backfill request for the current BLE session.
     /// Reset when the monitor is cleared so the next session re-requests.
@@ -311,95 +310,90 @@ public final class LibreLoopCGMManager: CGMManager {
     /// scanner is used for pair, reconnect, and ongoing monitoring -- the
     /// restoration identifier must stay stable for restoration to work.
     private static let restorationIdentifier = "org.loopkit.LibreLoop.central"
-    public lazy var scanner: SensorScanner = {
+    public lazy var scanner: SensorScannerNG = {
         BLETiming.setLogger { llog("ble: \($0)") }
-        let scanner = SensorScanner(configuration: .background(restorationIdentifier: Self.restorationIdentifier))
-        startRestorationListener(on: scanner)
-        return scanner
-    }()
-
-    private func startRestorationListener(on scanner: SensorScanner) {
-        restorationTask?.cancel()
-        restorationTask = Task { [weak self] in
-            for await event in scanner.restorationEvents() {
-                guard let self else { return }
-                await MainActor.run {
-                    self.handleRestorationEvent(event)
-                }
-                if Task.isCancelled { break }
-            }
-        }
+        let scanner = SensorScannerNG(configuration: .background(restorationIdentifier: Self.restorationIdentifier))
         // Tell iOS to wake us when our peripheral comes into range or
-        // disconnects, so we don't have to actively scan to notice. Combined
-        // with retrievePeripherals(withIdentifiers:) in reconnect, this
-        // replaces the "scan forever and hope" model that gets throttled
-        // after a few hours of failures.
+        // disconnects so we don't have to actively scan to notice.
         if let id = state.peripheralID {
             scanner.registerForConnectionEvents(peripheralIDs: [id])
             llog("registered for connection events on peripheral \(id.uuidString)")
         }
-        startConnectionEventListener(on: scanner)
-    }
+        startEventListener(on: scanner)
+        return scanner
+    }()
 
-    private var connectionEventTask: Task<Void, Never>?
-    private var stateEventTask: Task<Void, Never>?
+    private var eventListenerTask: Task<Void, Never>?
 
-    private func startConnectionEventListener(on scanner: SensorScanner) {
-        connectionEventTask?.cancel()
-        connectionEventTask = Task { [weak self] in
-            for await event in scanner.connectionEvents() {
+    /// Single Task that consumes `scanner.events()` and routes each CB
+    /// event to the right reaction. Replaces the three separate
+    /// listener Tasks the old SensorScanner exposed (state /
+    /// connection-event / restoration), all unified now that the new
+    /// scanner emits one event stream.
+    private func startEventListener(on scanner: SensorScannerNG) {
+        eventListenerTask?.cancel()
+        eventListenerTask = Task { [weak self] in
+            for await event in scanner.events() {
                 guard let self else { return }
-                llog("connection event: \(String(describing: event.event)) peripheral=\(event.peripheral.identifier.uuidString)")
-                if event.peripheral.identifier == self.state.peripheralID {
-                    await MainActor.run {
-                        if event.event == .peerDisconnected {
-                            // On any disconnect: cancel anything in flight
-                            // (the cached reconnect handshake can otherwise
-                            // sit blocked on a CoreBluetooth read that will
-                            // never complete because the peer is gone --
-                            // verified to deadlock for 98+ minutes in a
-                            // field log) and queue a new reconnect attempt
-                            // immediately. iOS's central.connect is fire-
-                            // and-forget; it auto-reconnects as soon as the
-                            // peripheral is reachable, so no delays / no
-                            // background scheduling needed here.
-                            llog("disconnect: cancelling in-flight reconnect/pairing and queuing immediate retry")
-                            self.cancelReconnect()
-                            self.scheduleReconnect()
-                        } else {
-                            // Connect or other event: hint to attempt
-                            // reconnect. Idempotent if loop is running.
-                            self.scheduleReconnect()
-                        }
-                    }
-                }
+                await MainActor.run { self.handleScannerEvent(event) }
                 if Task.isCancelled { break }
             }
         }
-        startStateEventListener(on: scanner)
     }
 
-    /// Mirrors G7's `centralManagerDidUpdateState` behavior at a higher
-    /// level: whenever the central transitions to `.poweredOn` (Bluetooth
-    /// was off and just came back, system reset settled, etc.), we
-    /// auto-kick a reconnect if we have saved sensor state. Without this
-    /// we'd sit waiting for Loop's next fetch poll to notice we're not
-    /// connected.
-    private func startStateEventListener(on scanner: SensorScanner) {
-        stateEventTask?.cancel()
-        stateEventTask = Task { [weak self] in
-            for await state in scanner.stateEvents() {
-                guard let self else { return }
-                llog("central state: \(String(describing: state))")
-                if state == .poweredOn,
-                   self.state.peripheralID != nil,
-                   self.monitor == nil {
-                    await MainActor.run {
-                        self.scheduleReconnect()
-                    }
-                }
-                if Task.isCancelled { break }
+    @MainActor
+    private func handleScannerEvent(_ event: SensorScannerNG.Event) {
+        switch event {
+        case .stateChanged(let s):
+            llog("central state: \(s.rawValue)")
+            // Mirrors G7's centralManagerDidUpdateState behavior: when
+            // BT comes back on (airplane mode toggle, system reset
+            // settled, etc.), kick a reconnect if we have saved state.
+            if s == .poweredOn, self.state.peripheralID != nil, self.monitor == nil {
+                self.scheduleReconnect()
             }
+        case .didConnect(let p):
+            llog("ble: didConnect \(p.identifier.uuidString)")
+            // didConnect is a hint to (re)attempt the handshake if we
+            // were waiting. scheduleReconnect is idempotent.
+            if p.identifier == self.state.peripheralID {
+                self.scheduleReconnect()
+            }
+        case .didFailToConnect(let p, let err):
+            llog("ble: didFailToConnect \(p.identifier.uuidString) error=\(err?.localizedDescription ?? "nil")")
+            // Failed connect intent: cancel any in-flight pairing/
+            // handshake Task and queue a fresh attempt. iOS will hold
+            // the new connect pending until the peripheral is reachable
+            // again -- no delay or background scheduling needed.
+            if p.identifier == self.state.peripheralID {
+                self.cancelReconnect()
+                self.scheduleReconnect()
+            }
+        case .didDisconnect(let p, let err):
+            llog("ble: didDisconnect \(p.identifier.uuidString) error=\(err?.localizedDescription ?? "nil")")
+            // Same policy as didFailToConnect: invalidate, retry.
+            // Without this an in-flight handshake can sit blocked on a
+            // CoreBluetooth read that will never complete because the
+            // peer is gone (verified 98-min outage in field log).
+            if p.identifier == self.state.peripheralID {
+                self.cancelReconnect()
+                self.scheduleReconnect()
+            }
+        case .connectionEvent(let e, let p):
+            llog("connection event: \(e.rawValue) peripheral=\(p.identifier.uuidString)")
+            if p.identifier == self.state.peripheralID {
+                if e == .peerDisconnected {
+                    self.cancelReconnect()
+                }
+                self.scheduleReconnect()
+            }
+        case .willRestoreState(let r):
+            self.handleRestorationEvent(r)
+        case .didDiscover:
+            // Discoveries are consumed by the pair-time scan inside
+            // LibreLoopPairingService via its own events() subscription.
+            // The CGMManager doesn't drive scans, so ignore here.
+            break
         }
     }
 
@@ -446,9 +440,7 @@ public final class LibreLoopCGMManager: CGMManager {
 
     deinit {
         noDataWatchdog?.cancel()
-        restorationTask?.cancel()
-        connectionEventTask?.cancel()
-        stateEventTask?.cancel()
+        eventListenerTask?.cancel()
     }
 
     /// Watchdog: if a monitor is alive but no glucose readings have arrived

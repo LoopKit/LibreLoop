@@ -46,9 +46,9 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
 
     private let session: SensorSession
     // Held strongly so the underlying CBCentralManager survives past pairing.
-    // SensorScanner owns the central manager + a [UUID: SensorSession] strong
+    // SensorScannerNG owns the central manager + a [UUID: SensorSession] strong
     // map; dropping it tears the BLE connection down.
-    private let scanner: SensorScanner
+    private let scanner: SensorScannerNG
     private let crypto: DataPlaneCrypto
     private let decoder: DataPlaneDecoder
     private let assembler = DataPlaneNotificationAssembler()
@@ -68,7 +68,7 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
     /// construction on PatchControl writes.
     private var outboundSequence: UInt16 = 0
 
-    init(scanner: SensorScanner, session: SensorSession, kEnc: Data, ivEnc: Data) throws {
+    init(scanner: SensorScannerNG, session: SensorSession, kEnc: Data, ivEnc: Data) throws {
         self.scanner = scanner
         self.session = session
         let crypto = try DataPlaneCrypto(kEnc: kEnc, ivEnc: ivEnc)
@@ -445,7 +445,7 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
 
 extension LibreLoopSensorMonitor {
     /// Internal builder used by `LibreLoopPairingService`.
-    static func make(scanner: SensorScanner, session: SensorSession, kEnc: Data, ivEnc: Data) throws -> LibreLoopSensorMonitor {
+    static func make(scanner: SensorScannerNG, session: SensorSession, kEnc: Data, ivEnc: Data) throws -> LibreLoopSensorMonitor {
         try LibreLoopSensorMonitor(scanner: scanner, session: session, kEnc: kEnc, ivEnc: ivEnc)
     }
 }

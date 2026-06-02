@@ -104,7 +104,7 @@ public final class LibreLoopPairingService {
     /// on success only when the fallback ran (cached reuses the existing
     /// one).
     public func reconnect(
-        scanner: SensorScanner,
+        scanner: SensorScannerNG,
         blePIN: Data,
         phase5RawKey: Data? = nil,
         expectedPeripheralID: UUID? = nil,
@@ -112,7 +112,7 @@ public final class LibreLoopPairingService {
         onStage: @Sendable @escaping (Stage) -> Void = { _ in }
     ) async throws -> ReconnectOutcome {
         onStage(.bleSearching)
-        try await scanner.waitUntilReady()
+        try await Self.awaitReady(scanner: scanner)
 
         // Fast path: when we have a peripheralID from a prior pair, ask iOS
         // for the peripheral directly. CB will deliver the connection when
@@ -121,7 +121,7 @@ public final class LibreLoopPairingService {
         // after several hours. Scanning is reserved for initial pair only.
         var peripheral: CBPeripheral?
         if let id = expectedPeripheralID {
-            let retrieved = await scanner.retrievePeripherals(withIdentifiers: [id])
+            let retrieved = scanner.retrievePeripherals(withIdentifiers: [id])
             peripheral = retrieved.first
         }
 
@@ -132,7 +132,7 @@ public final class LibreLoopPairingService {
         // The OS often holds the link from a prior session/restore and
         // we don't need to scan or even reconnect at the OS level.
         if peripheral == nil {
-            let connected = await scanner.retrieveConnectedPeripherals()
+            let connected = scanner.retrieveConnectedPeripherals()
             if let id = expectedPeripheralID {
                 peripheral = connected.first { $0.identifier == id }
             } else {
@@ -146,7 +146,7 @@ public final class LibreLoopPairingService {
         // Final fallback: scan. Bounded so we don't burn the radio
         // forever waiting for a sensor that might never show up.
         if peripheral == nil {
-            peripheral = try await Self.scanForPeripheral(
+            peripheral = try await Self.scanForPeripheralNG(
                 scanner: scanner,
                 matching: expectedPeripheralID,
                 timeout: scanTimeout
@@ -161,7 +161,7 @@ public final class LibreLoopPairingService {
         // against a non-poweredOn central silently fails. waitUntilReady
         // returns immediately if already .poweredOn, suspends if
         // transitioning, throws on terminal states.
-        try await scanner.waitUntilReady()
+        try await Self.awaitReady(scanner: scanner)
 
         // Do NOT cancel a pending .connecting state before calling connect().
         // G7 never does this either: CB deduplicates redundant connect() calls,
@@ -180,7 +180,11 @@ public final class LibreLoopPairingService {
             // budget. Initial pair (above) keeps its 120s timeout because
             // the user is staring at a UI and we need to surface a clear
             // failure if the sensor isn't reachable.
-            session = try await scanner.connect(peripheral, timeout: 0)
+            session = try await Self.connectAndBuildSession(
+                scanner: scanner,
+                peripheral: peripheral,
+                timeout: 0
+            )
         } catch {
             throw Failure.underlying("BLE connection failed: \(error.localizedDescription)")
         }
@@ -292,7 +296,7 @@ public final class LibreLoopPairingService {
 
     public func pair(
         mode: Mode = .fresh,
-        scanner: SensorScanner,
+        scanner: SensorScannerNG,
         onNFCResponse: @Sendable @escaping (NFCResponse) -> Void = { _ in },
         onStage: @Sendable @escaping (Stage) -> Void = { _ in }
     ) async throws -> PairOutcome {
@@ -359,21 +363,18 @@ public final class LibreLoopPairingService {
 
         // 2. BLE scan + connect
         onStage(.bleSearching)
-        try await scanner.waitUntilReady()
+        try await Self.awaitReady(scanner: scanner)
 
-        var discovered: DiscoveredSensor?
-        for await sensor in scanner.startScan() {
-            discovered = sensor
-            break
-        }
-        guard let sensor = discovered else {
-            throw Failure.bleNoSensorDiscovered
-        }
+        let sensor = try await Self.scanForAnyPeripheralNG(scanner: scanner, timeout: 120)
 
         onStage(.bleConnecting)
         let session: SensorSession
         do {
-            session = try await scanner.connect(sensor.peripheral, timeout: 120)
+            session = try await Self.connectAndBuildSession(
+                scanner: scanner,
+                peripheral: sensor.peripheral,
+                timeout: 120
+            )
         } catch {
             throw Failure.underlying("BLE connection failed: \(error.localizedDescription)")
         }
@@ -438,32 +439,172 @@ public final class LibreLoopPairingService {
         return PairOutcome(result: result, monitor: monitor, peripheralID: sensor.id)
     }
 
-    private static func scanForPeripheral(
-        scanner: SensorScanner,
-        matching expectedPeripheralID: UUID?,
+    // MARK: - SensorScannerNG event-stream adapters
+    //
+    // These translate the new event-driven scanner into the synchronous-
+    // await patterns the pair / reconnect flows are written against.
+    // They live here rather than in SensorScannerNG itself because the
+    // "wait for callback X" pattern is the caller's policy choice --
+    // the scanner deliberately doesn't take a position on timeouts.
+
+    /// Suspend until the scanner reports `.poweredOn`. Throws on a
+    /// terminal state (poweredOff, unauthorized, unsupported).
+    static func awaitReady(scanner: SensorScannerNG) async throws {
+        if let immediate = stateOutcome(scanner.centralState) {
+            switch immediate {
+            case .ready: return
+            case .error(let e): throw e
+            case .pending: break
+            }
+        }
+        for await event in scanner.events() {
+            if case .stateChanged(let s) = event, let outcome = stateOutcome(s) {
+                switch outcome {
+                case .ready: return
+                case .error(let e): throw e
+                case .pending: continue
+                }
+            }
+        }
+        throw SensorScannerError.bluetoothUnavailable
+    }
+
+    private enum StateOutcome { case ready, pending, error(SensorScannerError) }
+    private static func stateOutcome(_ s: CBManagerState) -> StateOutcome? {
+        switch s {
+        case .poweredOn: return .ready
+        case .poweredOff: return .error(.bluetoothPoweredOff)
+        case .unauthorized: return .error(.bluetoothUnauthorized)
+        case .unsupported: return .error(.bluetoothUnavailable)
+        case .resetting, .unknown: return .pending
+        @unknown default: return .error(.bluetoothUnavailable)
+        }
+    }
+
+    /// Issue `requestConnect`, wait for `.didConnect` matching the
+    /// requested peripheral, then build a fully-discovered SensorSession.
+    /// Throws on `.didFailToConnect` or `.didDisconnect` for the same
+    /// peripheral. `timeout = 0` means "never time out at this layer"
+    /// (caller is responsible for cancellation).
+    static func connectAndBuildSession(
+        scanner: SensorScannerNG,
+        peripheral: CBPeripheral,
+        timeout: TimeInterval
+    ) async throws -> SensorSession {
+        let pid = peripheral.identifier
+        // Issue the connect request before subscribing -- CB queues
+        // it idempotently, and if the peripheral is already connected
+        // we'd otherwise miss the (already-fired) didConnect event.
+        // Handle the already-connected case explicitly below.
+        if peripheral.state == .connected {
+            let session = SensorSession(peripheral: peripheral, queue: scanner.centralQueue)
+            try await session.discoverAndSubscribe()
+            return session
+        }
+        scanner.requestConnect(peripheral)
+        let connectedPeripheral: CBPeripheral = try await withEventStream(
+            scanner: scanner,
+            timeout: timeout,
+            timeoutError: SensorScannerError.timeout("connect timed out after \(Int(timeout))s")
+        ) { event in
+            switch event {
+            case .didConnect(let p) where p.identifier == pid:
+                return .done(p)
+            case .didFailToConnect(let p, let err) where p.identifier == pid:
+                return .throwing(SensorScannerError.connectionFailed(err?.localizedDescription ?? "unknown"))
+            case .didDisconnect(let p, let err) where p.identifier == pid:
+                return .throwing(SensorScannerError.connectionFailed(err?.localizedDescription ?? "disconnected"))
+            default:
+                return .continue
+            }
+        }
+        let session = SensorSession(peripheral: connectedPeripheral, queue: scanner.centralQueue)
+        try await session.discoverAndSubscribe()
+        return session
+    }
+
+    /// Start a scan and yield the first peripheral matching `expectedID`
+    /// (or any peripheral if `expectedID` is nil). Stops the scan on
+    /// completion.
+    static func scanForPeripheralNG(
+        scanner: SensorScannerNG,
+        matching expectedID: UUID?,
         timeout: TimeInterval
     ) async throws -> CBPeripheral {
-        let sensor: DiscoveredSensor = try await withThrowingTaskGroup(of: DiscoveredSensor?.self) { group in
+        scanner.startScan()
+        defer { scanner.stopScan() }
+        let discovered: DiscoveredSensor = try await withEventStream(
+            scanner: scanner,
+            timeout: timeout,
+            timeoutError: Failure.bleNoSensorDiscovered
+        ) { event in
+            if case .didDiscover(let d) = event, expectedID == nil || d.id == expectedID {
+                return .done(d)
+            }
+            return .continue
+        }
+        return discovered.peripheral
+    }
+
+    /// Like `scanForPeripheralNG` but returns the first discovery
+    /// regardless of UUID. Used by initial pair where we don't yet know
+    /// the peripheral identifier.
+    static func scanForAnyPeripheralNG(
+        scanner: SensorScannerNG,
+        timeout: TimeInterval
+    ) async throws -> DiscoveredSensor {
+        scanner.startScan()
+        defer { scanner.stopScan() }
+        return try await withEventStream(
+            scanner: scanner,
+            timeout: timeout,
+            timeoutError: Failure.bleNoSensorDiscovered
+        ) { event in
+            if case .didDiscover(let d) = event { return .done(d) }
+            return .continue
+        }
+    }
+
+    private enum EventStreamStep<T> {
+        case `continue`
+        case done(T)
+        case throwing(Error)
+    }
+
+    /// Compose a one-shot consumer of `scanner.events()` that walks
+    /// events until the matcher resolves. Adds a single optional
+    /// wall-clock timeout. The matcher runs synchronously on the
+    /// event-delivery thread; the result is returned to the caller.
+    private static func withEventStream<T>(
+        scanner: SensorScannerNG,
+        timeout: TimeInterval,
+        timeoutError: @autoclosure @escaping () -> Error,
+        matcher: @escaping (SensorScannerNG.Event) -> EventStreamStep<T>
+    ) async throws -> T {
+        try await withThrowingTaskGroup(of: T.self) { group in
             group.addTask {
-                for await found in scanner.startScan() {
-                    if expectedPeripheralID == nil || found.id == expectedPeripheralID {
-                        return found
+                for await event in scanner.events() {
+                    switch matcher(event) {
+                    case .continue: continue
+                    case .done(let value): return value
+                    case .throwing(let error): throw error
                     }
                 }
-                return nil
+                throw timeoutError()
             }
-            group.addTask {
-                try await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
-                return nil
+            if timeout > 0 {
+                group.addTask {
+                    try await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
+                    throw timeoutError()
+                }
             }
-            for try await result in group {
-                group.cancelAll()
-                if let result { return result }
-                throw Failure.bleNoSensorDiscovered
+            defer { group.cancelAll() }
+            // First task to finish wins; cancel the others.
+            if let result = try await group.next() {
+                return result
             }
-            throw Failure.bleNoSensorDiscovered
+            throw timeoutError()
         }
-        return sensor.peripheral
     }
 
     private static func secureRandomBytes(count: Int) throws -> Data {
