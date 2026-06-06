@@ -31,6 +31,15 @@ public final class LibreLoopCGMManager: CGMManager {
         didSet { notifyStateObservers() }
     }
 
+    /// Wall-clock time the current BLE session was adopted. Non-nil only
+    /// while `monitor` is alive. Used by the UI to surface the
+    /// connected-but-mute case ("connected for X, but no data received") --
+    /// the only place a healthy link with no readings should ever show up,
+    /// and only if the sensor firmware glitches. Cleared on disconnect.
+    public internal(set) var connectedAt: Date? {
+        didSet { notifyStateObservers() }
+    }
+
     /// Single-flight reconnect attempt. Non-nil while a `central.connect`+
     /// handshake is in progress. Cleared on attempt completion. Retries
     /// are driven by CoreBluetooth callbacks (didDisconnect / state
@@ -50,6 +59,10 @@ public final class LibreLoopCGMManager: CGMManager {
     /// our rapid re-calls weren't helping iOS reconnect any faster -- they
     /// were just churning Task lifecycle and the BLE stack.
     static let minReconnectInterval: TimeInterval = 0.5
+
+    /// How long a live link may stay silent before we treat the sensor as
+    /// mute and force a disconnect to recover (see `isConnectedButMute`).
+    static let muteForceDisconnectInterval: TimeInterval = 11 * 60
 
     /// Pure BLE connection state. Does NOT incorporate data-freshness
     /// signals; those belong in the lifecycle bar / Last Reading card so
@@ -310,8 +323,6 @@ public final class LibreLoopCGMManager: CGMManager {
         """
     }
 
-    private var noDataWatchdog: Task<Void, Never>?
-
     /// True once we've issued a backfill request for the current BLE session.
     /// Reset when the monitor is cleared so the next session re-requests.
     var hasRequestedBackfillThisSession: Bool = false
@@ -398,31 +409,54 @@ public final class LibreLoopCGMManager: CGMManager {
             }
         case .didFailToConnect(let p, let err):
             llog("ble: didFailToConnect \(p.identifier.uuidString) error=\(err?.localizedDescription ?? "nil")")
-            // Failed connect intent: cancel any in-flight pairing/
-            // handshake Task and queue a fresh attempt. iOS will hold
-            // the new connect pending until the peripheral is reachable
-            // again -- no delay or background scheduling needed.
+            // Event-driven, like G7's didFailToConnect: don't cancel
+            // anything, just re-arm. scheduleReconnect re-arms the CB
+            // connect intent and, via its reconnectAttempt single-flight
+            // guard, won't spawn a duplicate while a handshake is in
+            // flight. A failed connect means no session was built, so
+            // there's nothing in flight to unwind anyway.
             if p.identifier == self.state.peripheralID {
-                self.cancelReconnect()
                 self.scheduleReconnect()
             }
         case .didDisconnect(let p, let err):
             llog("ble: didDisconnect \(p.identifier.uuidString) error=\(err?.localizedDescription ?? "nil")")
-            // Same policy as didFailToConnect: invalidate, retry.
-            // Without this an in-flight handshake can sit blocked on a
-            // CoreBluetooth read that will never complete because the
-            // peer is gone (verified 98-min outage in field log).
+            // Don't cancel the in-flight handshake Task. Cancelling only
+            // the wrapper Task left LibreLoopPairingService.reconnect()
+            // running (it isn't cancellation-aware) AND cleared the
+            // single-flight guard -- so a second attempt raced the first,
+            // and the "cancelled" one fell through to a full first-pair
+            // handshake (StartAuthentication 0x01) that knocked the live
+            // session off and produced PairingFlowError 7 + a ~30-min
+            // stall (field log 2026-06-04 13:38). Instead, let the
+            // disconnect itself unwind the attempt: the session's pending
+            // BLE ops throw when the peer drops (sessionBox watchdog), so
+            // the handshake await fails promptly on its own. We just
+            // re-arm the connect intent.
             if p.identifier == self.state.peripheralID {
-                self.cancelReconnect()
-                self.scheduleReconnect()
+                // A CB-level disconnect is the authoritative "link is dead"
+                // signal. The monitor's own disconnect detection keys off
+                // session.notifications() terminating, but a "connection timed
+                // out" leaves that stream silently stalled rather than ended
+                // (field log 2026-06-04 18:53: link timed out, monitor stayed
+                // non-nil, scheduleReconnect's `guard monitor == nil` no-op'd
+                // every retry, 7+ min outage). So when we still hold a monitor,
+                // tear it down here -- handleMonitorDisconnect clears it and
+                // re-arms reconnect. When monitor is nil (handshake in flight),
+                // a bare scheduleReconnect is correct and must not disturb it.
+                if self.monitor != nil {
+                    self.handleMonitorDisconnect()
+                } else {
+                    self.scheduleReconnect()
+                }
             }
         case .connectionEvent(let e, let p):
             llog("connection event: \(e.rawValue) peripheral=\(p.identifier.uuidString)")
             if p.identifier == self.state.peripheralID {
-                if e == .peerDisconnected {
-                    self.cancelReconnect()
+                if e == .peerDisconnected, self.monitor != nil {
+                    self.handleMonitorDisconnect()
+                } else {
+                    self.scheduleReconnect()
                 }
-                self.scheduleReconnect()
             }
         case .willRestoreState(let r):
             self.handleRestorationEvent(r)
@@ -476,45 +510,7 @@ public final class LibreLoopCGMManager: CGMManager {
     }
 
     deinit {
-        noDataWatchdog?.cancel()
         eventListenerTask?.cancel()
-    }
-
-    /// Watchdog: if a monitor is alive but no glucose readings have arrived
-    /// within the threshold, treat the session as silently dead and force a
-    /// reconnect. Covers the case where BLE is technically "connected" but
-    /// the link is no longer producing notifications (rare; Loop has
-    /// bluetooth-central background mode so backgrounding alone doesn't
-    /// trigger this).
-    private static let noDataThreshold: TimeInterval = 3 * 60
-
-    func startNoDataWatchdog() {
-        noDataWatchdog?.cancel()
-        noDataWatchdog = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: UInt64(Self.noDataThreshold * 1_000_000_000))
-            guard !Task.isCancelled else { return }
-            guard let self else { return }
-            guard self.monitor != nil else { return }
-            // Only force reconnect if we still haven't seen a recent reading.
-            let last = self.state.latestReadingTimestamp
-            let stale = last.map { Date().timeIntervalSince($0) > Self.noDataThreshold } ?? true
-            if stale {
-                llog("no-data watchdog fired: \(Int(Self.noDataThreshold))s without a reading on a monitor we believe is connected; dropping monitor and re-arming reconnect")
-                await MainActor.run {
-                    self.monitor?.stop()
-                    self.monitor = nil
-                    // Setting monitor=nil alone doesn't start the reconnect
-                    // loop; kick it off explicitly. Idempotent if a loop is
-                    // already running.
-                    self.scheduleReconnect()
-                }
-            }
-        }
-    }
-
-    func cancelNoDataWatchdog() {
-        noDataWatchdog?.cancel()
-        noDataWatchdog = nil
     }
 
     public required convenience init?(rawState: CGMManager.RawStateValue) {
@@ -540,27 +536,23 @@ public final class LibreLoopCGMManager: CGMManager {
     public func fetchNewDataIfNeeded(_ completion: @escaping (CGMReadingResult) -> Void) {
         // Glucose samples are delivered asynchronously via
         // `cgmManagerDelegate?.cgmManager(_, hasNew:)` from the BLE monitor,
-        // so this poll-style API never has anything new to add. But Loop's
-        // periodic calls are a useful nudge to keep the link healthy:
-        //   - No monitor + saved state -> revive reconnect loop.
-        //   - Monitor alive but readings stale -> the session is silently
-        //     dead; drop the monitor so the disconnect path kicks in.
-        let needsRevive = monitor == nil && state.blePIN != nil
-        let isStalled: Bool
-        if monitor != nil,
-           let last = state.latestReadingTimestamp,
-           Date().timeIntervalSince(last) > Self.noDataThreshold {
-            isStalled = true
-        } else {
-            isStalled = false
-        }
+        // so this poll-style API never has anything new to add. The system is
+        // CoreBluetooth-driven: connection/data come from CB callbacks, not
+        // from polling here. But Loop's periodic call is our reliable
+        // "we got runtime" hook, so we use it for two idempotent checks:
+        //   1. No live monitor but saved state -> re-arm the CB connect
+        //      intent (belt-and-suspenders if a transition left us with no
+        //      standing intent).
+        //   2. Live link but mute for >11 min -> the sensor has gone silent
+        //      while the BLE link stays up (a firmware glitch CB can't
+        //      detect). Force a disconnect; the didDisconnect event drives
+        //      scheduleReconnect, so recovery is fully automatic.
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
-            if needsRevive {
+            if self.monitor == nil, self.state.blePIN != nil {
                 self.scheduleReconnect()
-            } else if isStalled {
-                self.monitor?.stop()
-                self.monitor = nil
+            } else if self.isConnectedButMute {
+                self.forceDisconnectForMuteRecovery()
             }
         }
         completion(.noData)

@@ -156,6 +156,7 @@ extension LibreLoopCGMManager {
 
     func adopt(monitor: LibreLoopSensorMonitor) {
         self.monitor = monitor
+        self.connectedAt = Date()
         // Each new BLE session gets its own backfill window.
         self.hasRequestedBackfillThisSession = false
         self.backfillForwardedLifeCounts.removeAll(keepingCapacity: true)
@@ -170,10 +171,6 @@ extension LibreLoopCGMManager {
             onLifeCount: { [weak self] lifeCount in self?.handleLifeCount(lifeCount) }
         )
         monitor.start()
-        // Start the no-data watchdog immediately after adoption -- if the
-        // first reading doesn't arrive within the threshold, the link is
-        // probably silently dead and a reconnect is in order.
-        startNoDataWatchdog()
     }
 
     /// Compute the lifecount to start backfill from for the current session.
@@ -316,12 +313,6 @@ extension LibreLoopCGMManager {
 
     func ingest(_ sample: LibreLoopGlucoseSample) {
         recordSample(sample)
-        // Restart the watchdog after every reading so it always reflects the
-        // most recent silence window. Previously we only cancelled it on the
-        // first reading, which meant a silent-disconnect (BLE link "open"
-        // but no data flowing) had nothing watching for it after that point.
-        startNoDataWatchdog()
-
         // Now that we have a confirmed realtime reading, we know the
         // sensor's current lifecount and can issue a sensible-range backfill
         // request (lifecount=0 is silently ignored by the sensor).
@@ -625,12 +616,16 @@ extension LibreLoopCGMManager {
         }
     }
 
-    private func handleMonitorDisconnect() {
+    func handleMonitorDisconnect() {
         llog("monitor reported disconnect; clearing and reconnecting")
         self.monitor = nil
+        self.connectedAt = nil
         self.hasRequestedBackfillThisSession = false
-        cancelNoDataWatchdog()
-        cancelReconnect()
+        // Don't cancel any in-flight reconnect attempt here. The session
+        // backing this monitor is already dead; a reconnect Task that's
+        // running is either a fresh handshake on a new link (which we must
+        // not kill) or will fail on its own when its session ops throw.
+        // scheduleReconnect's single-flight guard keeps us from racing.
         // Re-register for connection events on every disconnect, mirroring
         // G7's scanForPeripheral() pattern. The registration persists through
         // app suspension; re-issuing it ensures iOS has a fresh subscription
@@ -735,6 +730,36 @@ extension LibreLoopCGMManager {
     func cancelReconnect() {
         reconnectAttempt?.cancel()
         reconnectAttempt = nil
+    }
+
+    /// True when the BLE link is up but the sensor has gone mute -- a
+    /// firmware glitch we can't otherwise detect, since CB's supervision
+    /// timeout only fires on a genuinely lost link, not on a connected-but-
+    /// silent peer. A Libre 3 emits a realtime reading ~once a minute over a
+    /// live link, so 11 minutes of silence (covering ~2 of Loop's ~5-min
+    /// runtime cycles) without a false trigger means it's stopped talking.
+    @MainActor
+    var isConnectedButMute: Bool {
+        guard monitor != nil, let connectedAt else { return false }
+        // Anchor on the more recent of "link came up" and "last reading":
+        // covers both a session that never delivered and one that went quiet.
+        let lastActivity = max(connectedAt, state.latestReadingTimestamp ?? .distantPast)
+        return Date().timeIntervalSince(lastActivity) > Self.muteForceDisconnectInterval
+    }
+
+    /// Recovery for the connected-but-mute case. Dropping the link makes CB
+    /// emit didDisconnect, which routes through the events listener into
+    /// scheduleReconnect -- the same recovery path as a natural disconnect.
+    /// Only ever called when we hold a live link (see isConnectedButMute).
+    @MainActor
+    func forceDisconnectForMuteRecovery() {
+        guard let peripheralID = state.peripheralID,
+              let peripheral = scanner.retrievePeripherals(withIdentifiers: [peripheralID]).first,
+              peripheral.state == .connected || peripheral.state == .connecting else {
+            return
+        }
+        llog("connected \(connectedAt.map { Int(Date().timeIntervalSince($0)) } ?? -1)s with no data; forcing disconnect to recover")
+        scanner.cancelConnection(peripheral)
     }
 
     private func runReconnectOnce() async {
