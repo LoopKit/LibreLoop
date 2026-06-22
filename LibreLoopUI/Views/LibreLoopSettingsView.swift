@@ -20,7 +20,7 @@ struct LibreLoopSettingsView: View {
         case all = "All"
         case ble = "BLE"
         case clinical = "Clinical"
-        case reconnect = "Reconnect"
+        case connection = "Connection"
         var id: String { rawValue }
     }
 
@@ -306,8 +306,19 @@ struct LibreLoopSettingsView: View {
             return logger.recentLines.filter { $0.contains("ble:") || $0.contains("reconnect:") }
         case .clinical:
             return logger.recentLines.filter { $0.contains("clinical ") }
-        case .reconnect:
-            return logger.recentLines.filter { $0.contains("reconnect:") || $0.contains("BLE connect failed") || $0.contains("BLE timeout") }
+        case .connection:
+            // The BLE connection lifecycle: disconnects, our connect requests,
+            // iOS connect/fail callbacks, plus the internal reconnect scheduling.
+            return logger.recentLines.filter {
+                $0.contains("ble: requesting connect")
+                    || $0.contains("ble: didConnect")
+                    || $0.contains("ble: didDisconnect")
+                    || $0.contains("ble: didFailToConnect")
+                    || $0.contains("monitor reported disconnect")
+                    || $0.contains("reconnect:")
+                    || $0.contains("BLE connect failed")
+                    || $0.contains("BLE timeout")
+            }
         }
     }
 

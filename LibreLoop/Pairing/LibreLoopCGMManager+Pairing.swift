@@ -673,6 +673,7 @@ extension LibreLoopCGMManager {
         if let peripheralID = state.peripheralID,
            let peripheral = scanner.retrievePeripherals(withIdentifiers: [peripheralID]).first,
            peripheral.state != .connected, peripheral.state != .connecting {
+            llog("ble: requesting connect \(peripheral.identifier.uuidString) (peripheral state=\(peripheral.state.rawValue))")
             scanner.requestConnect(peripheral)
         }
         guard reconnectAttempt == nil else {

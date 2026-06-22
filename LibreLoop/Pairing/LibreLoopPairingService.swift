@@ -529,6 +529,7 @@ public final class LibreLoopPairingService {
             try await session.discoverAndSubscribe()
             return session
         }
+        llog("ble: requesting connect \(peripheral.identifier.uuidString) (handshake)")
         scanner.requestConnect(peripheral)
         let connectedPeripheral: CBPeripheral = try await withEventStream(
             scanner: scanner,
