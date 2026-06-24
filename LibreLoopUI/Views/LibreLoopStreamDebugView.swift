@@ -17,6 +17,7 @@ import LibreLoop
 ///   on their own axis since they're not in mg/dL.
 struct LibreLoopStreamDebugView: View {
     @StateObject private var viewModel: LibreLoopStreamDebugViewModel
+    @AppStorage(LibreLoopDebugSettings.continuousClinicalKey) private var continuousClinical = false
 
     init(viewModel: LibreLoopStreamDebugViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -28,6 +29,12 @@ struct LibreLoopStreamDebugView: View {
                 Text("Each series is plotted by lifeCount (minutes since sensor start). Realtime current and Clinical word[5] are identical by spec — clinical dots should land on the realtime line except across reconnect gaps.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
+            }
+
+            Section {
+                Toggle("Continuous clinical stream", isOn: $continuousClinical)
+            } footer: {
+                Text("Keeps the clinical channel subscribed so the clinical/raw charts update every minute. Off by default — only needed for stream inspection, and it adds per-reconnect clinical traffic. Takes effect on the next reconnect.")
             }
 
             glucoseSection

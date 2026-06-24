@@ -4,6 +4,21 @@ import LibreCRKit
 import os.log
 
 
+/// Developer-facing runtime flags persisted in UserDefaults.
+public enum LibreLoopDebugSettings {
+    /// Keep the clinical channel CCCD subscribed for the whole session so the
+    /// Glucose Streams debug view's clinical/raw charts update live. OFF by
+    /// default — it adds per-reconnect clinical churn and is only needed for
+    /// stream inspection; normal operation uses realtime + on-reconnect
+    /// clinical backfill.
+    public static let continuousClinicalKey = "org.loopkit.LibreLoop.continuousClinical"
+    public static var continuousClinicalEnabled: Bool {
+        get { UserDefaults.standard.bool(forKey: continuousClinicalKey) }
+        set { UserDefaults.standard.set(newValue, forKey: continuousClinicalKey) }
+    }
+}
+
+
 /// Wraps a live `SensorSession` after pairing has succeeded. Decrypts
 /// glucose-channel notifications using the session keys (`kEnc`/`ivEnc`)
 /// and surfaces usable readings via a callback.
@@ -192,16 +207,17 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
             llog("CCCD refresh starting")
             try await session.refreshDataPlaneNotifications()
             llog("CCCD refresh complete")
-            // Keep the clinical channel subscribed for the whole session so the
-            // per-minute clinical records (current word[5] + raw channels) stream
-            // live, not just as a burst-replay on reconnect. Best-effort: the
-            // realtime stream is what matters, so a failure here is logged but
-            // doesn't fail the session.
-            do {
-                try await session.setNotify(true, for: LibreSensorGATT.Char.clinicalData, timeout: 5)
-                llog("clinicalData notifications enabled (continuous)")
-            } catch {
-                llog("continuous clinicalData enable failed: \(String(describing: error))")
+            // Optionally keep the clinical channel subscribed for the whole
+            // session so the Streams debug view's clinical/raw charts update
+            // live. OFF by default (it adds per-reconnect clinical churn and is
+            // only needed for stream inspection). Best-effort either way.
+            if LibreLoopDebugSettings.continuousClinicalEnabled {
+                do {
+                    try await session.setNotify(true, for: LibreSensorGATT.Char.clinicalData, timeout: 5)
+                    llog("clinicalData notifications enabled (continuous)")
+                } catch {
+                    llog("continuous clinicalData enable failed: \(String(describing: error))")
+                }
             }
             return true
         } catch {
