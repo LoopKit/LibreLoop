@@ -210,6 +210,14 @@ extension LibreLoopCGMManager {
         guard let monitor else { return }
         hasRequestedBackfillThisSession = true
         let from = backfillStartLifeCount(currentLifeCount: currentLifeCount)
+        // Clinical backfill is per-minute; covering a multi-hour disconnect at
+        // 1-min resolution floods Loop with points. Limit clinical to a recent
+        // window (the older gap is still covered at 5-min by historical), so we
+        // get fine detail near "now" and coarse fill for old gaps.
+        let recentClinicalWindow: UInt16 = 30
+        let clinicalFrom: UInt16 = (currentLifeCount > recentClinicalWindow && currentLifeCount &- recentClinicalWindow > from)
+            ? currentLifeCount &- recentClinicalWindow
+            : from
         Task { [weak self, weak monitor] in
             guard let monitor else { return }
             do {
@@ -246,7 +254,7 @@ extension LibreLoopCGMManager {
                     try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
                 }
                 do {
-                    try await monitor.requestClinicalBackfill(fromLifeCount: from)
+                    try await monitor.requestClinicalBackfill(fromLifeCount: clinicalFrom)
                     break
                 } catch {
                     let isLast = (i == backoffs.count - 1)
@@ -514,7 +522,11 @@ extension LibreLoopCGMManager {
                 trendRate: nil,
                 isDisplayOnly: false,
                 wasUserEntered: false,
-                syncIdentifier: "libreloop-bkfill-\(serial)-\(sample.lifeCount)",
+                // Same scheme as realtime ("libreloop-<serial>-<lifeCount>") so
+                // a given minute has ONE identity in Loop regardless of source
+                // (realtime / historical / clinical) and can't become a
+                // duplicate point at the same timestamp.
+                syncIdentifier: "libreloop-\(serial)-\(sample.lifeCount)",
                 syncVersion: 1,
                 device: device
             ))
@@ -609,7 +621,7 @@ extension LibreLoopCGMManager {
             trendRate: nil,
             isDisplayOnly: false,
             wasUserEntered: false,
-            syncIdentifier: "libreloop-bkfill-\(serial)-\(lifeCount)",
+            syncIdentifier: "libreloop-\(serial)-\(lifeCount)",
             syncVersion: 1,
             device: device
         )

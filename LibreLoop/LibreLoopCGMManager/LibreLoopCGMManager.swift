@@ -540,6 +540,36 @@ public final class LibreLoopCGMManager: CGMManager {
     public init() {
         self.state = LibreLoopCGMManagerState()
         observeAppLifecycle()
+        registerDeviceLogForwarding()
+    }
+
+    /// Mirror every `llog` line into Loop's persistent DeviceLog so LibreLoop's
+    /// connection/data/error events show up in Loop's device logs and Issue
+    /// Reports, like the other CGM managers. The entry type is inferred from
+    /// the message; the device identifier is the sensor serial.
+    private func registerDeviceLogForwarding() {
+        setLibreLoopDeviceLogSink { [weak self] message in
+            guard let self else { return }
+            let lower = message.lowercased()
+            let type: DeviceLogEntryType
+            if lower.contains("error") || lower.contains("fail") {
+                type = .error
+            } else if lower.contains("connect") || lower.contains("disconnect") {
+                type = .connection
+            } else {
+                type = .receive
+            }
+            let identifier = self.state.sensorSerial
+            let forward = { [weak self] in
+                guard let self else { return }
+                self.cgmManagerDelegate?.deviceManager(self, logEventForDeviceIdentifier: identifier, type: type, message: message, completion: nil)
+            }
+            if let queue = self.delegateQueue {
+                queue.async(execute: forward)
+            } else {
+                forward()
+            }
+        }
     }
 
     private func observeAppLifecycle() {

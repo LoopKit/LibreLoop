@@ -113,8 +113,21 @@ public final class LibreLoopFileLogger: ObservableObject, @unchecked Sendable {
     }
 }
 
-/// Helper that mirrors a single string to both the unified OS log
-/// (so Console.app still sees it) and to the LibreLoop file logger.
+/// Optional sink that also forwards every `llog` message to Loop's persistent
+/// DeviceLog (`logEventForDeviceIdentifier`), so LibreLoop's connection and
+/// data events appear in Loop's device logs / Issue Reports like the other CGM
+/// managers. The CGM manager registers this via `setLibreLoopDeviceLogSink`.
+/// Set once at manager init, then read on every llog — a benign set-once race.
+private var libreLoopDeviceLogSink: ((String) -> Void)?
+
+/// Register (or clear) the DeviceLog forwarder used by `llog`.
+public func setLibreLoopDeviceLogSink(_ sink: ((String) -> Void)?) {
+    libreLoopDeviceLogSink = sink
+}
+
+/// Helper that mirrors a single string to the unified OS log (so Console.app
+/// still sees it), the LibreLoop file logger, and — when a sink is registered —
+/// Loop's persistent DeviceLog.
 /// Use this at every call site where we currently do `log.notice("...")`
 /// for connection-state events worth retaining.
 public func llog(_ message: String,
@@ -125,4 +138,7 @@ public func llog(_ message: String,
     let osLog = OSLog(subsystem: "org.loopkit.LibreLoop", category: String(describing: category))
     os_log("%{public}@ %{public}@", log: osLog, type: .info, tag, message)
     LibreLoopFileLogger.shared.append("\(tag) \(message)")
+    // DeviceLog gets the clean message only — no [file:line] tag, matching the
+    // other CGM managers' device-log style (the tag stays in os_log + file log).
+    libreLoopDeviceLogSink?(message)
 }
