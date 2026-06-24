@@ -400,9 +400,26 @@ public final class LibreLoopCGMManager: CGMManager {
     /// scanner is used for pair, reconnect, and ongoing monitoring -- the
     /// restoration identifier must stay stable for restoration to work.
     private static let restorationIdentifier = "org.loopkit.LibreLoop.central"
-    public lazy var scanner: SensorScannerNG = {
+
+    /// One process-wide BLE central, shared across CGMManager lifetimes.
+    ///
+    /// A CBCentralManager created with a state-restoration identifier is retained
+    /// by the system for the whole app lifetime (so iOS can relaunch us on BLE
+    /// events). Creating a SECOND central with the same restoration identifier —
+    /// which is exactly what happened when the CGM was deleted and re-added in
+    /// the same app session — is a CoreBluetooth API misuse: the new central
+    /// never powers on, surfacing as "Bluetooth not available" during pairing.
+    /// Sharing one instance avoids the collision. It's created lazily on first
+    /// use (so we don't trigger the Bluetooth permission prompt before the user
+    /// starts pairing) and outlives individual managers; each manager attaches
+    /// its own event listener and tears it down again in delete()/deinit.
+    private static let sharedScanner: SensorScannerNG = {
         BLETiming.setLogger { llog("ble: \($0)") }
-        let scanner = SensorScannerNG(configuration: .background(restorationIdentifier: Self.restorationIdentifier))
+        return SensorScannerNG(configuration: .background(restorationIdentifier: restorationIdentifier))
+    }()
+
+    public lazy var scanner: SensorScannerNG = {
+        let scanner = Self.sharedScanner
         // Tell iOS to wake us when our peripheral comes into range or
         // disconnects so we don't have to actively scan to notice.
         if let id = state.peripheralID {
@@ -678,6 +695,24 @@ public final class LibreLoopCGMManager: CGMManager {
     }
 
     public func delete(completion: @escaping () -> Void) {
+        // The central is shared and outlives this manager, so a deleted manager
+        // must stop driving it — otherwise its event listener + reconnect loop
+        // keep issuing connect/scan on the shared central and fight whatever
+        // manager replaces it (e.g. a re-add). Cancel our reconnect, drop our
+        // listener, and release any link/scan we started.
+        cancelReconnect()
+        // A non-nil listener task means the lazy `scanner` was initialized, so
+        // it's safe to touch without forcing central creation on a never-paired
+        // manager being deleted.
+        if eventListenerTask != nil {
+            eventListenerTask?.cancel()
+            eventListenerTask = nil
+            scanner.stopScan()
+            if let id = state.peripheralID,
+               let peripheral = scanner.retrievePeripherals(withIdentifiers: [id]).first {
+                scanner.cancelConnection(peripheral)
+            }
+        }
         completion()
     }
 }
