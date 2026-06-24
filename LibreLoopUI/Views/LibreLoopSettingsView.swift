@@ -327,10 +327,25 @@ struct LibreLoopSettingsView: View {
     /// timestamp + message is what's useful. The tag stays intact when
     /// you Copy log so re_abbot's tooling can still parse it.
     private func formatLineForDisplay(_ line: String) -> String {
-        guard let close = line.firstIndex(of: "]") else { return line }
-        let afterTag = line.index(after: close)
-        let trimmed = line[afterTag...].drop(while: { $0 == " " })
-        return String(trimmed)
+        // Stored format: "<ISO8601 UTC> [file:line] message". Show a local
+        // wall-clock time (so reconnection cadence is visible) + the message,
+        // dropping the verbose [file:line] tag.
+        var time = ""
+        var rest = Substring(line)
+        if let firstSpace = line.firstIndex(of: " ") {
+            let stamp = String(line[..<firstSpace])
+            if let date = Self.logISOParser.date(from: stamp) {
+                time = Self.logTimeFormatter.string(from: date)
+            }
+            rest = line[line.index(after: firstSpace)...]
+        }
+        let message: String
+        if let close = rest.firstIndex(of: "]") {
+            message = String(rest[rest.index(after: close)...].drop(while: { $0 == " " }))
+        } else {
+            message = String(rest)
+        }
+        return time.isEmpty ? message : "\(time)  \(message)"
     }
 
     private func copyActivity(_ lines: [String]) {
@@ -424,6 +439,20 @@ struct LibreLoopSettingsView: View {
     private static let relative: RelativeDateTimeFormatter = {
         let f = RelativeDateTimeFormatter()
         f.unitsStyle = .short
+        return f
+    }()
+
+    /// Parses the ISO8601 (UTC) prefix each log line is stamped with.
+    private static let logISOParser: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+
+    /// Renders the log timestamp as a local wall-clock time for the in-app view.
+    private static let logTimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "HH:mm:ss"
         return f
     }()
 
