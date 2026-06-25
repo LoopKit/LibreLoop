@@ -54,6 +54,13 @@ public final class LibreLoopCGMManager: CGMManager {
     /// manager that replaces it (a re-add), producing PairingFlowError 7 during
     /// the new pairing's handshake. Guards reconnect scheduling.
     private(set) var isDeleted = false
+
+    /// Alert identifier for the sensor-attention alert (replace/ended), routed
+    /// through LoopKit's AlertManager. Separate from the scheduled expiry alerts.
+    static let sensorAttentionAlertID: Alert.AlertIdentifier = "sensorAttention"
+    /// Last sensor-attention state we acted on, so the per-minute patch-status
+    /// stream only alerts on an actual state change (not every minute).
+    var lastSensorAttention: Libre3SensorAttention?
     /// Wall-clock time we last spawned a reconnect Task. Used by
     /// scheduleReconnect to coalesce bursts of CB events (e.g., a
     /// flapping link can emit 4+ didDisconnect / didFailToConnect

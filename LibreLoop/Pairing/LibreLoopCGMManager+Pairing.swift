@@ -117,6 +117,9 @@ extension LibreLoopCGMManager {
 
         emitSensorStartEvent(for: newState)
 
+        // New sensor — re-evaluate attention from scratch.
+        lastSensorAttention = nil
+
         adopt(monitor: outcome.monitor)
     }
 
@@ -299,6 +302,48 @@ extension LibreLoopCGMManager {
     /// onLifeCount handler is what fills activatedAt during that window.
     func handlePatchStatus(_ status: PatchStatus) {
         seedActivatedAtIfNeeded(currentLifeCount: status.currentLifeCount, source: "patch status")
+        notifySensorAttentionIfNeeded(status)
+    }
+
+    /// Surface the sensor's self-reported attention state (LibreCRKit e69dbd6's
+    /// `Libre3SensorAttention`) to the user via Loop's AlertManager. Only the
+    /// actionable end states (replace / ended) raise an alert; transient
+    /// check-sensor and clears are logged and retract any prior alert. Patch
+    /// status arrives ~once a minute, so we only act when the state changes.
+    private func notifySensorAttentionIfNeeded(_ status: PatchStatus) {
+        let attention = status.sensorAttention
+        guard attention != lastSensorAttention else { return }
+        lastSensorAttention = attention
+        llog("sensor attention: \(attention) (patchState=\(status.patchStateKind), replace=\(status.shouldNotifyReplaceSensor))")
+
+        let identifier = Alert.Identifier(managerIdentifier: pluginIdentifier,
+                                          alertIdentifier: Self.sensorAttentionAlertID)
+        let delegate = cgmManagerDelegate
+        let content: (title: String, body: String)?
+        switch attention {
+        case .replaceSensor:
+            content = ("Replace sensor",
+                       "Your FreeStyle Libre 3 sensor has stopped working and needs to be replaced to resume CGM readings.")
+        case .sensorEnded:
+            content = ("Sensor ended",
+                       "Your FreeStyle Libre 3 sensor session has ended. Replace it to resume CGM readings.")
+        case .checkSensor, .none, .unknown:
+            // Transient or cleared — don't alert; retract any standing one.
+            content = nil
+        }
+
+        guard let content else {
+            Task { await delegate?.retractAlert(identifier: identifier) }
+            return
+        }
+        let alert = Alert(
+            identifier: identifier,
+            foregroundContent: .init(title: content.title, body: content.body, acknowledgeActionButtonLabel: "OK"),
+            backgroundContent: .init(title: content.title, body: content.body, acknowledgeActionButtonLabel: "OK"),
+            trigger: .immediate,
+            interruptionLevel: .timeSensitive
+        )
+        Task { await delegate?.issueAlert(alert) }
     }
 
     /// Handle the per-minute lifeCount surfaced by every realtime glucose

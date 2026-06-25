@@ -230,7 +230,7 @@ public final class LibreLoopPairingService {
                 }
             }
 
-            let phoneCert = try Self.loadBundled162bCert()
+            let phoneCert = try Self.loadFirstPairCert()
             let nativeEphemeral = try SessionKey.makeFirstPairNativeEphemeral(
                 entropySource: Self.secureRandomBytes(count:)
             )
@@ -406,7 +406,7 @@ public final class LibreLoopPairingService {
         //   - Phase 5 entropy = nativeEphemeral.nullEntropy11A
         onStage(.handshaking)
         let transport = SensorSessionTransport(session: session)
-        let phoneCert = try Self.loadBundled162bCert()
+        let phoneCert = try Self.loadFirstPairCert()
         let nativeEphemeral = try SessionKey.makeFirstPairNativeEphemeral(
             entropySource: Self.secureRandomBytes(count:)
         )
@@ -704,6 +704,18 @@ public final class LibreLoopPairingService {
         }
         guard status == errSecSuccess else { throw Failure.entropy(status) }
         return Data(buffer)
+    }
+
+    /// The 03 03 first-pair cert. Prefer the copy bundled in LibreCRKit (the
+    /// canonical source as of upstream e69dbd6) so we automatically track any
+    /// upstream cert update; fall back to LibreLoop's vendored copy if the
+    /// package resource isn't loadable in this build configuration.
+    private static func loadFirstPairCert() throws -> PhoneCert {
+        if let cert = try? PhoneCert.bundled162b() {
+            return cert
+        }
+        llog("PhoneCert.bundled162b() unavailable; falling back to vendored phone_cert_162b.bin")
+        return try loadBundled162bCert()
     }
 
     private static func loadBundled162bCert() throws -> PhoneCert {
