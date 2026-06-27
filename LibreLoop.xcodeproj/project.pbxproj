@@ -1048,7 +1048,7 @@
 			repositoryURL = "https://github.com/airedev326/LibreCRKit.git";
 			requirement = {
 				kind = revision;
-				revision = 88508ae45304ce87d15de3df314fb62e939578d9;
+				revision = e69dbd66f648ee3956b838b1b42abb6cd54957d2;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
