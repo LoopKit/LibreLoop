@@ -5,21 +5,21 @@ struct LibreLoopScanHelpPagerView: View {
 
     private let steps: [HelpStep] = [
         HelpStep(
-            title: "STEP 1",
+            title: LocalizedString("STEP 1", comment: "Scan-sensor help step 1 title"),
             image: .systemSymbol("iphone.gen3.radiowaves.left.and.right"),
-            body: "Hold the BACK of your phone against the sensor.",
+            body: LocalizedString("Hold the BACK of your phone against the sensor.", comment: "Scan-sensor help step 1 body"),
             note: nil
         ),
         HelpStep(
-            title: "STEP 2",
+            title: LocalizedString("STEP 2", comment: "Scan-sensor help step 2 title"),
             image: .systemSymbol("hand.raised.fill"),
-            body: "Keep the phone still. Pairing takes a few seconds.",
-            note: "If your phone moves away, the scan will fail and you'll need to try again."
+            body: LocalizedString("Keep the phone still. Pairing takes a few seconds.", comment: "Scan-sensor help step 2 body"),
+            note: LocalizedString("If your phone moves away, the scan will fail and you'll need to try again.", comment: "Scan-sensor help step 2 note")
         ),
         HelpStep(
-            title: "STEP 3",
+            title: LocalizedString("STEP 3", comment: "Scan-sensor help step 3 title"),
             image: .systemSymbol("checkmark.seal.fill"),
-            body: "Your phone will vibrate when pairing succeeds.",
+            body: LocalizedString("Your phone will vibrate when pairing succeeds.", comment: "Scan-sensor help step 3 body"),
             note: nil
         )
     ]
@@ -33,11 +33,11 @@ struct LibreLoopScanHelpPagerView: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .always))
             .indexViewStyle(.page(backgroundDisplayMode: .always))
-            .navigationTitle("How to scan a Sensor")
+            .navigationTitle(LocalizedString("How to scan a Sensor", comment: "Scan-sensor help screen title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done", action: onDone)
+                    Button(LocalizedString("Done", comment: "Done button"), action: onDone)
                 }
             }
         }

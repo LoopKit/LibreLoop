@@ -5,39 +5,39 @@ struct LibreLoopApplyHelpPagerView: View {
 
     private let steps: [HelpStep] = [
         HelpStep(
-            title: "STEP 1",
+            title: LocalizedString("STEP 1", comment: "Apply-sensor help step 1 title"),
             image: .asset("ApplySensorStep1"),
-            body: "Select a site on the back of your upper arm.",
-            note: "Avoid scars, moles, stretch marks, lumps, and insulin injection sites. Rotate sites between applications."
+            body: LocalizedString("Select a site on the back of your upper arm.", comment: "Apply-sensor help step 1 body"),
+            note: LocalizedString("Avoid scars, moles, stretch marks, lumps, and insulin injection sites. Rotate sites between applications.", comment: "Apply-sensor help step 1 note")
         ),
         HelpStep(
-            title: "STEP 2",
+            title: LocalizedString("STEP 2", comment: "Apply-sensor help step 2 title"),
             image: .asset("ApplySensorStep2"),
-            body: "Wash the site with plain soap, dry, then clean with an alcohol wipe.",
-            note: "Let the area air-dry completely before applying."
+            body: LocalizedString("Wash the site with plain soap, dry, then clean with an alcohol wipe.", comment: "Apply-sensor help step 2 body"),
+            note: LocalizedString("Let the area air-dry completely before applying.", comment: "Apply-sensor help step 2 note")
         ),
         HelpStep(
-            title: "STEP 3",
+            title: LocalizedString("STEP 3", comment: "Apply-sensor help step 3 title"),
             image: .asset("ApplySensorStep3"),
-            body: "Twist off the cap from the sensor applicator.",
-            note: "Do not reuse the cap. The sterile barrier is broken once removed."
+            body: LocalizedString("Twist off the cap from the sensor applicator.", comment: "Apply-sensor help step 3 body"),
+            note: LocalizedString("Do not reuse the cap. The sterile barrier is broken once removed.", comment: "Apply-sensor help step 3 note")
         ),
         HelpStep(
-            title: "STEP 4",
+            title: LocalizedString("STEP 4", comment: "Apply-sensor help step 4 title"),
             image: .asset("ApplySensorStep4"),
-            body: "Press the applicator firmly against the prepared site.",
-            note: "Hold steady for a moment so the sensor seats fully against the skin."
+            body: LocalizedString("Press the applicator firmly against the prepared site.", comment: "Apply-sensor help step 4 body"),
+            note: LocalizedString("Hold steady for a moment so the sensor seats fully against the skin.", comment: "Apply-sensor help step 4 note")
         ),
         HelpStep(
-            title: "STEP 5",
+            title: LocalizedString("STEP 5", comment: "Apply-sensor help step 5 title"),
             image: .asset("ApplySensorStep5"),
-            body: "Lift the applicator straight away from your arm.",
-            note: "The sensor stays on your arm; the applicator comes off empty."
+            body: LocalizedString("Lift the applicator straight away from your arm.", comment: "Apply-sensor help step 5 body"),
+            note: LocalizedString("The sensor stays on your arm; the applicator comes off empty.", comment: "Apply-sensor help step 5 note")
         ),
         HelpStep(
-            title: "STEP 6",
+            title: LocalizedString("STEP 6", comment: "Apply-sensor help step 6 title"),
             image: .asset("ApplySensorStep6"),
-            body: "Run a finger around the adhesive edge to make sure the sensor is secure.",
+            body: LocalizedString("Run a finger around the adhesive edge to make sure the sensor is secure.", comment: "Apply-sensor help step 6 body"),
             note: nil
         )
     ]
@@ -51,11 +51,11 @@ struct LibreLoopApplyHelpPagerView: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .always))
             .indexViewStyle(.page(backgroundDisplayMode: .always))
-            .navigationTitle("How to apply a Sensor")
+            .navigationTitle(LocalizedString("How to apply a Sensor", comment: "Apply-sensor help screen title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done", action: onDone)
+                    Button(LocalizedString("Done", comment: "Done button"), action: onDone)
                 }
             }
         }

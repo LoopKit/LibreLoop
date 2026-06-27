@@ -990,10 +990,10 @@ extension LibreLoopCGMManager {
 
     static func statusText(for stage: LibreLoopPairingService.Stage) -> String {
         switch stage {
-        case .nfcScanning:   return "Scanning sensor"
-        case .bleSearching:  return "Searching for sensor"
-        case .bleConnecting: return "Connecting"
-        case .handshaking:   return "Authenticating"
+        case .nfcScanning:   return LocalizedString("Scanning sensor", comment: "Pairing stage: NFC scanning")
+        case .bleSearching:  return LocalizedString("Searching for sensor", comment: "Pairing stage: BLE searching")
+        case .bleConnecting: return LocalizedString("Connecting", comment: "Pairing stage: connecting")
+        case .handshaking:   return LocalizedString("Authenticating", comment: "Pairing stage: handshaking")
         }
     }
 

@@ -43,20 +43,20 @@ struct LibreLoopSettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                Button("Done", action: didFinish)
+                Button(LocalizedString("Done", comment: "Done button"), action: didFinish)
             }
         }
-        .confirmationDialog("Delete CGM?", isPresented: $confirmingDelete, titleVisibility: .visible) {
-            Button("Delete", role: .destructive, action: deleteCGM)
-            Button("Cancel", role: .cancel) { }
+        .confirmationDialog(LocalizedString("Delete CGM?", comment: "Delete CGM confirmation title"), isPresented: $confirmingDelete, titleVisibility: .visible) {
+            Button(LocalizedString("Delete", comment: "Delete button"), role: .destructive, action: deleteCGM)
+            Button(LocalizedString("Cancel", comment: "Cancel button"), role: .cancel) { }
         } message: {
-            Text("This removes the FreeStyle Libre 3 CGM from Loop. You'll need to re-pair to resume readings.")
+            Text(LocalizedString("This removes the FreeStyle Libre 3 CGM from Loop. You'll need to re-pair to resume readings.", comment: "Delete CGM confirmation message"))
         }
-        .confirmationDialog("Pair a new sensor?", isPresented: $confirmingReplace, titleVisibility: .visible) {
-            Button("Continue", action: replaceSensor)
-            Button("Cancel", role: .cancel) { }
+        .confirmationDialog(LocalizedString("Pair a new sensor?", comment: "Replace sensor confirmation title"), isPresented: $confirmingReplace, titleVisibility: .visible) {
+            Button(LocalizedString("Continue", comment: "Continue button"), action: replaceSensor)
+            Button(LocalizedString("Cancel", comment: "Cancel button"), role: .cancel) { }
         } message: {
-            Text("This stops monitoring the current sensor and starts pairing for a new one. The CGM stays configured with Loop.")
+            Text(LocalizedString("This stops monitoring the current sensor and starts pairing for a new one. The CGM stays configured with Loop.", comment: "Replace sensor confirmation message"))
         }
         // Sheet must be attached at the List level. When it's attached inside
         // a Section, the List rebuilds its rows on the state change and
@@ -99,7 +99,7 @@ struct LibreLoopSettingsView: View {
     }
 
     private var sensorSection: some View {
-        Section("Sensor") {
+        Section(LocalizedString("Sensor", comment: "Settings section: sensor")) {
             LibreLoopLifecycleBar(lifecycle: viewModel.lifecycle,
                                   statusDetail: viewModel.statusDetail)
                 .padding(.vertical, 4)
@@ -108,7 +108,7 @@ struct LibreLoopSettingsView: View {
                     Circle()
                         .fill(connectionColor)
                         .frame(width: 10, height: 10)
-                    Text("Bluetooth")
+                    Text(LocalizedString("Bluetooth", comment: "Bluetooth connection row label"))
                     Spacer()
                     Text(connectionLabel)
                         .foregroundStyle(.secondary)
@@ -124,7 +124,7 @@ struct LibreLoopSettingsView: View {
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
                             if let at = viewModel.lastReconnectAttemptAt {
-                                Text("Last attempt \(Self.relative.localizedString(for: at, relativeTo: Date()))")
+                                Text(String(format: LocalizedString("Last attempt %@", comment: "Reconnect error: time of last attempt"), Self.relative.localizedString(for: at, relativeTo: Date())))
                                     .font(.caption2)
                                     .foregroundStyle(.tertiary)
                             }
@@ -134,10 +134,10 @@ struct LibreLoopSettingsView: View {
                 }
             }
             if let model = viewModel.sensorModel {
-                LabeledContent("Sensor", value: model)
+                LabeledContent(LocalizedString("Sensor", comment: "Sensor model row label"), value: model)
             }
             if let activated = viewModel.activatedAt {
-                LabeledContent("Activated", value: activated.formatted(date: .abbreviated, time: .shortened))
+                LabeledContent(LocalizedString("Activated", comment: "Sensor activation date row label"), value: activated.formatted(date: .abbreviated, time: .shortened))
             }
         }
     }
@@ -149,27 +149,27 @@ struct LibreLoopSettingsView: View {
             || viewModel.blePINHex != nil
             || viewModel.receiverIDHex != nil
         if hasAny {
-            Section("Debug Info") {
+            Section(LocalizedString("Debug Info", comment: "Settings section: debug info")) {
                 if let serial = viewModel.sensorSerial {
-                    LabeledContent("Serial", value: serial)
+                    LabeledContent(LocalizedString("Serial", comment: "Sensor serial row label"), value: serial)
                         .monospaced()
                         .font(.footnote)
                         .textSelection(.enabled)
                 }
                 if let ble = viewModel.bleAddress {
-                    LabeledContent("Bluetooth", value: ble)
+                    LabeledContent(LocalizedString("Bluetooth", comment: "Bluetooth address row label"), value: ble)
                         .monospaced()
                         .font(.footnote)
                         .textSelection(.enabled)
                 }
                 if let pin = viewModel.blePINHex {
-                    LabeledContent("BLE PIN", value: pin)
+                    LabeledContent(LocalizedString("BLE PIN", comment: "BLE PIN row label"), value: pin)
                         .monospaced()
                         .font(.footnote)
                         .textSelection(.enabled)
                 }
                 if let rid = viewModel.receiverIDHex {
-                    LabeledContent("Receiver ID", value: rid)
+                    LabeledContent(LocalizedString("Receiver ID", comment: "Receiver ID row label"), value: rid)
                         .monospaced()
                         .font(.footnote)
                         .textSelection(.enabled)
@@ -180,7 +180,7 @@ struct LibreLoopSettingsView: View {
 
     @ViewBuilder
     private var lastReadingSection: some View {
-        Section("Last Reading") {
+        Section(LocalizedString("Last Reading", comment: "Settings section: last reading")) {
             if let sample = viewModel.latestSample {
                 HStack(alignment: .firstTextBaseline) {
                     Text(displayGlucosePreference.format(
@@ -213,7 +213,7 @@ struct LibreLoopSettingsView: View {
                     // Informational, not a warning: the sensor sent a
                     // value that's forwarded to Loop as isDisplayOnly --
                     // shown on the chart but not used for dosing math.
-                    Label(sample.qualityIssue ?? "Display only",
+                    Label(sample.qualityIssue ?? LocalizedString("Display only", comment: "Reading is display-only, not used for dosing"),
                           systemImage: "info.circle")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
@@ -232,7 +232,7 @@ struct LibreLoopSettingsView: View {
     @ViewBuilder
     private var recentReadingsSection: some View {
         if !viewModel.recentSamples.isEmpty {
-            Section("Recent Readings") {
+            Section(LocalizedString("Recent Readings", comment: "Settings section: recent readings")) {
                 LibreLoopReadingHeaderRow()
                 let visible = showingAllReadings ? viewModel.recentSamples : Array(viewModel.recentSamples.prefix(8))
                 ForEach(visible.indices, id: \.self) { idx in
@@ -243,7 +243,9 @@ struct LibreLoopSettingsView: View {
                     }
                 }
                 if viewModel.recentSamples.count > 8 {
-                    Button(showingAllReadings ? "Show fewer" : "Show all \(viewModel.recentSamples.count)") {
+                    Button(showingAllReadings
+                           ? LocalizedString("Show fewer", comment: "Collapse recent readings list")
+                           : String(format: LocalizedString("Show all %d", comment: "Expand recent readings list to N"), viewModel.recentSamples.count)) {
                         showingAllReadings.toggle()
                     }
                 }
@@ -259,8 +261,8 @@ struct LibreLoopSettingsView: View {
     @ViewBuilder
     private var activitySection: some View {
         let filtered = filteredLines
-        Section("Recent Activity") {
-            Picker("Filter", selection: $activityFilter) {
+        Section(LocalizedString("Recent Activity", comment: "Settings section: recent activity log")) {
+            Picker(LocalizedString("Filter", comment: "Activity log filter picker label"), selection: $activityFilter) {
                 ForEach(ActivityFilter.allCases) { f in
                     Text(f.rawValue).tag(f)
                 }
@@ -269,8 +271,8 @@ struct LibreLoopSettingsView: View {
 
             if filtered.isEmpty {
                 Text(activityFilter == .all
-                     ? "No activity logged yet."
-                     : "No activity matching this filter.")
+                     ? LocalizedString("No activity logged yet.", comment: "Empty activity log")
+                     : LocalizedString("No activity matching this filter.", comment: "Empty filtered activity log"))
                     .foregroundStyle(.secondary)
                     .font(.footnote)
             } else {
@@ -284,7 +286,9 @@ struct LibreLoopSettingsView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 if filtered.count > 12 {
-                    Button(showingAllActivity ? "Show fewer" : "Show all \(filtered.count)") {
+                    Button(showingAllActivity
+                           ? LocalizedString("Show fewer", comment: "Collapse activity log")
+                           : String(format: LocalizedString("Show all %d", comment: "Expand activity log to N lines"), filtered.count)) {
                         showingAllActivity.toggle()
                     }
                     .font(.footnote)
@@ -293,7 +297,7 @@ struct LibreLoopSettingsView: View {
                     Button {
                         copyActivity(filtered)
                     } label: {
-                        Label("Copy log", systemImage: "doc.on.doc")
+                        Label(LocalizedString("Copy log", comment: "Copy activity log button"), systemImage: "doc.on.doc")
                     }
                     .font(.footnote)
                     Spacer()
@@ -361,7 +365,7 @@ struct LibreLoopSettingsView: View {
     private func copyActivity(_ lines: [String]) {
         let joined = lines.joined(separator: "\n")
         UIPasteboard.general.string = joined
-        withAnimation { copyToast = "Copied \(lines.count) lines" }
+        withAnimation { copyToast = String(format: LocalizedString("Copied %d lines", comment: "Activity log copied confirmation"), lines.count) }
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             withAnimation { if copyToast != nil { copyToast = nil } }
         }
@@ -371,21 +375,21 @@ struct LibreLoopSettingsView: View {
     /// data streams (realtime current, clinical word[5], embedded 5-min
     /// historical, and raw sensor channels) to compare their noise.
     private var developerSection: some View {
-        Section("Developer") {
+        Section(LocalizedString("Developer", comment: "Settings section: developer tools")) {
             NavigationLink {
                 LibreLoopStreamDebugView(viewModel: viewModel.makeStreamDebugViewModel())
             } label: {
-                Label("Glucose Streams", systemImage: "waveform.path.ecg")
+                Label(LocalizedString("Glucose Streams", comment: "Developer: glucose streams debug view"), systemImage: "waveform.path.ecg")
             }
         }
     }
 
     private var deleteSection: some View {
         Section {
-            Button("Pair new sensor") {
+            Button(LocalizedString("Pair new sensor", comment: "Pair new sensor button")) {
                 confirmingReplace = true
             }
-            Button("Delete CGM", role: .destructive) {
+            Button(LocalizedString("Delete CGM", comment: "Delete CGM button"), role: .destructive) {
                 confirmingDelete = true
             }
         }
@@ -396,8 +400,8 @@ struct LibreLoopSettingsView: View {
     /// designed against 5-min CGM input. Turning it on requires the user
     /// to read the warning sheet.
     private var forwardingSection: some View {
-        Section("Forwarding to Loop") {
-            Toggle("Send every reading (experimental)", isOn: Binding(
+        Section(LocalizedString("Forwarding to Loop", comment: "Settings section: forwarding")) {
+            Toggle(LocalizedString("Send every reading (experimental)", comment: "Experimental minute-by-minute forwarding toggle"), isOn: Binding(
                 get: { viewModel.minuteByMinuteForwardingEnabled },
                 set: { newValue in
                     if newValue {
@@ -408,8 +412,8 @@ struct LibreLoopSettingsView: View {
                 }
             ))
             Text(viewModel.minuteByMinuteForwardingEnabled
-                 ? "Every realtime reading (~1/min) is sent to Loop."
-                 : "Only one reading every ~5 minutes is sent to Loop, matching the cadence other CGMs use.")
+                 ? LocalizedString("Every realtime reading (~1/min) is sent to Loop.", comment: "Forwarding footer: minute-by-minute on")
+                 : LocalizedString("Only one reading every ~5 minutes is sent to Loop, matching the cadence other CGMs use.", comment: "Forwarding footer: minute-by-minute off"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -438,11 +442,11 @@ struct LibreLoopSettingsView: View {
 
     private var connectionLabel: String {
         switch viewModel.connectionStatus {
-        case .notPaired:    return "Not paired"
-        case .connecting:   return "Connecting…"
-        case .reconnecting: return "Reconnecting…"
-        case .connected:    return "Connected"
-        case .disconnected: return "Disconnected"
+        case .notPaired:    return LocalizedString("Not paired", comment: "Connection status: not paired")
+        case .connecting:   return LocalizedString("Connecting…", comment: "Connection status: connecting")
+        case .reconnecting: return LocalizedString("Reconnecting…", comment: "Connection status: reconnecting")
+        case .connected:    return LocalizedString("Connected", comment: "Connection status: connected")
+        case .disconnected: return LocalizedString("Disconnected", comment: "Connection status: disconnected")
         }
     }
 
@@ -483,14 +487,14 @@ struct LibreLoopReadingHeaderRow: View {
 
     var body: some View {
         HStack {
-            Text("Time")
+            Text(LocalizedString("Time", comment: "Recent readings column header: time"))
                 .frame(width: 72, alignment: .leading)
             Text(displayGlucosePreference.unit.localizedShortUnitString)
                 .frame(width: 48, alignment: .trailing)
             Text("\(displayGlucosePreference.unit.localizedShortUnitString)/min")
                 .frame(width: 56, alignment: .trailing)
             Spacer()
-            Text("Trend")
+            Text(LocalizedString("Trend", comment: "Recent readings column header: trend"))
         }
         .font(.caption)
         .foregroundStyle(.secondary)
@@ -555,32 +559,32 @@ struct MinuteByMinuteWarningSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Label("Experimental setting", systemImage: "exclamationmark.triangle.fill")
+                    Label(LocalizedString("Experimental setting", comment: "Minute-by-minute warning header"), systemImage: "exclamationmark.triangle.fill")
                         .font(.title3.weight(.semibold))
                         .foregroundStyle(.orange)
 
-                    Text("Loop's algorithm was designed and tuned against CGMs that emit a new reading every 5 minutes. With this setting on, Loop receives a new reading from the FreeStyle Libre 3 every minute instead.")
-                    Text("This can change how Loop reacts to glucose movement compared to default behavior:")
+                    Text(LocalizedString("Loop's algorithm was designed and tuned against CGMs that emit a new reading every 5 minutes. With this setting on, Loop receives a new reading from the FreeStyle Libre 3 every minute instead.", comment: "Minute-by-minute warning paragraph 1"))
+                    Text(LocalizedString("This can change how Loop reacts to glucose movement compared to default behavior:", comment: "Minute-by-minute warning paragraph 2"))
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("• Dosing decisions may shift sooner or further than what Loop's review and tuning guidance assumes.")
-                        Text("• Trend math, retrospective correction, and momentum effects were validated at the 5-minute cadence.")
-                        Text("• You're accepting responsibility for monitoring outcomes more closely while this is on.")
+                        Text(LocalizedString("• Dosing decisions may shift sooner or further than what Loop's review and tuning guidance assumes.", comment: "Minute-by-minute warning bullet 1"))
+                        Text(LocalizedString("• Trend math, retrospective correction, and momentum effects were validated at the 5-minute cadence.", comment: "Minute-by-minute warning bullet 2"))
+                        Text(LocalizedString("• You're accepting responsibility for monitoring outcomes more closely while this is on.", comment: "Minute-by-minute warning bullet 3"))
                     }
                     .font(.callout)
-                    Text("Leave this off unless you understand the implications. You can turn it off again at any time.")
+                    Text(LocalizedString("Leave this off unless you understand the implications. You can turn it off again at any time.", comment: "Minute-by-minute warning footer"))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
                 .padding()
             }
-            .navigationTitle("Send every reading")
+            .navigationTitle(LocalizedString("Send every reading", comment: "Minute-by-minute warning screen title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", action: onCancel)
+                    Button(LocalizedString("Cancel", comment: "Cancel button"), action: onCancel)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Enable", role: .destructive, action: onEnable)
+                    Button(LocalizedString("Enable", comment: "Enable button"), role: .destructive, action: onEnable)
                 }
             }
         }

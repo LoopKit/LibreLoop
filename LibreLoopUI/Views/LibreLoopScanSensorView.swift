@@ -16,12 +16,12 @@ struct LibreLoopScanSensorView: View {
                         .foregroundStyle(.tint)
                         .padding(.top, 32)
 
-                    Text("Scan new Sensor")
+                    Text(LocalizedString("Scan new Sensor", comment: "Scan-sensor screen title"))
                         .font(.title2.weight(.semibold))
 
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Hold the top of your phone against the sensor.")
-                        Text("Keep it still — your phone will vibrate once the sensor is paired.")
+                        Text(LocalizedString("Hold the top of your phone against the sensor.", comment: "Scan-sensor instruction"))
+                        Text(LocalizedString("Keep it still — your phone will vibrate once the sensor is paired.", comment: "Scan-sensor stillness instruction"))
                             .foregroundStyle(.secondary)
                     }
                     .font(.body)
@@ -31,7 +31,7 @@ struct LibreLoopScanSensorView: View {
                     Button(action: onShowHelp) {
                         HStack(spacing: 8) {
                             Image(systemName: "questionmark.circle.fill")
-                            Text("HOW TO SCAN A SENSOR")
+                            Text(LocalizedString("HOW TO SCAN A SENSOR", comment: "Scan-sensor help button"))
                                 .font(.subheadline.weight(.semibold))
                         }
                     }
@@ -43,14 +43,14 @@ struct LibreLoopScanSensorView: View {
 
             VStack(spacing: 12) {
                 Button(action: onScan) {
-                    Text("Start pairing")
+                    Text(LocalizedString("Start pairing", comment: "Start pairing button"))
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                 }
                 .buttonStyle(.borderedProminent)
 
-                Button("Recover existing sensor", action: onShowRecovery)
+                Button(LocalizedString("Recover existing sensor", comment: "Recover existing sensor button"), action: onShowRecovery)
                     .font(.subheadline)
             }
             .padding()

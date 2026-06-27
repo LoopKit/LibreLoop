@@ -12,12 +12,12 @@ struct LibreLoopApplySensorView: View {
                     heroImage
                         .padding(.top, 32)
 
-                    Text("Apply a new Sensor")
+                    Text(LocalizedString("Apply a new Sensor", comment: "Apply-sensor screen title"))
                         .font(.title2.weight(.semibold))
 
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("The sensor should only be applied to the back of your upper arm.")
-                        Text("Do not remove the cap from the sensor applicator until you're ready to apply the sensor.")
+                        Text(LocalizedString("The sensor should only be applied to the back of your upper arm.", comment: "Apply-sensor instruction"))
+                        Text(LocalizedString("Do not remove the cap from the sensor applicator until you're ready to apply the sensor.", comment: "Apply-sensor cap instruction"))
                             .foregroundStyle(.secondary)
                     }
                     .font(.body)
@@ -27,7 +27,7 @@ struct LibreLoopApplySensorView: View {
                     Button(action: onShowHelp) {
                         HStack(spacing: 8) {
                             Image(systemName: "questionmark.circle.fill")
-                            Text("HOW TO APPLY A SENSOR")
+                            Text(LocalizedString("HOW TO APPLY A SENSOR", comment: "Apply-sensor help button"))
                                 .font(.subheadline.weight(.semibold))
                         }
                     }
@@ -38,7 +38,7 @@ struct LibreLoopApplySensorView: View {
             }
 
             Button(action: onNext) {
-                Text("Next")
+                Text(LocalizedString("Next", comment: "Next button"))
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
@@ -50,7 +50,7 @@ struct LibreLoopApplySensorView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel", action: onCancel)
+                Button(LocalizedString("Cancel", comment: "Cancel button"), action: onCancel)
             }
         }
     }

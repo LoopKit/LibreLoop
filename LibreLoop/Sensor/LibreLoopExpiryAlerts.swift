@@ -40,21 +40,19 @@ enum LibreLoopExpiryAlerts {
         let fullString = expirationFullString(expiresAt)
 
         var alerts: [Alert] = []
+        let ok = LocalizedString("OK", comment: "Alert acknowledge button")
 
         let warn24h = expiresAt.addingTimeInterval(-24 * 60 * 60)
         if warn24h > now {
+            let content = Alert.Content(
+                title: LocalizedString("Sensor ends tomorrow", comment: "24h sensor-expiry alert title"),
+                body: String(format: LocalizedString("Your FreeStyle Libre 3 sensor expires %@. Replace it before then to avoid a CGM interruption.", comment: "24h sensor-expiry alert body (expiry date/time)"), fullString),
+                acknowledgeActionButtonLabel: ok
+            )
             alerts.append(Alert(
                 identifier: .init(managerIdentifier: managerIdentifier, alertIdentifier: warning24hIdentifier),
-                foregroundContent: .init(
-                    title: "Sensor ends tomorrow",
-                    body: "Your FreeStyle Libre 3 sensor expires \(fullString). Replace it before then to avoid a CGM interruption.",
-                    acknowledgeActionButtonLabel: "OK"
-                ),
-                backgroundContent: .init(
-                    title: "Sensor ends tomorrow",
-                    body: "Your FreeStyle Libre 3 sensor expires \(fullString). Replace it before then to avoid a CGM interruption.",
-                    acknowledgeActionButtonLabel: "OK"
-                ),
+                foregroundContent: content,
+                backgroundContent: content,
                 trigger: .delayed(interval: warn24h.timeIntervalSince(now)),
                 interruptionLevel: .active
             ))
@@ -62,36 +60,30 @@ enum LibreLoopExpiryAlerts {
 
         let warn2h = expiresAt.addingTimeInterval(-2 * 60 * 60)
         if warn2h > now {
+            let content = Alert.Content(
+                title: LocalizedString("Sensor ends in 2 hours", comment: "2h sensor-expiry alert title"),
+                body: String(format: LocalizedString("Your FreeStyle Libre 3 sensor expires at %@. Replace it now to avoid a CGM interruption.", comment: "2h sensor-expiry alert body (expiry time)"), timeString),
+                acknowledgeActionButtonLabel: ok
+            )
             alerts.append(Alert(
                 identifier: .init(managerIdentifier: managerIdentifier, alertIdentifier: warning2hIdentifier),
-                foregroundContent: .init(
-                    title: "Sensor ends in 2 hours",
-                    body: "Your FreeStyle Libre 3 sensor expires at \(timeString). Replace it now to avoid a CGM interruption.",
-                    acknowledgeActionButtonLabel: "OK"
-                ),
-                backgroundContent: .init(
-                    title: "Sensor ends in 2 hours",
-                    body: "Your FreeStyle Libre 3 sensor expires at \(timeString). Replace it now to avoid a CGM interruption.",
-                    acknowledgeActionButtonLabel: "OK"
-                ),
+                foregroundContent: content,
+                backgroundContent: content,
                 trigger: .delayed(interval: warn2h.timeIntervalSince(now)),
                 interruptionLevel: .timeSensitive
             ))
         }
 
         if expiresAt > now {
+            let content = Alert.Content(
+                title: LocalizedString("Sensor session ended", comment: "Sensor expired alert title"),
+                body: LocalizedString("Your FreeStyle Libre 3 sensor has expired. Replace it to resume CGM readings.", comment: "Sensor expired alert body"),
+                acknowledgeActionButtonLabel: ok
+            )
             alerts.append(Alert(
                 identifier: .init(managerIdentifier: managerIdentifier, alertIdentifier: sessionEndedIdentifier),
-                foregroundContent: .init(
-                    title: "Sensor session ended",
-                    body: "Your FreeStyle Libre 3 sensor has expired. Replace it to resume CGM readings.",
-                    acknowledgeActionButtonLabel: "OK"
-                ),
-                backgroundContent: .init(
-                    title: "Sensor session ended",
-                    body: "Your FreeStyle Libre 3 sensor has expired. Replace it to resume CGM readings.",
-                    acknowledgeActionButtonLabel: "OK"
-                ),
+                foregroundContent: content,
+                backgroundContent: content,
                 trigger: .delayed(interval: expiresAt.timeIntervalSince(now)),
                 interruptionLevel: .timeSensitive
             ))

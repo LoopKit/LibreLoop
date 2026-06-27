@@ -70,12 +70,12 @@ final class LibreLoopPairingViewModel: ObservableObject {
 
     var statusText: String {
         switch state {
-        case .idle: return "Preparing…"
-        case .nfcScanning: return "Hold your phone to the sensor"
-        case .bleSearching: return "Searching for sensor over Bluetooth…"
-        case .bleConnecting: return "Connecting…"
-        case .handshaking: return "Authenticating with sensor…"
-        case .succeeded(let serial): return "Sensor \(serial) paired"
+        case .idle: return LocalizedString("Preparing…", comment: "Pairing status: preparing")
+        case .nfcScanning: return LocalizedString("Hold your phone to the sensor", comment: "Pairing status: NFC scanning")
+        case .bleSearching: return LocalizedString("Searching for sensor over Bluetooth…", comment: "Pairing status: BLE searching")
+        case .bleConnecting: return LocalizedString("Connecting…", comment: "Pairing status: connecting")
+        case .handshaking: return LocalizedString("Authenticating with sensor…", comment: "Pairing status: handshaking")
+        case .succeeded(let serial): return String(format: LocalizedString("Sensor %@ paired", comment: "Pairing status: success with serial"), serial)
         case .failed(let message): return message
         }
     }

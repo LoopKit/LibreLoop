@@ -18,7 +18,7 @@ struct LibreLoopPairingProgressView: View {
             footer
         }
         .padding()
-        .navigationTitle("Pairing")
+        .navigationTitle(LocalizedString("Pairing", comment: "Pairing progress screen title"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .onAppear { viewModel.start() }
@@ -48,7 +48,7 @@ struct LibreLoopPairingProgressView: View {
     private var footer: some View {
         if viewModel.didSucceed {
             Button(action: onDone) {
-                Text("Done")
+                Text(LocalizedString("Done", comment: "Done button"))
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
@@ -57,17 +57,17 @@ struct LibreLoopPairingProgressView: View {
         } else if viewModel.didFail {
             VStack(spacing: 12) {
                 Button(action: onRetry) {
-                    Text("Try again")
+                    Text(LocalizedString("Try again", comment: "Retry button"))
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                 }
                 .buttonStyle(.borderedProminent)
-                Button("Cancel", action: onCancel)
+                Button(LocalizedString("Cancel", comment: "Cancel button"), action: onCancel)
                     .font(.subheadline)
             }
         } else {
-            Button("Cancel", action: onCancel)
+            Button(LocalizedString("Cancel", comment: "Cancel button"), action: onCancel)
                 .font(.subheadline)
         }
     }

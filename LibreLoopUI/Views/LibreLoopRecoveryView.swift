@@ -14,23 +14,23 @@ struct LibreLoopRecoveryView: View {
                         Image(systemName: "key.horizontal.fill")
                             .font(.largeTitle)
                             .foregroundStyle(.tint)
-                        Text("Recover existing sensor")
+                        Text(LocalizedString("Recover existing sensor", comment: "Recovery screen title"))
                             .font(.title2.weight(.semibold))
-                        Text("Enter the receiver ID this sensor was originally paired under. The sensor only accepts a switch-receiver command from the same ID it remembers — there's no way to recover without it.")
+                        Text(LocalizedString("Enter the receiver ID this sensor was originally paired under. The sensor only accepts a switch-receiver command from the same ID it remembers — there's no way to recover without it.", comment: "Recovery screen explanation"))
                             .font(.body)
                             .foregroundStyle(.secondary)
                     }
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Receiver ID")
+                        Text(LocalizedString("Receiver ID", comment: "Receiver ID field label"))
                             .font(.subheadline.weight(.semibold))
-                        TextField("8-character hex (little-endian)", text: $receiverIDInput)
+                        TextField(LocalizedString("8-character hex (little-endian)", comment: "Receiver ID field placeholder"), text: $receiverIDInput)
                             .textFieldStyle(.roundedBorder)
                             .autocorrectionDisabled()
                             .textInputAutocapitalization(.never)
                             .monospaced()
                             .onChange(of: receiverIDInput) { _, _ in validationError = nil }
-                        Text("Example: `78563412`. If this sensor was paired with this app before, the value is shown as \"Receiver ID\" in the Debug Info section of the Libre 3 CGM settings page.")
+                        Text(LocalizedString("Example: `78563412`. If this sensor was paired with this app before, the value is shown as \"Receiver ID\" in the Debug Info section of the Libre 3 CGM settings page.", comment: "Receiver ID field help text"))
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                         if let validationError {
@@ -40,7 +40,7 @@ struct LibreLoopRecoveryView: View {
                         }
                     }
 
-                    Text("The receiver ID is assigned by Loop when it first pairs a sensor. It's saved in this app and shown on the Libre 3 settings page — write it down if you want to re-pair this sensor after reinstalling Loop.")
+                    Text(LocalizedString("The receiver ID is assigned by Loop when it first pairs a sensor. It's saved in this app and shown on the Libre 3 settings page — write it down if you want to re-pair this sensor after reinstalling Loop.", comment: "Recovery screen footnote"))
                         .font(.footnote)
                         .italic()
                         .foregroundStyle(.secondary)
@@ -51,7 +51,7 @@ struct LibreLoopRecoveryView: View {
             }
 
             Button(action: tryContinue) {
-                Text("Continue")
+                Text(LocalizedString("Continue", comment: "Continue button"))
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
@@ -60,7 +60,7 @@ struct LibreLoopRecoveryView: View {
             .disabled(receiverIDInput.isEmpty)
             .padding()
         }
-        .navigationTitle("Recovery")
+        .navigationTitle(LocalizedString("Recovery", comment: "Recovery screen title"))
         .navigationBarTitleDisplayMode(.inline)
     }
 
@@ -69,7 +69,7 @@ struct LibreLoopRecoveryView: View {
             .replacingOccurrences(of: "0x", with: "", options: [.caseInsensitive])
             .filter { $0.isHexDigit }
         guard cleaned.count == 8 else {
-            validationError = "Enter exactly 8 hex characters."
+            validationError = LocalizedString("Enter exactly 8 hex characters.", comment: "Receiver ID validation error: wrong length")
             return
         }
         // Little-endian: first hex pair is the least-significant byte
@@ -78,7 +78,7 @@ struct LibreLoopRecoveryView: View {
         while idx < cleaned.endIndex {
             let next = cleaned.index(idx, offsetBy: 2)
             guard let b = UInt8(cleaned[idx..<next], radix: 16) else {
-                validationError = "Couldn't parse hex."
+                validationError = LocalizedString("Couldn't parse hex.", comment: "Receiver ID validation error: parse failure")
                 return
             }
             bytes.append(b)
