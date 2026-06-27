@@ -18,7 +18,7 @@ extension LibreLoopCGMManager: CGMManagerUI {
         allowDebugFeatures: Bool,
         prefersToSkipUserInteraction: Bool
     ) -> SetupUIResult<CGMManagerViewController, CGMManagerUI> {
-        .userInteractionRequired(LibreLoopUICoordinator(cgmManager: nil, colorPalette: colorPalette))
+        .userInteractionRequired(LibreLoopUICoordinator(cgmManager: nil, colorPalette: colorPalette, displayGlucosePreference: displayGlucosePreference))
     }
 
     public func settingsViewController(
@@ -27,7 +27,7 @@ extension LibreLoopCGMManager: CGMManagerUI {
         colorPalette: LoopUIColorPalette,
         allowDebugFeatures: Bool
     ) -> CGMManagerViewController {
-        LibreLoopUICoordinator(cgmManager: self, colorPalette: colorPalette)
+        LibreLoopUICoordinator(cgmManager: self, colorPalette: colorPalette, displayGlucosePreference: displayGlucosePreference)
     }
 
     public var smallImage: UIImage? {

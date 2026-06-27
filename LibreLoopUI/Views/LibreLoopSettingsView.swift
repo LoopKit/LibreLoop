@@ -1,9 +1,12 @@
 import SwiftUI
 import LibreLoop
+import LoopAlgorithm
+import LoopKitUI
 
 struct LibreLoopSettingsView: View {
     @ObservedObject var viewModel: LibreLoopSettingsViewModel
     @ObservedObject private var logger = LibreLoopFileLogger.shared
+    @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
     let didFinish: () -> Void
     let replaceSensor: () -> Void
     let deleteCGM: () -> Void
@@ -180,11 +183,13 @@ struct LibreLoopSettingsView: View {
         Section("Last Reading") {
             if let sample = viewModel.latestSample {
                 HStack(alignment: .firstTextBaseline) {
-                    Text("\(Int(sample.valueMgDL))")
+                    Text(displayGlucosePreference.format(
+                            LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: sample.valueMgDL),
+                            includeUnit: false))
                         .font(.system(size: 44, weight: .semibold, design: .rounded))
                         .monospacedDigit()
                         .foregroundStyle(sample.isActionable ? .primary : .secondary)
-                    Text("mg/dL")
+                    Text(displayGlucosePreference.unit.localizedShortUnitString)
                         .font(.headline)
                         .foregroundStyle(.secondary)
                     Spacer()
@@ -197,7 +202,8 @@ struct LibreLoopSettingsView: View {
                         .foregroundStyle(.secondary)
                     Spacer()
                     if let rate = sample.rateOfChangeMgDLPerMinute {
-                        Text(String(format: "%+.1f mg/dL/min", rate))
+                        Text(displayGlucosePreference.formatMinuteRate(
+                                LoopQuantity(unit: .milligramsPerDeciliterPerMinute, doubleValue: rate)))
                             .foregroundStyle(.secondary)
                             .monospacedDigit()
                     }
@@ -473,13 +479,15 @@ struct LibreLoopSettingsView: View {
 }
 
 struct LibreLoopReadingHeaderRow: View {
+    @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
+
     var body: some View {
         HStack {
             Text("Time")
                 .frame(width: 72, alignment: .leading)
-            Text("mg/dL")
+            Text(displayGlucosePreference.unit.localizedShortUnitString)
                 .frame(width: 48, alignment: .trailing)
-            Text("mg/dL/min")
+            Text("\(displayGlucosePreference.unit.localizedShortUnitString)/min")
                 .frame(width: 56, alignment: .trailing)
             Spacer()
             Text("Trend")
@@ -491,6 +499,7 @@ struct LibreLoopReadingHeaderRow: View {
 
 struct LibreLoopReadingRow: View {
     let sample: LibreLoopGlucoseSample
+    @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
 
     var body: some View {
         HStack {
@@ -498,13 +507,17 @@ struct LibreLoopReadingRow: View {
                 .foregroundStyle(.secondary)
                 .monospacedDigit()
                 .frame(width: 72, alignment: .leading)
-            Text("\(Int(sample.valueMgDL))")
+            Text(displayGlucosePreference.format(
+                    LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: sample.valueMgDL),
+                    includeUnit: false))
                 .font(.body.weight(.semibold))
                 .monospacedDigit()
                 .foregroundStyle(sample.isActionable ? .primary : .secondary)
                 .frame(width: 48, alignment: .trailing)
             if let rate = sample.rateOfChangeMgDLPerMinute {
-                Text(String(format: "%+.1f", rate))
+                Text(displayGlucosePreference.formatMinuteRate(
+                        LoopQuantity(unit: .milligramsPerDeciliterPerMinute, doubleValue: rate),
+                        includeUnit: false))
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
                     .frame(width: 56, alignment: .trailing)

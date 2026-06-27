@@ -11,10 +11,14 @@ final class LibreLoopUICoordinator: UINavigationController, CGMManagerOnboarding
 
     private var cgmManager: LibreLoopCGMManager?
     private let colorPalette: LoopUIColorPalette
+    private let displayGlucosePreference: DisplayGlucosePreference
 
-    init(cgmManager: LibreLoopCGMManager?, colorPalette: LoopUIColorPalette) {
+    init(cgmManager: LibreLoopCGMManager?,
+         colorPalette: LoopUIColorPalette,
+         displayGlucosePreference: DisplayGlucosePreference) {
         self.cgmManager = cgmManager
         self.colorPalette = colorPalette
+        self.displayGlucosePreference = displayGlucosePreference
         super.init(navigationBarClass: UINavigationBar.self, toolbarClass: UIToolbar.self)
     }
 
@@ -157,6 +161,7 @@ final class LibreLoopUICoordinator: UINavigationController, CGMManagerOnboarding
                 }
             }
         )
+        .environmentObject(displayGlucosePreference)
         return DismissibleHostingController(content: view, colorPalette: colorPalette)
     }
 
