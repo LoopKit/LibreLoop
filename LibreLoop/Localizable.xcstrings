@@ -1,6 +1,10 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%1$@ can't reconnect to your FreeStyle Libre 3. Scan the sensor again to resume CGM readings. If it was recently inserted and keeps failing, the sensor may be defective — replace it.": {
+      "extractionState": "manual",
+      "comment": "Reconnect-failed alert body (1: appName)"
+    },
     "Active": {
       "extractionState": "manual",
       "comment": "Sensor lifecycle: active"
@@ -24,10 +28,6 @@
     "Initializing": {
       "extractionState": "manual",
       "comment": "Sensor lifecycle: initializing"
-    },
-    "Loop can't reconnect to your FreeStyle Libre 3. Scan the sensor again to resume CGM readings. If it was recently inserted and keeps failing, the sensor may be defective — replace it.": {
-      "extractionState": "manual",
-      "comment": "Reconnect-failed alert body"
     },
     "No sensor": {
       "extractionState": "manual",

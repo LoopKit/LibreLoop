@@ -1,6 +1,10 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%1$@'s algorithm was designed and tuned against CGMs that emit a new reading every 5 minutes. With this setting on, %1$@ receives a new reading from the FreeStyle Libre 3 every minute instead.": {
+      "extractionState": "manual",
+      "comment": "Minute-by-minute warning paragraph 1 (1: appName)"
+    },
     "%@ remaining": {
       "extractionState": "manual",
       "comment": "Lifecycle bar detail: active time remaining"
@@ -125,9 +129,9 @@
       "extractionState": "manual",
       "comment": "Recovery screen explanation"
     },
-    "Every realtime reading (~1/min) is sent to Loop.": {
+    "Every realtime reading (~1/min) is sent to %1$@.": {
       "extractionState": "manual",
-      "comment": "Forwarding footer: minute-by-minute on"
+      "comment": "Forwarding footer: minute-by-minute on (1: appName)"
     },
     "Example: `78563412`. If this sensor was paired with this app before, the value is shown as \"Receiver ID\" in the Debug Info section of the Libre 3 CGM settings page.": {
       "extractionState": "manual",
@@ -149,9 +153,9 @@
       "extractionState": "manual",
       "comment": "Activity log filter picker label"
     },
-    "Forwarding to Loop": {
+    "Forwarding to %1$@": {
       "extractionState": "manual",
-      "comment": "Sample detail section: forwarding\n   Settings section: forwarding"
+      "comment": "Sample detail section: forwarding (1: appName)\n   Settings section: forwarding (1: appName)"
     },
     "Glucose Streams": {
       "extractionState": "manual",
@@ -237,10 +241,6 @@
       "extractionState": "manual",
       "comment": "Apply-sensor help step 5 body"
     },
-    "Loop's algorithm was designed and tuned against CGMs that emit a new reading every 5 minutes. With this setting on, Loop receives a new reading from the FreeStyle Libre 3 every minute instead.": {
-      "extractionState": "manual",
-      "comment": "Minute-by-minute warning paragraph 1"
-    },
     "Next": {
       "extractionState": "manual",
       "comment": "Next button"
@@ -265,9 +265,9 @@
       "extractionState": "manual",
       "comment": "Connection status: not paired"
     },
-    "Only one reading every ~5 minutes is sent to Loop, matching the cadence other CGMs use.": {
+    "Only one reading every ~5 minutes is sent to %1$@, matching the cadence other CGMs use.": {
       "extractionState": "manual",
-      "comment": "Forwarding footer: minute-by-minute off"
+      "comment": "Forwarding footer: minute-by-minute off (1: appName)"
     },
     "Pair a new sensor?": {
       "extractionState": "manual",
@@ -465,9 +465,9 @@
       "extractionState": "manual",
       "comment": "Sample detail: raw sensor temperature"
     },
-    "The receiver ID is assigned by Loop when it first pairs a sensor. It's saved in this app and shown on the Libre 3 settings page — write it down if you want to re-pair this sensor after reinstalling Loop.": {
+    "The receiver ID is assigned by %1$@ when it first pairs a sensor. It's saved in this app and shown on the Libre 3 settings page — write it down if you want to re-pair this sensor after reinstalling %1$@.": {
       "extractionState": "manual",
-      "comment": "Recovery screen footnote"
+      "comment": "Recovery screen footnote (1: appName)"
     },
     "The sensor should only be applied to the back of your upper arm.": {
       "extractionState": "manual",
@@ -477,13 +477,13 @@
       "extractionState": "manual",
       "comment": "Apply-sensor help step 5 note"
     },
-    "This can change how Loop reacts to glucose movement compared to default behavior:": {
+    "This can change how %1$@ reacts to glucose movement compared to default behavior:": {
       "extractionState": "manual",
-      "comment": "Minute-by-minute warning paragraph 2"
+      "comment": "Minute-by-minute warning paragraph 2 (1: appName)"
     },
-    "This removes the FreeStyle Libre 3 CGM from Loop. You'll need to re-pair to resume readings.": {
+    "This removes the FreeStyle Libre 3 CGM from %1$@. You'll need to re-pair to resume readings.": {
       "extractionState": "manual",
-      "comment": "Delete CGM confirmation message"
+      "comment": "Delete CGM confirmation message (1: appName)"
     },
     "This stops monitoring the current sensor and starts pairing for a new one. The CGM stays configured with Loop.": {
       "extractionState": "manual",
@@ -537,9 +537,9 @@
       "extractionState": "manual",
       "comment": "Scan-sensor help step 3 body"
     },
-    "• Dosing decisions may shift sooner or further than what Loop's review and tuning guidance assumes.": {
+    "• Dosing decisions may shift sooner or further than what %1$@'s review and tuning guidance assumes.": {
       "extractionState": "manual",
-      "comment": "Minute-by-minute warning bullet 1"
+      "comment": "Minute-by-minute warning bullet 1 (1: appName)"
     },
     "• Trend math, retrospective correction, and momentum effects were validated at the 5-minute cadence.": {
       "extractionState": "manual",

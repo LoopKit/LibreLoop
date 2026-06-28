@@ -8,6 +8,7 @@ import LoopKitUI
 struct LibreLoopSampleDetailView: View {
     let sample: LibreLoopGlucoseSample
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
+    @Environment(\.appName) private var appName
 
     var body: some View {
         List {
@@ -38,7 +39,7 @@ struct LibreLoopSampleDetailView: View {
                 }
             }
 
-            Section(LocalizedString("Forwarding to Loop", comment: "Sample detail section: forwarding")) {
+            Section(String(format: LocalizedString("Forwarding to %1$@", comment: "Sample detail section: forwarding (1: appName)"), appName)) {
                 LabeledContent(LocalizedString("Sent", comment: "Sample detail: sent to Loop")) {
                     HStack(spacing: 6) {
                         Image(systemName: sentIcon)

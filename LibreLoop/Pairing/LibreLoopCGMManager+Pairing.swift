@@ -972,7 +972,7 @@ extension LibreLoopCGMManager {
         let identifier = Alert.Identifier(managerIdentifier: pluginIdentifier,
                                           alertIdentifier: Self.needsReScanAlertID)
         let title = LocalizedString("Re-scan sensor", comment: "Reconnect-failed alert title")
-        let body = LocalizedString("Loop can't reconnect to your FreeStyle Libre 3. Scan the sensor again to resume CGM readings. If it was recently inserted and keeps failing, the sensor may be defective — replace it.", comment: "Reconnect-failed alert body")
+        let body = String(format: LocalizedString("%1$@ can't reconnect to your FreeStyle Libre 3. Scan the sensor again to resume CGM readings. If it was recently inserted and keeps failing, the sensor may be defective — replace it.", comment: "Reconnect-failed alert body (1: appName)"), Bundle.main.bundleDisplayName)
         let ok = LocalizedString("OK", comment: "Alert acknowledge button")
         let alert = Alert(
             identifier: identifier,
@@ -1004,5 +1004,16 @@ extension LibreLoopCGMManager {
             self.cgmManagerDelegate?.cgmManagerDidUpdateState(self)
         }
         notifyStateObservers()
+    }
+}
+
+extension Bundle {
+    /// The host app's display name (Loop, Trio, a rebrand, …). `Bundle.main`
+    /// is the running app, not this plugin, so this resolves to whatever app
+    /// embedded LibreLoop. Used for app-name substitution in user-facing alerts.
+    var bundleDisplayName: String {
+        return object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
+            ?? object(forInfoDictionaryKey: "CFBundleName") as? String
+            ?? "Loop"
     }
 }

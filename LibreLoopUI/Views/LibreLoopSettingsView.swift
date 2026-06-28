@@ -7,6 +7,7 @@ struct LibreLoopSettingsView: View {
     @ObservedObject var viewModel: LibreLoopSettingsViewModel
     @ObservedObject private var logger = LibreLoopFileLogger.shared
     @EnvironmentObject private var displayGlucosePreference: DisplayGlucosePreference
+    @Environment(\.appName) private var appName
     let didFinish: () -> Void
     let replaceSensor: () -> Void
     let deleteCGM: () -> Void
@@ -50,7 +51,7 @@ struct LibreLoopSettingsView: View {
             Button(LocalizedString("Delete", comment: "Delete button"), role: .destructive, action: deleteCGM)
             Button(LocalizedString("Cancel", comment: "Cancel button"), role: .cancel) { }
         } message: {
-            Text(LocalizedString("This removes the FreeStyle Libre 3 CGM from Loop. You'll need to re-pair to resume readings.", comment: "Delete CGM confirmation message"))
+            Text(String(format: LocalizedString("This removes the FreeStyle Libre 3 CGM from %1$@. You'll need to re-pair to resume readings.", comment: "Delete CGM confirmation message (1: appName)"), appName))
         }
         .confirmationDialog(LocalizedString("Pair a new sensor?", comment: "Replace sensor confirmation title"), isPresented: $confirmingReplace, titleVisibility: .visible) {
             Button(LocalizedString("Continue", comment: "Continue button"), action: replaceSensor)
@@ -400,7 +401,7 @@ struct LibreLoopSettingsView: View {
     /// designed against 5-min CGM input. Turning it on requires the user
     /// to read the warning sheet.
     private var forwardingSection: some View {
-        Section(LocalizedString("Forwarding to Loop", comment: "Settings section: forwarding")) {
+        Section(String(format: LocalizedString("Forwarding to %1$@", comment: "Settings section: forwarding (1: appName)"), appName)) {
             Toggle(LocalizedString("Send every reading (experimental)", comment: "Experimental minute-by-minute forwarding toggle"), isOn: Binding(
                 get: { viewModel.minuteByMinuteForwardingEnabled },
                 set: { newValue in
@@ -412,8 +413,8 @@ struct LibreLoopSettingsView: View {
                 }
             ))
             Text(viewModel.minuteByMinuteForwardingEnabled
-                 ? LocalizedString("Every realtime reading (~1/min) is sent to Loop.", comment: "Forwarding footer: minute-by-minute on")
-                 : LocalizedString("Only one reading every ~5 minutes is sent to Loop, matching the cadence other CGMs use.", comment: "Forwarding footer: minute-by-minute off"))
+                 ? String(format: LocalizedString("Every realtime reading (~1/min) is sent to %1$@.", comment: "Forwarding footer: minute-by-minute on (1: appName)"), appName)
+                 : String(format: LocalizedString("Only one reading every ~5 minutes is sent to %1$@, matching the cadence other CGMs use.", comment: "Forwarding footer: minute-by-minute off (1: appName)"), appName))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -554,6 +555,7 @@ struct LibreLoopReadingRow: View {
 struct MinuteByMinuteWarningSheet: View {
     let onEnable: () -> Void
     let onCancel: () -> Void
+    @Environment(\.appName) private var appName
 
     var body: some View {
         NavigationStack {
@@ -563,10 +565,10 @@ struct MinuteByMinuteWarningSheet: View {
                         .font(.title3.weight(.semibold))
                         .foregroundStyle(.orange)
 
-                    Text(LocalizedString("Loop's algorithm was designed and tuned against CGMs that emit a new reading every 5 minutes. With this setting on, Loop receives a new reading from the FreeStyle Libre 3 every minute instead.", comment: "Minute-by-minute warning paragraph 1"))
-                    Text(LocalizedString("This can change how Loop reacts to glucose movement compared to default behavior:", comment: "Minute-by-minute warning paragraph 2"))
+                    Text(String(format: LocalizedString("%1$@'s algorithm was designed and tuned against CGMs that emit a new reading every 5 minutes. With this setting on, %1$@ receives a new reading from the FreeStyle Libre 3 every minute instead.", comment: "Minute-by-minute warning paragraph 1 (1: appName)"), appName))
+                    Text(String(format: LocalizedString("This can change how %1$@ reacts to glucose movement compared to default behavior:", comment: "Minute-by-minute warning paragraph 2 (1: appName)"), appName))
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(LocalizedString("• Dosing decisions may shift sooner or further than what Loop's review and tuning guidance assumes.", comment: "Minute-by-minute warning bullet 1"))
+                        Text(String(format: LocalizedString("• Dosing decisions may shift sooner or further than what %1$@'s review and tuning guidance assumes.", comment: "Minute-by-minute warning bullet 1 (1: appName)"), appName))
                         Text(LocalizedString("• Trend math, retrospective correction, and momentum effects were validated at the 5-minute cadence.", comment: "Minute-by-minute warning bullet 2"))
                         Text(LocalizedString("• You're accepting responsibility for monitoring outcomes more closely while this is on.", comment: "Minute-by-minute warning bullet 3"))
                     }

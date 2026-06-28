@@ -1,7 +1,9 @@
 import SwiftUI
+import LoopKitUI
 
 struct LibreLoopRecoveryView: View {
     let onContinue: (UInt32) -> Void
+    @Environment(\.appName) private var appName
 
     @State private var receiverIDInput: String = ""
     @State private var validationError: String?
@@ -40,7 +42,7 @@ struct LibreLoopRecoveryView: View {
                         }
                     }
 
-                    Text(LocalizedString("The receiver ID is assigned by Loop when it first pairs a sensor. It's saved in this app and shown on the Libre 3 settings page — write it down if you want to re-pair this sensor after reinstalling Loop.", comment: "Recovery screen footnote"))
+                    Text(String(format: LocalizedString("The receiver ID is assigned by %1$@ when it first pairs a sensor. It's saved in this app and shown on the Libre 3 settings page — write it down if you want to re-pair this sensor after reinstalling %1$@.", comment: "Recovery screen footnote (1: appName)"), appName))
                         .font(.footnote)
                         .italic()
                         .foregroundStyle(.secondary)
