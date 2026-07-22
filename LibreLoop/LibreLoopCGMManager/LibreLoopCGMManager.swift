@@ -575,14 +575,17 @@ public final class LibreLoopCGMManager: CGMManager {
         case .willRestoreState(let r):
             self.handleRestorationEvent(r)
         case .didDiscover(let d):
-            // Discoveries are consumed by the pair-time scan inside
-            // LibreLoopPairingService via its own events() subscription; the
-            // CGMManager doesn't drive scans, so we don't act here. But log a
-            // discovery of OUR sensor: if it's advertising (with RSSI) while a
-            // reconnect is failing, that's exactly the visibility otherwise
-            // missing during an out-of-range/back-in-range window.
+            // Our sensor is advertising. When we see it while disconnected
+            // (during the reconnect scan, or a back-in-range window), re-declare
+            // the connect on the FRESH handle from this discovery -- cheap
+            // reinforcement of the standing connect. Pairing runs its own
+            // discovery consumer and has no saved peripheralID yet, so this
+            // only fires for an already-paired sensor.
             if let id = self.state.peripheralID, d.id == id {
                 llog("ble: didDiscover \(d.id.uuidString) rssi=\(d.rssi) (our sensor advertising)")
+                if self.monitor == nil {
+                    self.scanner.requestConnect(d.peripheral)
+                }
             }
         }
     }
@@ -714,6 +717,24 @@ public final class LibreLoopCGMManager: CGMManager {
             }
         }
         completion(.noData)
+    }
+
+    /// Diagnostic (event-driven, NO timer): called when the user opens the CGM
+    /// status page. If we're not connected and a reconnect has been outstanding
+    /// for a while, log what CoreBluetooth thinks the peripheral's state is.
+    /// `.connecting` (1) means iOS is holding our standing connect; a
+    /// `.disconnected` (0) state or a missing handle means that intent isn't
+    /// landing. Call on the main thread (as SwiftUI onAppear does).
+    public func logConnectionStateForStatusView() {
+        guard monitor == nil, let id = state.peripheralID else { return }
+        guard let since = lastReconnectAttemptStartedAt.map({ Date().timeIntervalSince($0) }),
+              since > 20 else { return }
+        // CBPeripheralState: 0 disconnected, 1 connecting, 2 connected, 3 disconnecting
+        if let p = scanner.retrievePeripherals(withIdentifiers: [id]).first {
+            llog("status page opened while disconnected \(Int(since))s since connect start: peripheral.state=\(p.state.rawValue) central=\(scanner.centralState.rawValue)")
+        } else {
+            llog("status page opened while disconnected \(Int(since))s since connect start: peripheral.state=<no handle> (retrievePeripherals empty) central=\(scanner.centralState.rawValue)")
+        }
     }
 
     // AlertResponder. Tidepool-sync's LoopKit replaced the completion-handler
