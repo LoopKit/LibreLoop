@@ -651,6 +651,9 @@ final class LibreLoopSettingsViewModel: ObservableObject, LibreLoopStateObserver
 
     func subscribe() {
         cgmManager.addStateObserver(self)
+        // Event-driven connection diagnostic (no timer): if we're disconnected
+        // with a reconnect outstanding when this page opens, log peripheral.state.
+        cgmManager.logConnectionStateForStatusView()
         // Sync immediately from current state. Without this, any changes
         // that happened while we weren't observing (e.g. a Pair-new-sensor
         // flow run from a pushed view) leave the @Published fields stale.
