@@ -180,6 +180,8 @@ extension LibreLoopCGMManager {
             Task { await delegate?.retractAlert(identifier: id) }
         }
         self.monitor = monitor
+        // Session established -- stop any failure-recovery scan armed by the reconnect re-arm.
+        scanner.stopScan()
         self.connectedAt = Date()
         // Each new BLE session gets its own backfill window.
         self.hasRequestedBackfillThisSession = false
@@ -875,13 +877,19 @@ extension LibreLoopCGMManager {
                 // here too would be a duplicate within ms.
                 scanner.cancelConnection(peripheral)
             } else {
-                // No active link, no in-flight Task, no CB event
-                // pending. Explicitly re-arm. scheduleReconnect
-                // always re-arms the CB connect intent at its top
-                // (idempotent), and its 0.5s debounce throttles
-                // Task spawning so this can't tight-loop with the
-                // events listener's own scheduleReconnect calls.
-                await MainActor.run { self.scheduleReconnect() }
+                // No active link, no in-flight Task, no CB event pending. Re-arm the standing connect --
+                // BUT a bare standing connect can be inert here: a restored-cache handshake failure can leave
+                // the peripheral .disconnected with iOS silently dropping the pending connect (field log:
+                // 15-min stall, diagnostic showed peripheral.state=0). The failed ATTEMPT is our error
+                // evidence, so ALSO engage a scan: it makes iOS actively reacquire the sensor, and a fresh
+                // discovery re-declares the connect on a fresh handle (.didDiscover) -> a fresh connect.
+                // Stopped the moment a session is established (see `self.monitor = monitor`).
+                await MainActor.run {
+                    self.scheduleReconnect()
+                    if self.scanner.centralState == .poweredOn {
+                        self.scanner.startScan()
+                    }
+                }
             }
         }
     }
