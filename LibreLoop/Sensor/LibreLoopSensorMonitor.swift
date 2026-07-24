@@ -173,7 +173,17 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
             // failure that wasn't propagated). Fire disconnect immediately
             // so the CGMManager re-enters the reconnect loop.
             if !refreshOK {
-                llog("CCCD refresh failed; treating session as disconnected and not consuming notifications")
+                llog("CCCD refresh failed; closing the link so the reconnect is a fresh connect + full re-subscribe")
+                // We never finished setup (post-auth CCCD arm), so don't sit on the
+                // still-open link -- close it. Reusing a half-set-up connection
+                // re-arms cached, un-acked CCCD state and relivelocks
+                // (connect→adopt→arm-fail, repeat); a fresh connect forces a full
+                // re-discover + re-arm -- the "clears only on a fresh characteristic
+                // discovery" the livelock note describes, without an app restart.
+                // Critically, a half-set-up link can stay connected while the
+                // regular-data channels (glucose/patchStatus) never armed, so iOS
+                // gets no notification to wake us on: closing avoids that dead state.
+                self.scanner.cancelConnection(self.session.peripheral)
                 self.lock.lock()
                 let handler = self.disconnectHandler
                 self.lock.unlock()
