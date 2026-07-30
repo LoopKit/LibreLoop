@@ -836,16 +836,29 @@ extension LibreLoopCGMManager {
         // We should NEVER sit "disconnected with no CB intent
         // pending" -- otherwise the peripheral returning to range
         // generates no callback. BUT only call requestConnect when
-        // the peripheral isn't already .connected/.connecting:
-        // calling central.connect on an already-connected peripheral
-        // on iOS empirically re-fires didConnect, and since our
-        // didConnect handler calls scheduleReconnect, that produces a
-        // tight loop bounded only by `monitor == nil`. Field log
-        // captured 3228 didConnect events in 1 second during the
-        // ~2.2s handshake window because of this.
+        // the peripheral is actually .disconnected:
+        //  - .connected/.connecting: calling central.connect on an
+        //    already-connected peripheral on iOS empirically re-fires
+        //    didConnect, and since our didConnect handler calls
+        //    scheduleReconnect, that produces a tight loop bounded only
+        //    by `monitor == nil` (field log: 3228 didConnect events in
+        //    1 second during the ~2.2s handshake window).
+        //  - .disconnecting: issuing connect while a cancelConnection is
+        //    still in flight (e.g. the close-on-CCCD-failure path drops
+        //    the link and immediately re-schedules) races the pending
+        //    teardown. iOS leaves the peripheral in a phantom .connecting
+        //    state that never fires didConnect, and that phantom state
+        //    then suppresses every legitimate re-arm: the subsequent
+        //    didDisconnect's scheduleReconnect skips connect (sees
+        //    .connecting), and the failed-attempt continuation calls a
+        //    no-op cancelConnection instead of re-arming -- leaving us
+        //    "disconnected with nothing pending" until an app restart
+        //    (field log 2026-07-25 15:53: 17-hour outage). Wait for the
+        //    didDisconnect; its scheduleReconnect re-arms from
+        //    .disconnected.
         if let peripheralID = state.peripheralID,
            let peripheral = scanner.retrievePeripherals(withIdentifiers: [peripheralID]).first,
-           peripheral.state != .connected, peripheral.state != .connecting {
+           peripheral.state == .disconnected {
             llog("ble: requesting connect \(peripheral.identifier.uuidString) (peripheral state=\(peripheral.state.rawValue))")
             scanner.requestConnect(peripheral)
         }
@@ -885,22 +898,38 @@ extension LibreLoopCGMManager {
             // minutes. CB events alone are NOT a sufficient retry
             // trigger when the failure path doesn't go through CB.
             guard await MainActor.run(body: { self.monitor == nil }) else { return }
-            if let peripheralID,
-               let peripheral = scanner.retrievePeripherals(withIdentifiers: [peripheralID]).first,
-               peripheral.state == .connected || peripheral.state == .connecting {
-                // Active link survived the handshake failure --
-                // drop it and let the resulting didDisconnect route
-                // through the events listener (which calls
-                // scheduleReconnect). Calling scheduleReconnect
-                // here too would be a duplicate within ms.
-                scanner.cancelConnection(peripheral)
-            } else {
-                // No active link, no in-flight Task, no CB event
-                // pending. Explicitly re-arm. scheduleReconnect
-                // always re-arms the CB connect intent at its top
-                // (idempotent), and its 0.5s debounce throttles
-                // Task spawning so this can't tight-loop with the
-                // events listener's own scheduleReconnect calls.
+            let peripheral = peripheralID.flatMap {
+                scanner.retrievePeripherals(withIdentifiers: [$0]).first
+            }
+            switch peripheral?.state {
+            case .connected:
+                // A full link survived the failed handshake but we never
+                // adopted a monitor. Drop it so its didDisconnect routes
+                // through the events listener into scheduleReconnect for a
+                // clean restart. cancelConnection on a .connected peripheral
+                // DOES fire a terminal callback, so this can't strand us.
+                if let peripheral { scanner.cancelConnection(peripheral) }
+            case .connecting, .disconnecting:
+                // A CB callback is already guaranteed to come and route to
+                // scheduleReconnect: .connecting will deliver didConnect when
+                // the peripheral is reachable (connect-on-demand, no timeout);
+                // .disconnecting will deliver didDisconnect imminently. Do
+                // NOTHING here -- in particular do NOT cancel a .connecting
+                // peripheral: that fires NO terminal callback, silently
+                // dropping the connect intent and stranding us "disconnected
+                // with nothing pending". This is exactly how the didDisconnect
+                // that FAILS this attempt strands us -- it re-arms the connect
+                // (requestConnect from .disconnected -> .connecting), and if we
+                // then cancel that, recovery dies (field log 2026-07-26 16:40:
+                // SensorSessionError.disconnected mid-handshake, didDisconnect
+                // re-armed, this continuation cancelled it -> 6-min outage).
+                break
+            default:
+                // .disconnected, unknown, or peripheral not retrievable: nothing
+                // reliable is pending -> re-arm. scheduleReconnect re-arms the
+                // CB connect intent at its top (idempotent) and its 0.5s
+                // debounce throttles Task spawning so this can't tight-loop
+                // with the events listener's own scheduleReconnect calls.
                 await MainActor.run { self.scheduleReconnect() }
             }
         }

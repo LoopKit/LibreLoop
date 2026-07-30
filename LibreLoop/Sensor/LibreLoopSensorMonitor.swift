@@ -164,6 +164,18 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
             llog("monitor starting; refreshing post-auth notifications")
             self.emitStatus("Refreshing notifications")
             let refreshOK = await self.refreshPostAuthNotifications()
+            // If this monitor was stopped while the (not cancellation-aware)
+            // CCCD refresh was still awaiting its acks, it has been superseded
+            // by a newer connection. Bail before touching the link: otherwise
+            // this stale monitor's close path would cancelConnection the *new*
+            // attempt's peripheral (same identifier) and fire the disconnect
+            // handler, derailing the live reconnect (field log 2026-07-25
+            // 15:53: a refresh started at :37, monitor stopped at :47, refresh
+            // failed at :53 and dropped the fresh attempt mid-connect).
+            if Task.isCancelled {
+                llog("monitor superseded during CCCD refresh; not touching the link")
+                return
+            }
             // If CCCD refresh failed because the BLE link died between
             // handshake-complete and our first CCCD write, the session is
             // already dead. session.notifications() on a dead session
