@@ -46,7 +46,7 @@ enum LibreLoopExpiryAlerts {
         if warn24h > now {
             let content = Alert.Content(
                 title: LocalizedString("Sensor ends tomorrow", comment: "24h sensor-expiry alert title"),
-                body: String(format: LocalizedString("Your FreeStyle Libre 3 sensor expires %@. Replace it before then to avoid a CGM interruption.", comment: "24h sensor-expiry alert body (expiry date/time)"), fullString),
+                body: String(format: LocalizedString("Your FreeStyle Libre 3 sensor ends %@. When you replace it, the new sensor warms up for about an hour before readings resume — a short CGM gap is normal.", comment: "24h sensor-expiry alert body (expiry date/time)"), fullString),
                 acknowledgeActionButtonLabel: ok
             )
             alerts.append(Alert(
@@ -62,7 +62,7 @@ enum LibreLoopExpiryAlerts {
         if warn2h > now {
             let content = Alert.Content(
                 title: LocalizedString("Sensor ends in 2 hours", comment: "2h sensor-expiry alert title"),
-                body: String(format: LocalizedString("Your FreeStyle Libre 3 sensor expires at %@. Replace it now to avoid a CGM interruption.", comment: "2h sensor-expiry alert body (expiry time)"), timeString),
+                body: String(format: LocalizedString("Your FreeStyle Libre 3 sensor ends at %@. Have a new sensor ready — it warms up for about an hour before readings resume, so expect a short CGM gap.", comment: "2h sensor-expiry alert body (expiry time)"), timeString),
                 acknowledgeActionButtonLabel: ok
             )
             alerts.append(Alert(
@@ -77,7 +77,7 @@ enum LibreLoopExpiryAlerts {
         if expiresAt > now {
             let content = Alert.Content(
                 title: LocalizedString("Sensor session ended", comment: "Sensor expired alert title"),
-                body: LocalizedString("Your FreeStyle Libre 3 sensor has expired. Replace it to resume CGM readings.", comment: "Sensor expired alert body"),
+                body: LocalizedString("Your FreeStyle Libre 3 sensor has ended. Apply a new sensor to resume CGM — it warms up for about an hour before the first reading.", comment: "Sensor expired alert body"),
                 acknowledgeActionButtonLabel: ok
             )
             alerts.append(Alert(
