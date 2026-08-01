@@ -49,17 +49,29 @@ public enum LibreLoopSensorLifecycle: Equatable {
         now: Date = Date()
     ) -> LibreLoopSensorLifecycle {
         guard sensorPaired else { return .noSensor }
-        // A sensor-reported replace/ended state is authoritative — it overrides
-        // every timing-based phase (it won't resume on its own). Distinguish a
-        // normal end-of-life (self-reported `sensorEnded`) from an early failure
-        // so the UI shows "Expired" vs "Sensor failed"; both require replacement.
-        if needsReplacement { return endedNormally ? .expired : .failed }
-        guard let activatedAt else { return .initializing }
-        let age = now.timeIntervalSince(activatedAt)
 
         let sensorWearDuration: TimeInterval = wearDurationMinutes
             .map { TimeInterval($0) * 60 }
             ?? activeDuration
+
+        // A sensor-reported replace/ended state is authoritative — it overrides
+        // every timing-based phase (it won't resume on its own). Distinguish a
+        // normal end-of-life from an early failure so the UI shows "Expired" vs
+        // "Sensor failed"; both require replacement.
+        if needsReplacement {
+            if endedNormally { return .expired }
+            // A replace/terminated report from a sensor that has already reached
+            // its rated wear duration is a normal end-of-life ("Expired"), not a
+            // failure: some sensors emit the terminated-shutdown code (errorData
+            // 8 → `replaceSensor`) after a clean end-of-wear. Only a
+            // `replaceSensor` *before* rated wear is a genuine "Sensor failed".
+            if let activatedAt, now.timeIntervalSince(activatedAt) >= sensorWearDuration {
+                return .expired
+            }
+            return .failed
+        }
+        guard let activatedAt else { return .initializing }
+        let age = now.timeIntervalSince(activatedAt)
 
         let sensorWarmupDuration: TimeInterval = warmupDurationMinutes
             .map { TimeInterval($0) * 60 }
