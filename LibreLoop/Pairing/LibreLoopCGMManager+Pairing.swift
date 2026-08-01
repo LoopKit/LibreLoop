@@ -351,7 +351,12 @@ extension LibreLoopCGMManager {
         let needsReplacement = (attention == .replaceSensor || attention == .sensorEnded)
         // A normal end-of-life (`sensorEnded`) surfaces as "Expired"; an early
         // failure (`replaceSensor`) as "Sensor failed". Both need replacement.
-        let endedNormally = needsReplacement && attention == .sensorEnded
+        // Sticky: once a sensor has reported a clean end-of-life, a later
+        // `terminated`/`replaceSensor` shutdown must not downgrade "Expired" to
+        // "failed" — a sensor that ended normally can't retroactively become a
+        // failure. (Abbott emits errorData 8 → `replaceSensor` after a clean
+        // end-of-wear.) The flag resets on the next pairing.
+        let endedNormally = needsReplacement && (attention == .sensorEnded || state.sensorEndedNormally)
         if state.sensorNeedsReplacement != needsReplacement || state.sensorEndedNormally != endedNormally {
             var updated = state
             updated.sensorNeedsReplacement = needsReplacement

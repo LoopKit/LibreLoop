@@ -32,6 +32,7 @@ struct LibreLoopSettingsView: View {
         List {
             sensorImageHeader
             sensorSection
+            replaceSensorPromptSection
             lastReadingSection
             recentReadingsSection
             debugInfoSection
@@ -175,6 +176,29 @@ struct LibreLoopSettingsView: View {
                         .font(.footnote)
                         .textSelection(.enabled)
                 }
+            }
+        }
+    }
+
+    /// Prominent replace CTA shown at the top (above Last Reading) only when the
+    /// current sensor is done — expired or failed. The same action also lives in
+    /// the management section at the bottom for a deliberate early replace, but
+    /// when the sensor needs replacing the user shouldn't have to hunt for it.
+    @ViewBuilder
+    private var replaceSensorPromptSection: some View {
+        if viewModel.lifecycle == .expired || viewModel.lifecycle == .failed {
+            Section {
+                Button {
+                    confirmingReplace = true
+                } label: {
+                    Text(LocalizedString("Pair New Sensor", comment: "Prominent action to pair a new sensor when the current one needs replacement"))
+                        .fontWeight(.semibold)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                .listRowBackground(Color.clear)
             }
         }
     }
