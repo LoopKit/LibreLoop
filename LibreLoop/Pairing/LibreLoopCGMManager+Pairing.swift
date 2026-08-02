@@ -522,11 +522,10 @@ extension LibreLoopCGMManager {
 
         // Non-actionable samples are forwarded as isDisplayOnly so Loop
         // shows them on the chart/HUD but excludes them from dosing math.
-        // We also skip the dosing-cadence throttle for them -- it exists
-        // to keep Loop's 5-min algorithm from jittering on minute-by-
-        // minute updates, but display-only samples don't enter dosing.
-        // This lets the user watch readings flow in during the post-
-        // warmup stabilization window instead of seeing a frozen chart.
+        // They are still subject to the dosing-cadence throttle below when
+        // minute-by-minute mode is off: at ~1/min, display-only points would
+        // otherwise flood Loop's chart, and the toggle promises ~5-min cadence
+        // regardless of a reading's actionability.
         //
         // BUT: when the sensor itself reports a hardware/data fault
         // (DQ or sensor condition issue), the value is unreliable at
@@ -546,18 +545,19 @@ extension LibreLoopCGMManager {
 
         let isDisplayOnly = !sample.isActionable
 
-        if sample.isActionable,
-           !state.experimentalMinuteByMinuteForwarding,
+        if !state.experimentalMinuteByMinuteForwarding,
            let last = state.latestForwardedToLoopAt,
            sample.date.timeIntervalSince(last) < 270 {
-            // Default-mode throttle: Loop's algorithm is paced around the
-            // 5-minute CGM cadence other plugins emit, and per-minute
-            // updates can shift dosing decisions in ways the cadence
-            // wasn't tuned for. 4.5 min gives a 30-second slop under
-            // 5 min so the natural cadence isn't blocked by jitter.
-            // Opt-out is experimentalMinuteByMinuteForwarding.
+            // Default-mode throttle, applied to actionable AND display-only
+            // samples alike: Loop's algorithm is paced around the 5-minute CGM
+            // cadence other plugins emit, and per-minute updates — even
+            // display-only chart points — pull the cadence away from what Loop
+            // was tuned for. 4.5 min gives a 30-second slop under 5 min so the
+            // natural cadence isn't blocked by jitter. Opt-out is
+            // experimentalMinuteByMinuteForwarding.
             let age = Int(sample.date.timeIntervalSince(last))
-            llog("throttled: \(Int(sample.valueMgDL)) mg/dL lifeCount=\(sample.lifeCount) (only \(age)s since last forward; experimental minute-by-minute mode is off)")
+            let tag = isDisplayOnly ? " display-only" : ""
+            llog("throttled:\(tag) \(Int(sample.valueMgDL)) mg/dL lifeCount=\(sample.lifeCount) (only \(age)s since last forward; experimental minute-by-minute mode is off)")
             recordForwardingOutcome(
                 forLifeCount: sample.lifeCount,
                 wasForwarded: false,
@@ -590,14 +590,14 @@ extension LibreLoopCGMManager {
 
         let displayTag = isDisplayOnly ? " (display-only)" : ""
         llog("forwarding to Loop\(displayTag): \(Int(sample.valueMgDL)) mg/dL lifeCount=\(sample.lifeCount) sampleDate=\(sample.date.timeIntervalSince1970)")
-        if sample.isActionable {
-            // Only advance the throttle clock on actionable samples so a
-            // run of display-only forwards doesn't push out the next
-            // actionable forward.
-            var stamped = state
-            stamped.latestForwardedToLoopAt = sample.date
-            setState(stamped)
-        }
+        // Advance the throttle clock on every forward — actionable or
+        // display-only — so the ~5-min cadence also holds through a warmup
+        // window that is entirely display-only. If only actionable forwards
+        // moved the clock, it would never start during warmup and display-only
+        // points would stream at 1/min.
+        var stamped = state
+        stamped.latestForwardedToLoopAt = sample.date
+        setState(stamped)
         recordForwardingOutcome(forLifeCount: sample.lifeCount, wasForwarded: true, skipReason: nil)
 
         delegateQueue?.async { [weak self] in
