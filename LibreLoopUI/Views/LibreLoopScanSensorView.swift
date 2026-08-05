@@ -20,7 +20,7 @@ struct LibreLoopScanSensorView: View {
                         .font(.title2.weight(.semibold))
 
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(LocalizedString("Hold the top of your phone against the sensor.", comment: "Scan-sensor instruction"))
+                        Text(LocalizedString("Hold the TOP of your iPhone very close to the Sensor", comment: "Scan-sensor instruction"))
                         Text(LocalizedString("Keep it still — your phone will vibrate once the sensor is paired.", comment: "Scan-sensor stillness instruction"))
                             .foregroundStyle(.secondary)
                     }
