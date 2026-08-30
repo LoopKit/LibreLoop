@@ -1,554 +1,603 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "%1$@'s algorithm was designed and tuned against CGMs that emit a new reading every 5 minutes. With this setting on, %1$@ receives a new reading from the FreeStyle Libre 3 every minute instead.": {
-      "extractionState": "manual",
-      "comment": "Minute-by-minute warning paragraph 1 (1: appName)"
-    },
-    "%@ remaining": {
-      "extractionState": "manual",
-      "comment": "Lifecycle bar detail: active time remaining"
-    },
-    "%@ until ready": {
-      "extractionState": "manual",
-      "comment": "Lifecycle bar detail: warmup time remaining"
-    },
-    "8-character hex (little-endian)": {
-      "extractionState": "manual",
-      "comment": "Receiver ID field placeholder"
-    },
-    "Activated": {
-      "extractionState": "manual",
-      "comment": "Sensor activation date row label"
-    },
-    "Apply a new Sensor": {
-      "extractionState": "manual",
-      "comment": "Apply-sensor screen title"
-    },
-    "Authenticating with sensor…": {
-      "extractionState": "manual",
-      "comment": "Pairing status: handshaking"
-    },
-    "Avoid scars, moles, stretch marks, lumps, and insulin injection sites. Rotate sites between applications.": {
-      "extractionState": "manual",
-      "comment": "Apply-sensor help step 1 note"
-    },
-    "Awaiting first reading": {
-      "extractionState": "manual",
-      "comment": "Lifecycle bar detail: awaiting first reading after pairing"
-    },
-    "BLE PIN": {
-      "extractionState": "manual",
-      "comment": "BLE PIN row label"
-    },
-    "Bluetooth": {
-      "extractionState": "manual",
-      "comment": "Bluetooth address row label\n   Bluetooth connection row label"
-    },
-    "Cancel": {
-      "extractionState": "manual",
-      "comment": "Cancel button"
-    },
-    "Clinical backfill": {
-      "extractionState": "manual",
-      "comment": "Sample source: clinical backfill"
-    },
-    "Connected": {
-      "extractionState": "manual",
-      "comment": "Connection status: connected"
-    },
-    "Connecting…": {
-      "extractionState": "manual",
-      "comment": "Connection status: connecting\n   Pairing status: connecting"
-    },
-    "Continue": {
-      "extractionState": "manual",
-      "comment": "Continue button"
-    },
-    "Copied %d lines": {
-      "extractionState": "manual",
-      "comment": "Activity log copied confirmation"
-    },
-    "Copy log": {
-      "extractionState": "manual",
-      "comment": "Copy activity log button"
-    },
-    "Couldn't parse hex.": {
-      "extractionState": "manual",
-      "comment": "Receiver ID validation error: parse failure"
-    },
-    "Debug Info": {
-      "extractionState": "manual",
-      "comment": "Settings section: debug info"
-    },
-    "Delete": {
-      "extractionState": "manual",
-      "comment": "Delete button"
-    },
-    "Delete CGM": {
-      "extractionState": "manual",
-      "comment": "Delete CGM button"
-    },
-    "Delete CGM?": {
-      "extractionState": "manual",
-      "comment": "Delete CGM confirmation title"
-    },
-    "Developer": {
-      "extractionState": "manual",
-      "comment": "Settings section: developer tools"
-    },
-    "Disconnected": {
-      "extractionState": "manual",
-      "comment": "Connection status: disconnected"
-    },
-    "Display only": {
-      "extractionState": "manual",
-      "comment": "Reading is display-only, not used for dosing"
-    },
-    "Do not remove the cap from the sensor applicator until you're ready to apply the sensor.": {
-      "extractionState": "manual",
-      "comment": "Apply-sensor cap instruction"
-    },
-    "Do not reuse the cap. The sterile barrier is broken once removed.": {
-      "extractionState": "manual",
-      "comment": "Apply-sensor help step 3 note"
-    },
-    "Done": {
-      "extractionState": "manual",
-      "comment": "Done button"
-    },
-    "Enable": {
-      "extractionState": "manual",
-      "comment": "Enable button"
-    },
-    "Enter exactly 8 hex characters.": {
-      "extractionState": "manual",
-      "comment": "Receiver ID validation error: wrong length"
-    },
-    "Enter the receiver ID this sensor was originally paired under. The sensor only accepts a switch-receiver command from the same ID it remembers — there's no way to recover without it.": {
-      "extractionState": "manual",
-      "comment": "Recovery screen explanation"
-    },
-    "Every realtime reading (~1/min) is sent to %1$@.": {
-      "extractionState": "manual",
-      "comment": "Forwarding footer: minute-by-minute on (1: appName)"
-    },
-    "Example: `78563412`. If this sensor was paired with this app before, the value is shown as \"Receiver ID\" in the Debug Info section of the Libre 3 CGM settings page.": {
-      "extractionState": "manual",
-      "comment": "Receiver ID field help text"
-    },
-    "Experimental setting": {
-      "extractionState": "manual",
-      "comment": "Minute-by-minute warning header"
-    },
-    "Falling quickly ⇊": {
-      "extractionState": "manual",
-      "comment": "Trend: falling quickly"
-    },
-    "Falling ↘": {
-      "extractionState": "manual",
-      "comment": "Trend: falling"
-    },
-    "Filter": {
-      "extractionState": "manual",
-      "comment": "Activity log filter picker label"
-    },
-    "Forwarding to %1$@": {
-      "extractionState": "manual",
-      "comment": "Sample detail section: forwarding (1: appName)\n   Settings section: forwarding (1: appName)"
-    },
-    "Glucose Streams": {
-      "extractionState": "manual",
-      "comment": "Developer: glucose streams debug view"
-    },
-    "Historical backfill": {
-      "extractionState": "manual",
-      "comment": "Sample source: historical backfill"
-    },
-    "Hold steady for a moment so the sensor seats fully against the skin.": {
-      "extractionState": "manual",
-      "comment": "Apply-sensor help step 4 note"
-    },
-    "Hold the BACK of your phone against the sensor.": {
-      "extractionState": "manual",
-      "comment": "Scan-sensor help step 1 body"
-    },
-    "Hold the top of your phone against the sensor.": {
-      "extractionState": "manual",
-      "comment": "Scan-sensor instruction"
-    },
-    "Hold your phone to the sensor": {
-      "extractionState": "manual",
-      "comment": "Pairing status: NFC scanning"
-    },
-    "How to apply a Sensor": {
-      "extractionState": "manual",
-      "comment": "Apply-sensor help screen title"
-    },
-    "HOW TO APPLY A SENSOR": {
-      "extractionState": "manual",
-      "comment": "Apply-sensor help button"
-    },
-    "How to scan a Sensor": {
-      "extractionState": "manual",
-      "comment": "Scan-sensor help screen title"
-    },
-    "HOW TO SCAN A SENSOR": {
-      "extractionState": "manual",
-      "comment": "Scan-sensor help button"
-    },
-    "If your phone moves away, the scan will fail and you'll need to try again.": {
-      "extractionState": "manual",
-      "comment": "Scan-sensor help step 2 note"
-    },
-    "Initializing": {
-      "extractionState": "manual",
-      "comment": "CGM status highlight: waiting for first reading"
-    },
-    "Issue": {
-      "extractionState": "manual",
-      "comment": "Sample detail: quality issue"
-    },
-    "Keep it still — your phone will vibrate once the sensor is paired.": {
-      "extractionState": "manual",
-      "comment": "Scan-sensor stillness instruction"
-    },
-    "Keep the phone still. Pairing takes a few seconds.": {
-      "extractionState": "manual",
-      "comment": "Scan-sensor help step 2 body"
-    },
-    "Last attempt %@": {
-      "extractionState": "manual",
-      "comment": "Reconnect error: time of last attempt"
-    },
-    "Last Reading": {
-      "extractionState": "manual",
-      "comment": "Settings section: last reading"
-    },
-    "Last reading %@": {
-      "extractionState": "manual",
-      "comment": "Lifecycle bar detail: time since last reading"
-    },
-    "Leave this off unless you understand the implications. You can turn it off again at any time.": {
-      "extractionState": "manual",
-      "comment": "Minute-by-minute warning footer"
-    },
-    "Let the area air-dry completely before applying.": {
-      "extractionState": "manual",
-      "comment": "Apply-sensor help step 2 note"
-    },
-    "Lift the applicator straight away from your arm.": {
-      "extractionState": "manual",
-      "comment": "Apply-sensor help step 5 body"
-    },
-    "Next": {
-      "extractionState": "manual",
-      "comment": "Next button"
-    },
-    "No": {
-      "extractionState": "manual",
-      "comment": "Sample detail: not sent to Loop"
-    },
-    "No activity logged yet.": {
-      "extractionState": "manual",
-      "comment": "Empty activity log"
-    },
-    "No activity matching this filter.": {
-      "extractionState": "manual",
-      "comment": "Empty filtered activity log"
-    },
-    "No readings — replace the sensor.": {
-      "extractionState": "manual",
-      "comment": "Last reading placeholder when the sensor has failed"
-    },
-    "Not paired": {
-      "extractionState": "manual",
-      "comment": "Connection status: not paired"
-    },
-    "Only one reading every ~5 minutes is sent to %1$@, matching the cadence other CGMs use.": {
-      "extractionState": "manual",
-      "comment": "Forwarding footer: minute-by-minute off (1: appName)"
-    },
-    "Pair a new sensor?": {
-      "extractionState": "manual",
-      "comment": "Replace sensor confirmation title"
-    },
-    "Pair new sensor": {
-      "extractionState": "manual",
-      "comment": "Pair new sensor button"
-    },
-    "Pairing": {
-      "extractionState": "manual",
-      "comment": "Pairing progress screen title"
-    },
-    "Path": {
-      "extractionState": "manual",
-      "comment": "Sample detail: source path"
-    },
-    "Preparing…": {
-      "extractionState": "manual",
-      "comment": "Pairing status: preparing"
-    },
-    "Press the applicator firmly against the prepared site.": {
-      "extractionState": "manual",
-      "comment": "Apply-sensor help step 4 body"
-    },
-    "Quality": {
-      "extractionState": "manual",
-      "comment": "Sample detail section: quality"
-    },
-    "Rate of change": {
-      "extractionState": "manual",
-      "comment": "Sample detail: rate of change"
-    },
-    "Reading": {
-      "extractionState": "manual",
-      "comment": "Sample detail section: reading"
-    },
-    "Realtime (live BLE)": {
-      "extractionState": "manual",
-      "comment": "Sample source: realtime"
-    },
-    "Reason": {
-      "extractionState": "manual",
-      "comment": "Sample detail: not-forwarded reason"
-    },
-    "Receiver ID": {
-      "extractionState": "manual",
-      "comment": "Receiver ID field label\n   Receiver ID row label"
-    },
-    "Recent Activity": {
-      "extractionState": "manual",
-      "comment": "Settings section: recent activity log"
-    },
-    "Recent Readings": {
-      "extractionState": "manual",
-      "comment": "Settings section: recent readings"
-    },
-    "Reconnecting…": {
-      "extractionState": "manual",
-      "comment": "Connection status: reconnecting"
-    },
-    "Recover existing sensor": {
-      "extractionState": "manual",
-      "comment": "Recover existing sensor button\n   Recovery screen title"
-    },
-    "Recovery": {
-      "extractionState": "manual",
-      "comment": "Recovery screen title"
-    },
-    "Replace sensor": {
-      "extractionState": "manual",
-      "comment": "Lifecycle bar detail: replace sensor"
-    },
-    "Replace\nSensor": {
-      "extractionState": "manual",
-      "comment": "CGM status highlight: sensor failed, replace it"
-    },
-    "Rising quickly ⇈": {
-      "extractionState": "manual",
-      "comment": "Trend: rising quickly"
-    },
-    "Rising ↗": {
-      "extractionState": "manual",
-      "comment": "Trend: rising"
-    },
-    "Run a finger around the adhesive edge to make sure the sensor is secure.": {
-      "extractionState": "manual",
-      "comment": "Apply-sensor help step 6 body"
-    },
-    "Sample detail": {
-      "extractionState": "manual",
-      "comment": "Sample detail screen title"
-    },
-    "Scan new Sensor": {
-      "extractionState": "manual",
-      "comment": "Scan-sensor screen title"
-    },
-    "Searching for sensor over Bluetooth…": {
-      "extractionState": "manual",
-      "comment": "Pairing status: BLE searching"
-    },
-    "Select a site on the back of your upper arm.": {
-      "extractionState": "manual",
-      "comment": "Apply-sensor help step 1 body"
-    },
-    "Send every reading": {
-      "extractionState": "manual",
-      "comment": "Minute-by-minute warning screen title"
-    },
-    "Send every reading (experimental)": {
-      "extractionState": "manual",
-      "comment": "Experimental minute-by-minute forwarding toggle"
-    },
-    "Sensor": {
-      "extractionState": "manual",
-      "comment": "Sensor model row label\n   Settings section: sensor"
-    },
-    "Sensor %@ paired": {
-      "extractionState": "manual",
-      "comment": "Pairing status: success with serial"
-    },
-    "Sensor diagnostics": {
-      "extractionState": "manual",
-      "comment": "Sample detail section: diagnostics"
-    },
-    "Sensor\nExpired": {
-      "extractionState": "manual",
-      "comment": "CGM status highlight: sensor expired"
-    },
-    "Sensor\nStabilizing": {
-      "extractionState": "manual",
-      "comment": "CGM status highlight: sensor stabilizing after pairing"
-    },
-    "Sensor\nWarmup": {
-      "extractionState": "manual",
-      "comment": "CGM status highlight: sensor warming up"
-    },
-    "Sent": {
-      "extractionState": "manual",
-      "comment": "Sample detail: sent to Loop"
-    },
-    "Serial": {
-      "extractionState": "manual",
-      "comment": "Sensor serial row label"
-    },
-    "Show all %d": {
-      "extractionState": "manual",
-      "comment": "Expand activity log to N lines\n   Expand recent readings list to N"
-    },
-    "Show fewer": {
-      "extractionState": "manual",
-      "comment": "Collapse activity log\n   Collapse recent readings list"
-    },
-    "Signal\nLoss": {
-      "extractionState": "manual",
-      "comment": "CGM status highlight: signal loss"
-    },
-    "Source": {
-      "extractionState": "manual",
-      "comment": "Sample detail section: source"
-    },
-    "Stable →": {
-      "extractionState": "manual",
-      "comment": "Trend: stable"
-    },
-    "Start pairing": {
-      "extractionState": "manual",
-      "comment": "Start pairing button"
-    },
-    "STEP 1": {
-      "extractionState": "manual",
-      "comment": "Apply-sensor help step 1 title\n   Scan-sensor help step 1 title"
-    },
-    "STEP 2": {
-      "extractionState": "manual",
-      "comment": "Apply-sensor help step 2 title\n   Scan-sensor help step 2 title"
-    },
-    "STEP 3": {
-      "extractionState": "manual",
-      "comment": "Apply-sensor help step 3 title\n   Scan-sensor help step 3 title"
-    },
-    "STEP 4": {
-      "extractionState": "manual",
-      "comment": "Apply-sensor help step 4 title"
-    },
-    "STEP 5": {
-      "extractionState": "manual",
-      "comment": "Apply-sensor help step 5 title"
-    },
-    "STEP 6": {
-      "extractionState": "manual",
-      "comment": "Apply-sensor help step 6 title"
-    },
-    "Temperature (raw)": {
-      "extractionState": "manual",
-      "comment": "Sample detail: raw sensor temperature"
-    },
-    "The receiver ID is assigned by %1$@ when it first pairs a sensor. It's saved in this app and shown on the Libre 3 settings page — write it down if you want to re-pair this sensor after reinstalling %1$@.": {
-      "extractionState": "manual",
-      "comment": "Recovery screen footnote (1: appName)"
-    },
-    "The sensor should only be applied to the back of your upper arm.": {
-      "extractionState": "manual",
-      "comment": "Apply-sensor instruction"
-    },
-    "The sensor stays on your arm; the applicator comes off empty.": {
-      "extractionState": "manual",
-      "comment": "Apply-sensor help step 5 note"
-    },
-    "This can change how %1$@ reacts to glucose movement compared to default behavior:": {
-      "extractionState": "manual",
-      "comment": "Minute-by-minute warning paragraph 2 (1: appName)"
-    },
-    "This removes the FreeStyle Libre 3 CGM from %1$@. You'll need to re-pair to resume readings.": {
-      "extractionState": "manual",
-      "comment": "Delete CGM confirmation message (1: appName)"
-    },
-    "This stops monitoring the current sensor and starts pairing for a new one. The CGM stays configured with Loop.": {
-      "extractionState": "manual",
-      "comment": "Replace sensor confirmation message"
-    },
-    "Time": {
-      "extractionState": "manual",
-      "comment": "Recent readings column header: time\n   Sample detail: time"
-    },
-    "Time (relative)": {
-      "extractionState": "manual",
-      "comment": "Sample detail: relative time"
-    },
-    "Trend": {
-      "extractionState": "manual",
-      "comment": "Recent readings column header: trend\n   Sample detail: trend"
-    },
-    "Try again": {
-      "extractionState": "manual",
-      "comment": "Retry button"
-    },
-    "Twist off the cap from the sensor applicator.": {
-      "extractionState": "manual",
-      "comment": "Apply-sensor help step 3 body"
-    },
-    "Value": {
-      "extractionState": "manual",
-      "comment": "Sample detail: glucose value"
-    },
-    "Waiting for first reading": {
-      "extractionState": "manual",
-      "comment": "Lifecycle bar detail: waiting for first reading"
-    },
-    "Waiting for first reading…": {
-      "extractionState": "manual",
-      "comment": "Last reading placeholder before the first reading"
-    },
-    "Wash the site with plain soap, dry, then clean with an alcohol wipe.": {
-      "extractionState": "manual",
-      "comment": "Apply-sensor help step 2 body"
-    },
-    "Yes": {
-      "extractionState": "manual",
-      "comment": "Sample detail: sent to Loop"
-    },
-    "Yes (display only)": {
-      "extractionState": "manual",
-      "comment": "Sample detail: sent display-only"
-    },
-    "Your phone will vibrate when pairing succeeds.": {
-      "extractionState": "manual",
-      "comment": "Scan-sensor help step 3 body"
-    },
-    "• Dosing decisions may shift sooner or further than what %1$@'s review and tuning guidance assumes.": {
-      "extractionState": "manual",
-      "comment": "Minute-by-minute warning bullet 1 (1: appName)"
-    },
-    "• Trend math, retrospective correction, and momentum effects were validated at the 5-minute cadence.": {
-      "extractionState": "manual",
-      "comment": "Minute-by-minute warning bullet 2"
-    },
-    "• You're accepting responsibility for monitoring outcomes more closely while this is on.": {
-      "extractionState": "manual",
-      "comment": "Minute-by-minute warning bullet 3"
+  "sourceLanguage" : "en",
+  "strings" : {
+    "—" : {
+      "comment" : "A placeholder string.",
+      "isCommentAutoGenerated" : true
+    },
+    "(%@)" : {
+
+    },
+    "%@ remaining" : {
+      "comment" : "Lifecycle bar detail: active time remaining",
+      "extractionState" : "manual"
+    },
+    "%@ until ready" : {
+      "comment" : "Lifecycle bar detail: warmup time remaining",
+      "extractionState" : "manual"
+    },
+    "%@/min" : {
+
+    },
+    "%1$@'s algorithm was designed and tuned against CGMs that emit a new reading every 5 minutes. With this setting on, %1$@ receives a new reading from the FreeStyle Libre 3 every minute instead." : {
+      "comment" : "Minute-by-minute warning paragraph 1 (1: appName)",
+      "extractionState" : "manual"
+    },
+    "• Dosing decisions may shift sooner or further than what %1$@'s review and tuning guidance assumes." : {
+      "comment" : "Minute-by-minute warning bullet 1 (1: appName)",
+      "extractionState" : "manual"
+    },
+    "• Trend math, retrospective correction, and momentum effects were validated at the 5-minute cadence." : {
+      "comment" : "Minute-by-minute warning bullet 2",
+      "extractionState" : "manual"
+    },
+    "• You're accepting responsibility for monitoring outcomes more closely while this is on." : {
+      "comment" : "Minute-by-minute warning bullet 3",
+      "extractionState" : "manual"
+    },
+    "8-character hex (little-endian)" : {
+      "comment" : "Receiver ID field placeholder",
+      "extractionState" : "manual"
+    },
+    "Activated" : {
+      "comment" : "Sensor activation date row label",
+      "extractionState" : "manual"
+    },
+    "Apply a new Sensor" : {
+      "comment" : "Apply-sensor screen title",
+      "extractionState" : "manual"
+    },
+    "Authenticating with sensor…" : {
+      "comment" : "Pairing status: handshaking",
+      "extractionState" : "manual"
+    },
+    "Avoid scars, moles, stretch marks, lumps, and insulin injection sites. Rotate sites between applications." : {
+      "comment" : "Apply-sensor help step 1 note",
+      "extractionState" : "manual"
+    },
+    "Awaiting first reading" : {
+      "comment" : "Lifecycle bar detail: awaiting first reading after pairing",
+      "extractionState" : "manual"
+    },
+    "BLE PIN" : {
+      "comment" : "BLE PIN row label",
+      "extractionState" : "manual"
+    },
+    "Bluetooth" : {
+      "comment" : "Bluetooth address row label\n   Bluetooth connection row label",
+      "extractionState" : "manual"
+    },
+    "Cancel" : {
+      "comment" : "Cancel button",
+      "extractionState" : "manual"
+    },
+    "Clinical backfill" : {
+      "comment" : "Sample source: clinical backfill",
+      "extractionState" : "manual"
+    },
+    "Connected" : {
+      "comment" : "Connection status: connected",
+      "extractionState" : "manual"
+    },
+    "Connecting…" : {
+      "comment" : "Connection status: connecting\n   Pairing status: connecting",
+      "extractionState" : "manual"
+    },
+    "Continue" : {
+      "comment" : "Continue button",
+      "extractionState" : "manual"
+    },
+    "Copied %d lines" : {
+      "comment" : "Activity log copied confirmation",
+      "extractionState" : "manual"
+    },
+    "Copy log" : {
+      "comment" : "Copy activity log button",
+      "extractionState" : "manual"
+    },
+    "Couldn't parse hex." : {
+      "comment" : "Receiver ID validation error: parse failure",
+      "extractionState" : "manual"
+    },
+    "Debug Info" : {
+      "comment" : "Settings section: debug info",
+      "extractionState" : "manual"
+    },
+    "Delete" : {
+      "comment" : "Delete button",
+      "extractionState" : "manual"
+    },
+    "Delete CGM" : {
+      "comment" : "Delete CGM button",
+      "extractionState" : "manual"
+    },
+    "Delete CGM?" : {
+      "comment" : "Delete CGM confirmation title",
+      "extractionState" : "manual"
+    },
+    "Developer" : {
+      "comment" : "Settings section: developer tools",
+      "extractionState" : "manual"
+    },
+    "Disconnected" : {
+      "comment" : "Connection status: disconnected",
+      "extractionState" : "manual"
+    },
+    "Display only" : {
+      "comment" : "Reading is display-only, not used for dosing",
+      "extractionState" : "manual"
+    },
+    "Do not remove the cap from the sensor applicator until you're ready to apply the sensor." : {
+      "comment" : "Apply-sensor cap instruction",
+      "extractionState" : "manual"
+    },
+    "Do not reuse the cap. The sterile barrier is broken once removed." : {
+      "comment" : "Apply-sensor help step 3 note",
+      "extractionState" : "manual"
+    },
+    "Done" : {
+      "comment" : "Done button",
+      "extractionState" : "manual"
+    },
+    "Each entry is one decoded packet. Tap to see when it arrived and every decoded field — including the realtime frame's historical lag, which is why the embedded 5-min value is always ~17 min behind." : {
+      "comment" : "A footer for the LibreLoopStreamDebugView.",
+      "isCommentAutoGenerated" : true
+    },
+    "Each series is plotted by lifeCount (minutes since sensor start). Realtime current and Clinical word[5] are identical by spec — clinical dots should land on the realtime line except across reconnect gaps." : {
+      "comment" : "A description of the Libre 3 glucose streams.",
+      "isCommentAutoGenerated" : true
+    },
+    "Enable" : {
+      "comment" : "Enable button",
+      "extractionState" : "manual"
+    },
+    "Enter exactly 8 hex characters." : {
+      "comment" : "Receiver ID validation error: wrong length",
+      "extractionState" : "manual"
+    },
+    "Enter the receiver ID this sensor was originally paired under. The sensor only accepts a switch-receiver command from the same ID it remembers — there's no way to recover without it." : {
+      "comment" : "Recovery screen explanation",
+      "extractionState" : "manual"
+    },
+    "Every realtime reading (~1/min) is sent to %1$@." : {
+      "comment" : "Forwarding footer: minute-by-minute on (1: appName)",
+      "extractionState" : "manual"
+    },
+    "Example: `78563412`. If this sensor was paired with this app before, the value is shown as \"Receiver ID\" in the Debug Info section of the Libre 3 CGM settings page." : {
+      "comment" : "Receiver ID field help text",
+      "extractionState" : "manual"
+    },
+    "Experimental setting" : {
+      "comment" : "Minute-by-minute warning header",
+      "extractionState" : "manual"
+    },
+    "Falling ↘" : {
+      "comment" : "Trend: falling",
+      "extractionState" : "manual"
+    },
+    "Falling quickly ⇊" : {
+      "comment" : "Trend: falling quickly",
+      "extractionState" : "manual"
+    },
+    "Filter" : {
+      "comment" : "Activity log filter picker label",
+      "extractionState" : "manual"
+    },
+    "Forwarding to %1$@" : {
+      "comment" : "Sample detail section: forwarding (1: appName)\n   Settings section: forwarding (1: appName)",
+      "extractionState" : "manual"
+    },
+    "Glucose Streams" : {
+      "comment" : "Developer: glucose streams debug view",
+      "extractionState" : "manual"
+    },
+    "Historical backfill" : {
+      "comment" : "Sample source: historical backfill",
+      "extractionState" : "manual"
+    },
+    "Hold steady for a moment so the sensor seats fully against the skin." : {
+      "comment" : "Apply-sensor help step 4 note",
+      "extractionState" : "manual"
+    },
+    "Hold the BACK of your phone against the sensor." : {
+      "comment" : "Scan-sensor help step 1 body",
+      "extractionState" : "manual"
+    },
+    "Hold the top of your phone against the sensor." : {
+      "comment" : "Scan-sensor instruction",
+      "extractionState" : "manual"
+    },
+    "Hold your phone to the sensor" : {
+      "comment" : "Pairing status: NFC scanning",
+      "extractionState" : "manual"
+    },
+    "How to apply a Sensor" : {
+      "comment" : "Apply-sensor help screen title",
+      "extractionState" : "manual"
+    },
+    "HOW TO APPLY A SENSOR" : {
+      "comment" : "Apply-sensor help button",
+      "extractionState" : "manual"
+    },
+    "How to scan a Sensor" : {
+      "comment" : "Scan-sensor help screen title",
+      "extractionState" : "manual"
+    },
+    "HOW TO SCAN A SENSOR" : {
+      "comment" : "Scan-sensor help button",
+      "extractionState" : "manual"
+    },
+    "If your phone moves away, the scan will fail and you'll need to try again." : {
+      "comment" : "Scan-sensor help step 2 note",
+      "extractionState" : "manual"
+    },
+    "Initializing" : {
+      "comment" : "CGM status highlight: waiting for first reading",
+      "extractionState" : "manual"
+    },
+    "Issue" : {
+      "comment" : "Sample detail: quality issue",
+      "extractionState" : "manual"
+    },
+    "Keep it still — your phone will vibrate once the sensor is paired." : {
+      "comment" : "Scan-sensor stillness instruction",
+      "extractionState" : "manual"
+    },
+    "Keep the phone still. Pairing takes a few seconds." : {
+      "comment" : "Scan-sensor help step 2 body",
+      "extractionState" : "manual"
+    },
+    "Keeps the clinical channel subscribed so the clinical/raw charts update every minute. Off by default — only needed for stream inspection, and it adds per-reconnect clinical traffic. Takes effect on the next reconnect." : {
+      "comment" : "A description of the effect of the \"Continuous clinical stream\" toggle.",
+      "isCommentAutoGenerated" : true
+    },
+    "Last attempt %@" : {
+      "comment" : "Reconnect error: time of last attempt",
+      "extractionState" : "manual"
+    },
+    "Last Reading" : {
+      "comment" : "Settings section: last reading",
+      "extractionState" : "manual"
+    },
+    "Last reading %@" : {
+      "comment" : "Lifecycle bar detail: time since last reading",
+      "extractionState" : "manual"
+    },
+    "Leave this off unless you understand the implications. You can turn it off again at any time." : {
+      "comment" : "Minute-by-minute warning footer",
+      "extractionState" : "manual"
+    },
+    "Let the area air-dry completely before applying." : {
+      "comment" : "Apply-sensor help step 2 note",
+      "extractionState" : "manual"
+    },
+    "Lift the applicator straight away from your arm." : {
+      "comment" : "Apply-sensor help step 5 body",
+      "extractionState" : "manual"
+    },
+    "Lower = smoother. Realtime and Clinical word[5] should match; Embedded 5-min should be lowest." : {
+      "comment" : "A description of the meaning of the noise values.",
+      "isCommentAutoGenerated" : true
+    },
+    "Next" : {
+      "comment" : "Next button",
+      "extractionState" : "manual"
+    },
+    "No" : {
+      "comment" : "Sample detail: not sent to Loop",
+      "extractionState" : "manual"
+    },
+    "No activity logged yet." : {
+      "comment" : "Empty activity log",
+      "extractionState" : "manual"
+    },
+    "No activity matching this filter." : {
+      "comment" : "Empty filtered activity log",
+      "extractionState" : "manual"
+    },
+    "No clinical raw data yet." : {
+      "comment" : "A placeholder text displayed when a user has not yet",
+      "isCommentAutoGenerated" : true
+    },
+    "No readings — replace the sensor." : {
+      "comment" : "Last reading placeholder when the sensor has failed",
+      "extractionState" : "manual"
+    },
+    "No reads captured yet." : {
+      "comment" : "A message displayed when a user has not yet captured any reads.",
+      "isCommentAutoGenerated" : true
+    },
+    "Noise (mean |Δ| between consecutive points)" : {
+      "comment" : "A label displayed above a section of a view that shows",
+      "isCommentAutoGenerated" : true
+    },
+    "Not paired" : {
+      "comment" : "Connection status: not paired",
+      "extractionState" : "manual"
+    },
+    "Only one reading every ~5 minutes is sent to %1$@, matching the cadence other CGMs use." : {
+      "comment" : "Forwarding footer: minute-by-minute off (1: appName)",
+      "extractionState" : "manual"
+    },
+    "Pair a new sensor?" : {
+      "comment" : "Replace sensor confirmation title",
+      "extractionState" : "manual"
+    },
+    "Pair new sensor" : {
+      "comment" : "Pair new sensor button",
+      "extractionState" : "manual"
+    },
+    "Pair New Sensor" : {
+      "comment" : "Prominent action to pair a new sensor when the current one needs replacement"
+    },
+    "Pairing" : {
+      "comment" : "Pairing progress screen title",
+      "extractionState" : "manual"
+    },
+    "Path" : {
+      "comment" : "Sample detail: source path",
+      "extractionState" : "manual"
+    },
+    "Preparing…" : {
+      "comment" : "Pairing status: preparing",
+      "extractionState" : "manual"
+    },
+    "Press the applicator firmly against the prepared site." : {
+      "comment" : "Apply-sensor help step 4 body",
+      "extractionState" : "manual"
+    },
+    "Quality" : {
+      "comment" : "Sample detail section: quality",
+      "extractionState" : "manual"
+    },
+    "Rate of change" : {
+      "comment" : "Sample detail: rate of change",
+      "extractionState" : "manual"
+    },
+    "Raw Reads (newest first)" : {
+      "comment" : "A label displayed above a list of raw reads.",
+      "isCommentAutoGenerated" : true
+    },
+    "Reading" : {
+      "comment" : "Sample detail section: reading",
+      "extractionState" : "manual"
+    },
+    "Realtime (live BLE)" : {
+      "comment" : "Sample source: realtime",
+      "extractionState" : "manual"
+    },
+    "Reason" : {
+      "comment" : "Sample detail: not-forwarded reason",
+      "extractionState" : "manual"
+    },
+    "Receiver ID" : {
+      "comment" : "Receiver ID field label\n   Receiver ID row label",
+      "extractionState" : "manual"
+    },
+    "Recent Activity" : {
+      "comment" : "Settings section: recent activity log",
+      "extractionState" : "manual"
+    },
+    "Recent Readings" : {
+      "comment" : "Settings section: recent readings",
+      "extractionState" : "manual"
+    },
+    "Reconnecting…" : {
+      "comment" : "Connection status: reconnecting",
+      "extractionState" : "manual"
+    },
+    "Recover existing sensor" : {
+      "comment" : "Recover existing sensor button\n   Recovery screen title",
+      "extractionState" : "manual"
+    },
+    "Recovery" : {
+      "comment" : "Recovery screen title",
+      "extractionState" : "manual"
+    },
+    "Replace\nSensor" : {
+      "comment" : "CGM status highlight: sensor failed, replace it",
+      "extractionState" : "manual"
+    },
+    "Replace sensor" : {
+      "comment" : "Lifecycle bar detail: replace sensor",
+      "extractionState" : "manual"
+    },
+    "Rising ↗" : {
+      "comment" : "Trend: rising",
+      "extractionState" : "manual"
+    },
+    "Rising quickly ⇈" : {
+      "comment" : "Trend: rising quickly",
+      "extractionState" : "manual"
+    },
+    "Run a finger around the adhesive edge to make sure the sensor is secure." : {
+      "comment" : "Apply-sensor help step 6 body",
+      "extractionState" : "manual"
+    },
+    "Sample detail" : {
+      "comment" : "Sample detail screen title",
+      "extractionState" : "manual"
+    },
+    "Scan new Sensor" : {
+      "comment" : "Scan-sensor screen title",
+      "extractionState" : "manual"
+    },
+    "Searching for sensor over Bluetooth…" : {
+      "comment" : "Pairing status: BLE searching",
+      "extractionState" : "manual"
+    },
+    "Select a site on the back of your upper arm." : {
+      "comment" : "Apply-sensor help step 1 body",
+      "extractionState" : "manual"
+    },
+    "Send every reading" : {
+      "comment" : "Minute-by-minute warning screen title",
+      "extractionState" : "manual"
+    },
+    "Send every reading (experimental)" : {
+      "comment" : "Experimental minute-by-minute forwarding toggle",
+      "extractionState" : "manual"
+    },
+    "Sensor" : {
+      "comment" : "Sensor model row label\n   Settings section: sensor",
+      "extractionState" : "manual"
+    },
+    "Sensor\nExpired" : {
+      "comment" : "CGM status highlight: sensor expired",
+      "extractionState" : "manual"
+    },
+    "Sensor\nStabilizing" : {
+      "comment" : "CGM status highlight: sensor stabilizing after pairing",
+      "extractionState" : "manual"
+    },
+    "Sensor\nWarmup" : {
+      "comment" : "CGM status highlight: sensor warming up",
+      "extractionState" : "manual"
+    },
+    "Sensor %@ paired" : {
+      "comment" : "Pairing status: success with serial",
+      "extractionState" : "manual"
+    },
+    "Sensor diagnostics" : {
+      "comment" : "Sample detail section: diagnostics",
+      "extractionState" : "manual"
+    },
+    "Sent" : {
+      "comment" : "Sample detail: sent to Loop",
+      "extractionState" : "manual"
+    },
+    "Serial" : {
+      "comment" : "Sensor serial row label",
+      "extractionState" : "manual"
+    },
+    "Show all %d" : {
+      "comment" : "Expand activity log to N lines\n   Expand recent readings list to N",
+      "extractionState" : "manual"
+    },
+    "Show fewer" : {
+      "comment" : "Collapse activity log\n   Collapse recent readings list",
+      "extractionState" : "manual"
+    },
+    "Signal\nLoss" : {
+      "comment" : "CGM status highlight: signal loss",
+      "extractionState" : "manual"
+    },
+    "Source" : {
+      "comment" : "Sample detail section: source",
+      "extractionState" : "manual"
+    },
+    "Stable →" : {
+      "comment" : "Trend: stable",
+      "extractionState" : "manual"
+    },
+    "Start pairing" : {
+      "comment" : "Start pairing button",
+      "extractionState" : "manual"
+    },
+    "STEP 1" : {
+      "comment" : "Apply-sensor help step 1 title\n   Scan-sensor help step 1 title",
+      "extractionState" : "manual"
+    },
+    "STEP 2" : {
+      "comment" : "Apply-sensor help step 2 title\n   Scan-sensor help step 2 title",
+      "extractionState" : "manual"
+    },
+    "STEP 3" : {
+      "comment" : "Apply-sensor help step 3 title\n   Scan-sensor help step 3 title",
+      "extractionState" : "manual"
+    },
+    "STEP 4" : {
+      "comment" : "Apply-sensor help step 4 title",
+      "extractionState" : "manual"
+    },
+    "STEP 5" : {
+      "comment" : "Apply-sensor help step 5 title",
+      "extractionState" : "manual"
+    },
+    "STEP 6" : {
+      "comment" : "Apply-sensor help step 6 title",
+      "extractionState" : "manual"
+    },
+    "Temperature (raw)" : {
+      "comment" : "Sample detail: raw sensor temperature",
+      "extractionState" : "manual"
+    },
+    "The receiver ID is assigned by %1$@ when it first pairs a sensor. It's saved in this app and shown on the Libre 3 settings page — write it down if you want to re-pair this sensor after reinstalling %1$@." : {
+      "comment" : "Recovery screen footnote (1: appName)",
+      "extractionState" : "manual"
+    },
+    "The sensor should only be applied to the back of your upper arm." : {
+      "comment" : "Apply-sensor instruction",
+      "extractionState" : "manual"
+    },
+    "The sensor stays on your arm; the applicator comes off empty." : {
+      "comment" : "Apply-sensor help step 5 note",
+      "extractionState" : "manual"
+    },
+    "This can change how %1$@ reacts to glucose movement compared to default behavior:" : {
+      "comment" : "Minute-by-minute warning paragraph 2 (1: appName)",
+      "extractionState" : "manual"
+    },
+    "This removes the FreeStyle Libre 3 CGM from %1$@. You'll need to re-pair to resume readings." : {
+      "comment" : "Delete CGM confirmation message (1: appName)",
+      "extractionState" : "manual"
+    },
+    "This stops monitoring the current sensor and starts pairing for a new one. The CGM stays configured with Loop." : {
+      "comment" : "Replace sensor confirmation message",
+      "extractionState" : "manual"
+    },
+    "Time" : {
+      "comment" : "Recent readings column header: time\n   Sample detail: time",
+      "extractionState" : "manual"
+    },
+    "Time (relative)" : {
+      "comment" : "Sample detail: relative time",
+      "extractionState" : "manual"
+    },
+    "Trend" : {
+      "comment" : "Recent readings column header: trend\n   Sample detail: trend",
+      "extractionState" : "manual"
+    },
+    "Try again" : {
+      "comment" : "Retry button",
+      "extractionState" : "manual"
+    },
+    "Twist off the cap from the sensor applicator." : {
+      "comment" : "Apply-sensor help step 3 body",
+      "extractionState" : "manual"
+    },
+    "Value" : {
+      "comment" : "Sample detail: glucose value",
+      "extractionState" : "manual"
+    },
+    "Waiting for first reading" : {
+      "comment" : "Lifecycle bar detail: waiting for first reading",
+      "extractionState" : "manual"
+    },
+    "Waiting for first reading…" : {
+      "comment" : "Last reading placeholder before the first reading",
+      "extractionState" : "manual"
+    },
+    "Waiting for stream data…" : {
+      "comment" : "A placeholder text displayed when no glucose data is",
+      "isCommentAutoGenerated" : true
+    },
+    "Wash the site with plain soap, dry, then clean with an alcohol wipe." : {
+      "comment" : "Apply-sensor help step 2 body",
+      "extractionState" : "manual"
+    },
+    "Yes" : {
+      "comment" : "Sample detail: sent to Loop",
+      "extractionState" : "manual"
+    },
+    "Yes (display only)" : {
+      "comment" : "Sample detail: sent display-only",
+      "extractionState" : "manual"
+    },
+    "Your phone will vibrate when pairing succeeds." : {
+      "comment" : "Scan-sensor help step 3 body",
+      "extractionState" : "manual"
     }
   },
-  "version": "1.0"
+  "version" : "1.1"
 }
