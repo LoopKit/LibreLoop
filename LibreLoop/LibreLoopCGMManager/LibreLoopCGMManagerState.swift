@@ -64,6 +64,10 @@ public struct LibreLoopCGMManagerState: RawRepresentable, Equatable {
     /// NFC patch-info `generation` field. 0 = Libre 3, 1 = Libre 3 Plus /
     /// Instinct. Nil for state paired before this field was captured.
     public var generation: UInt16?
+    /// NFC patch-info firmware version ("w.x.y.z"). Nil for state paired
+    /// before this field was captured. Device-info/diagnostics only; it is
+    /// the one version we set on the uploaded HKDevice.
+    public var firmwareVersion: String?
     /// `activatedAt` value for which we last issued sensor-expiry alerts
     /// via Loop's AlertManager. When this matches the current
     /// `activatedAt`, expiry alerts are already scheduled and we skip
@@ -125,6 +129,7 @@ public struct LibreLoopCGMManagerState: RawRepresentable, Equatable {
         self.wearDurationMinutes = rawValue["wearDurationMinutes"] as? Int
         self.warmupDurationMinutes = rawValue["warmupDurationMinutes"] as? Int
         self.generation = (rawValue["generation"] as? Int).map { UInt16(clamping: $0) }
+        self.firmwareVersion = rawValue["firmwareVersion"] as? String
         self.expiryAlertsScheduledForActivatedAt = rawValue["expiryAlertsScheduledForActivatedAt"] as? Date
         self.sensorNeedsReplacement = rawValue["sensorNeedsReplacement"] as? Bool ?? false
         self.sensorEndedNormally = rawValue["sensorEndedNormally"] as? Bool ?? false
@@ -153,6 +158,7 @@ public struct LibreLoopCGMManagerState: RawRepresentable, Equatable {
         raw["wearDurationMinutes"] = wearDurationMinutes
         raw["warmupDurationMinutes"] = warmupDurationMinutes
         raw["generation"] = generation.map { Int($0) }
+        raw["firmwareVersion"] = firmwareVersion
         raw["expiryAlertsScheduledForActivatedAt"] = expiryAlertsScheduledForActivatedAt
         if sensorNeedsReplacement {
             raw["sensorNeedsReplacement"] = true

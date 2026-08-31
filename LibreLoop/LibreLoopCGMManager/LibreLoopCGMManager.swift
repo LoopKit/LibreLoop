@@ -413,7 +413,7 @@ public final class LibreLoopCGMManager: CGMManager {
                  manufacturer: "Abbott",
                  model: "Libre 3",
                  hardwareVersion: nil,
-                 firmwareVersion: nil,
+                 firmwareVersion: state.firmwareVersion,
                  softwareVersion: nil,
                  localIdentifier: state.sensorSerial,
                  udiDeviceIdentifier: nil)
