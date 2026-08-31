@@ -7,7 +7,7 @@ struct LibreLoopScanHelpPagerView: View {
         HelpStep(
             title: LocalizedString("STEP 1", comment: "Scan-sensor help step 1 title"),
             image: .systemSymbol("iphone.gen3.radiowaves.left.and.right"),
-            body: LocalizedString("Hold the BACK of your phone against the sensor.", comment: "Scan-sensor help step 1 body"),
+            body: LocalizedString("Hold the TOP of your phone against the sensor.", comment: "Scan-sensor help step 1 body"),
             note: nil
         ),
         HelpStep(
