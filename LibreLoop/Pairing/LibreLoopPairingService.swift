@@ -51,6 +51,9 @@ public final class LibreLoopPairingService {
         /// NFC patch-info `generation` field. 0 = Libre 3,
         /// 1 = Libre 3 Plus / Instinct. Direct sensor-family discriminator.
         public let generation: UInt16?
+        /// NFC patch-info firmware version ("w.x.y.z", bytes 11–14). Device
+        /// info only — surfaced in settings and uploaded on HKDevice.
+        public let firmwareVersion: String?
     }
 
     public struct PairOutcomeMetadata: Sendable {
@@ -376,7 +379,8 @@ public final class LibreLoopPairingService {
             activatedAt: activatedAtFromNFC,
             wearDurationMinutes: Int(scanResult.patchInfo.wearDurationMinutes),
             warmupDurationMinutes: Int(scanResult.patchInfo.warmupMinutes),
-            generation: scanResult.patchInfo.generation
+            generation: scanResult.patchInfo.generation,
+            firmwareVersion: scanResult.patchInfo.firmwareVersion
         )
         onNFCResponse(nfcResponse)
 

@@ -6,6 +6,8 @@ final class LibreLoopCGMManagerStateTests: XCTestCase {
         var state = LibreLoopCGMManagerState()
         state.sensorSerial = "ABC123"
         state.activatedAt = Date(timeIntervalSince1970: 1_700_000_000)
+        state.generation = 1
+        state.firmwareVersion = "1.1.31.0"
 
         let raw = state.rawValue
         guard let restored = LibreLoopCGMManagerState(rawValue: raw) else {
@@ -14,6 +16,8 @@ final class LibreLoopCGMManagerStateTests: XCTestCase {
 
         XCTAssertEqual(restored.sensorSerial, state.sensorSerial)
         XCTAssertEqual(restored.activatedAt, state.activatedAt)
+        XCTAssertEqual(restored.generation, state.generation)
+        XCTAssertEqual(restored.firmwareVersion, state.firmwareVersion)
     }
 }
 
