@@ -47,12 +47,22 @@ extension LibreLoopCGMManager {
         return activatedAt
     }
 
-    func retractExpiryAlerts() {
+    /// Retract every alert this manager could have standing — the scheduled
+    /// expiry set plus the sensor-attention and re-scan alerts.
+    ///
+    /// Must be called whenever the sensor goes away (discard) or the manager
+    /// does (delete). An alert left in Loop's AlertStore unacknowledged and
+    /// unretracted is replayed at every app launch for the life of the cache
+    /// window — see `LibreLoopCGMManager.allAlertIdentifiers`.
+    ///
+    /// The delegate is captured strongly up front so the retraction still
+    /// lands if this manager is released immediately afterwards.
+    func retractAllAlerts() {
         let delegate = cgmManagerDelegate
-        let identifiers = LibreLoopExpiryAlerts.allIdentifiers.map {
+        let identifiers = Self.allAlertIdentifiers.map {
             Alert.Identifier(managerIdentifier: pluginIdentifier, alertIdentifier: $0)
         }
-        llog("expiry alerts: retracting \(identifiers.count) identifier(s)")
+        llog("alerts: retracting \(identifiers.count) identifier(s)")
         Task {
             for identifier in identifiers {
                 await delegate?.retractAlert(identifier: identifier)

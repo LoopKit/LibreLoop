@@ -152,8 +152,14 @@ final class LibreLoopUICoordinator: UINavigationController, CGMManagerOnboarding
                 self.completionDelegate?.completionNotifyingDidComplete(self)
             },
             replaceSensor: { [weak self] in self?.startReplacementPairing() },
+            // `delete` — not `notifyDelegateOfDeletion` — so the manager's own
+            // teardown runs: dropping the shared central's listener/link, and
+            // retracting standing alerts. Loop's AlertStore replays anything
+            // left behind on every launch, so skipping this leaves a deleted
+            // sensor's expiry reminder firing for weeks. `delete` notifies the
+            // delegate itself.
             deleteCGM: { [weak self] in
-                self?.cgmManager?.notifyDelegateOfDeletion {
+                self?.cgmManager?.delete {
                     DispatchQueue.main.async {
                         guard let self = self else { return }
                         self.completionDelegate?.completionNotifyingDidComplete(self)
