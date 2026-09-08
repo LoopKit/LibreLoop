@@ -78,13 +78,8 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
     private var lastPatchStatusAt: Date?
     /// Last time a glucose frame arrived.
     private var lastGlucoseAt: Date?
-    /// Stuck-value detector state: the last raw current-glucose word, the
-    /// lifeCount it arrived at, and the count of consecutive *advancing* frames
-    /// that repeated it. Catches a held/frozen glucose (e.g. after a DQ error) —
-    /// the repeats carry no error flag, so they look valid and get forwarded.
-    private var lastGlucoseWord: UInt16?
-    private var lastGlucoseWordLifeCount: UInt16?
-    private var stuckGlucoseRun: Int = 0
+    /// Watches for a held/frozen current glucose — see `StuckGlucoseDetector`.
+    private var stuckDetector = StuckGlucoseDetector()
     private var readingHandler: ReadingHandler?
     private var disconnectHandler: DisconnectHandler?
     private var statusHandler: StatusHandler?
@@ -555,23 +550,29 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
                 lock.lock()
                 let lcHandler = lifeCountHandler
                 lastGlucoseAt = event.receivedAt   // feed the silence watchdog
-                // Stuck-value detector: count consecutive *advancing* frames that
-                // repeat the raw current-glucose word. A same-minute resend
-                // (lifeCount unchanged) doesn't count; a new lifeCount carrying
-                // an identical word is a held/frozen value.
-                if reading.lifeCount == lastGlucoseWordLifeCount {
-                    // same-minute resend — ignore for the stuck run
-                } else if lastGlucoseWord == reading.currentWord {
-                    stuckGlucoseRun += 1
-                } else {
-                    stuckGlucoseRun = 0
-                }
-                lastGlucoseWord = reading.currentWord
-                lastGlucoseWordLifeCount = reading.lifeCount
-                let stuckRun = stuckGlucoseRun
+                let histLag = Int(reading.lifeCount) - Int(reading.historicalLifeCount)
+                let stuckReport = stuckDetector.observe(.init(
+                    lifeCount: reading.lifeCount,
+                    currentWord: reading.currentWord,
+                    currentMgDL: reading.currentGlucoseMgDL,
+                    historicMgDL: reading.isHistoricalGlucoseValid ? reading.historicalGlucoseMgDL : nil,
+                    historicLifeCount: reading.historicalLifeCount
+                ))
                 lock.unlock()
-                if stuckRun >= 3 {
-                    llog("STUCK: current glucose word \(String(format: "0x%04x", reading.currentWord)) unchanged across \(stuckRun + 1) advancing frames (lifeCount=\(reading.lifeCount) mgdl=\(mgdlStr) dq=\(reading.dqError))")
+                switch stuckReport {
+                case .held(let held):
+                    let histText = held.historicMgDL.map {
+                        "\($0) mg/dL @LC \(held.historicLifeCount) (lag \(held.historicLag))"
+                    } ?? "unavailable"
+                    let driftText = held.historicDrift.map { String(format: "%+d", $0) } ?? "n/a"
+                    let gapText = held.currentVsHistoric.map(String.init) ?? "n/a"
+                    let label = held.diverged ? "STUCK-LATCH" : "STUCK"
+                    llog("\(label): current glucose word \(String(format: "0x%04x", held.word)) unchanged across \(held.frames) advancing frames (lifeCount=\(reading.lifeCount) mgdl=\(mgdlStr) dq=\(reading.dqError) historic=\(histText) historicDrift=\(driftText) curVsHistoric=\(gapText) mg/dL)")
+                case .cleared(let frames, let step):
+                    let stepText = step.map { String(format: "%+d", $0) } ?? "n/a"
+                    llog("STUCK cleared after \(frames) advancing frames (lifeCount=\(reading.lifeCount) mgdl=\(mgdlStr) step=\(stepText) mg/dL)")
+                case nil:
+                    break
                 }
                 lcHandler?(reading.lifeCount)
                 if let sample = Self.makeSample(from: reading, assessment: assessment, receivedAt: event.receivedAt) {
@@ -593,7 +594,6 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
                     lock.unlock()
                     embedded?(reading.historicalLifeCount, histMgDL)
                 }
-                let histLag = Int(reading.lifeCount) - Int(reading.historicalLifeCount)
                 emitRead("Realtime", summary: "\(reading.currentGlucoseMgDL.map(String.init) ?? "—") mg/dL  LC \(reading.lifeCount)", at: event.receivedAt, [
                     ("currentGlucose", reading.currentGlucoseMgDL.map { "\($0) mg/dL" } ?? "—"),
                     ("currentValid", "\(reading.isCurrentGlucoseValid)"),
@@ -729,4 +729,144 @@ extension LibreLoopSensorMonitor {
     static func make(scanner: SensorScannerNG, session: SensorSession, kEnc: Data, ivEnc: Data) throws -> LibreLoopSensorMonitor {
         try LibreLoopSensorMonitor(scanner: scanner, session: session, kEnc: kEnc, ivEnc: ivEnc)
     }
+}
+
+
+/// Watches the realtime glucose stream for a *held* current value — the same
+/// raw current-glucose word repeating across frames whose lifeCount keeps
+/// advancing. The repeats carry no error flag, so a held value looks perfectly
+/// valid on the way to Loop.
+///
+/// Run length on its own can't separate a held value from genuinely flat
+/// glucose. At 1 mg/dL resolution real glucose repeats for a surprisingly long
+/// time: a healthy 5-hour field capture contained runs of 4, 6, 7 and 10
+/// advancing frames, every one of them with the surrounding frame bytes and the
+/// sensor's historic series advancing normally. So the threshold sits above
+/// that observed ceiling, and every report also carries a second opinion: the
+/// sensor's committed 5-min historic series, which is produced independently
+/// and lands ~15 minutes behind the live value.
+///
+/// Once a run has outlasted its own historic lag, the two records are
+/// describing the same minutes, so the historic should have converged on the
+/// pinned value. If it hasn't, they genuinely disagree and the live value is
+/// the suspect (`diverged`). If it has, the whole sensor is reporting the
+/// value — which is just as useful to know, and is what the false-low report
+/// that motivated this detector actually looked like.
+///
+/// Pure and self-contained so it can be exercised directly in tests; the
+/// monitor owns one instance and formats the reports into the log.
+struct StuckGlucoseDetector {
+    /// Advancing frames a repeated word must span before it is worth a log line.
+    static let warnRun = 12
+    /// After the first report, repeat only every Nth frame — an hour-long hold
+    /// then costs ~10 lines instead of ~55.
+    static let repeatEvery = 5
+    /// Gap, in mg/dL, between the pinned current value and the historic series
+    /// that counts as the two records disagreeing.
+    static let divergenceMgDL = 15
+
+    struct Frame {
+        var lifeCount: UInt16
+        var currentWord: UInt16
+        /// Normalized displayable value; nil for an error/unavailable word.
+        var currentMgDL: UInt16?
+        /// Normalized historic value, or nil when the frame's historic slot
+        /// isn't valid yet.
+        var historicMgDL: UInt16?
+        var historicLifeCount: UInt16
+    }
+
+    struct Held: Equatable {
+        var word: UInt16
+        /// Advancing frames the run spans, inclusive of the frame that opened it.
+        var frames: Int
+        var mgDL: UInt16?
+        var historicMgDL: UInt16?
+        var historicLifeCount: UInt16
+        var historicLag: Int
+        /// How far the historic series moved since the run opened.
+        var historicDrift: Int?
+        var currentVsHistoric: Int?
+        /// The run has outlasted the historic lag and the records still disagree.
+        var diverged: Bool
+    }
+
+    enum Report: Equatable {
+        case held(Held)
+        /// A run that had been reported just ended. `step` is the size of the
+        /// move that broke it — diagnostic in itself, since a real flat stretch
+        /// resumes by ±1-2 while a released hold jumps.
+        case cleared(frames: Int, step: Int?)
+    }
+
+    private var lastWord: UInt16?
+    private var lastLifeCount: UInt16?
+    private var run = 0
+    private var reported = false
+    private var runStartHistoric: UInt16?
+    private var runMgDL: UInt16?
+
+    /// Feeds one realtime frame in. Returns a report when the frame crosses the
+    /// reporting threshold, lands on a repeat interval, or ends a reported run.
+    mutating func observe(_ frame: Frame) -> Report? {
+        var cleared: Report?
+
+        if frame.currentMgDL == nil {
+            // A repeated *error* word is a different failure, already surfaced
+            // through the quality-assessment path and never forwarded to Loop.
+            cleared = endRun(brokenBy: nil)
+        } else if frame.lifeCount == lastLifeCount {
+            // Same-minute resend — carries no new information about a hold.
+        } else if lastWord == frame.currentWord {
+            run += 1
+            if runStartHistoric == nil { runStartHistoric = frame.historicMgDL }
+        } else {
+            cleared = endRun(brokenBy: frame)
+        }
+
+        lastWord = frame.currentWord
+        lastLifeCount = frame.lifeCount
+
+        if let cleared { return cleared }
+
+        guard run >= Self.warnRun,
+              !reported || (run - Self.warnRun) % Self.repeatEvery == 0 else { return nil }
+        reported = true
+
+        let lag = Int(frame.lifeCount) - Int(frame.historicLifeCount)
+        let drift = zip2(frame.historicMgDL, runStartHistoric) { Int($0) - Int($1) }
+        let gap = zip2(frame.currentMgDL, frame.historicMgDL) { abs(Int($0) - Int($1)) }
+        return .held(Held(word: frame.currentWord,
+                          frames: run + 1,
+                          mgDL: frame.currentMgDL,
+                          historicMgDL: frame.historicMgDL,
+                          historicLifeCount: frame.historicLifeCount,
+                          historicLag: lag,
+                          historicDrift: drift,
+                          currentVsHistoric: gap,
+                          diverged: run > max(lag, 0) && (gap ?? 0) > Self.divergenceMgDL))
+    }
+
+    /// Resets run state, returning a `.cleared` report if the run that just
+    /// ended had been reported.
+    private mutating func endRun(brokenBy frame: Frame?) -> Report? {
+        let wasReported = reported
+        let length = run
+        let held = runMgDL
+
+        run = 0
+        reported = false
+        runStartHistoric = frame?.historicMgDL
+        runMgDL = frame?.currentMgDL
+
+        guard wasReported else { return nil }
+        let step = zip2(frame?.currentMgDL, held) { Int($0) - Int($1) }
+        return .cleared(frames: length + 1, step: step)
+    }
+}
+
+/// Combines two optionals, yielding nil unless both are present.
+private func zip2<A, B, R>(_ a: A?, _ b: B?, _ transform: (A, B) -> R) -> R? {
+    guard let a, let b else { return nil }
+    return transform(a, b)
 }
