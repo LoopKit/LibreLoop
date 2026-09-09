@@ -9,7 +9,7 @@ import UIKit
 
 public final class LibreLoopCGMManager: CGMManager {
     public static let pluginIdentifier = "LibreLoopCGMManager"
-    public static let localizedTitle = "FreeStyle Libre 3"
+    public static let localizedTitle = "FreeStyle Libre 3 / 3+"
     public static let healthKitStorageDelay: TimeInterval = 0
 
     public var localizedTitle: String { Self.localizedTitle }

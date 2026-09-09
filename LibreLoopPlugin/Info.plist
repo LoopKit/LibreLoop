@@ -23,7 +23,7 @@
 	<key>NSPrincipalClass</key>
 	<string>LibreLoopPlugin</string>
 	<key>com.loopkit.Loop.CGMManagerDisplayName</key>
-	<string>FreeStyle Libre 3</string>
+	<string>FreeStyle Libre 3 / 3+</string>
 	<key>com.loopkit.Loop.CGMManagerIdentifier</key>
 	<string>LibreLoopCGMManager</string>
 </dict>
