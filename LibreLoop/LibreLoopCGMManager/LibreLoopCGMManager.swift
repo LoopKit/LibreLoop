@@ -252,15 +252,8 @@ public final class LibreLoopCGMManager: CGMManager {
     /// failed attempt.
     var hasIssuedReScanAlert = false
 
-    /// Every alert identifier this manager can issue.
-    ///
-    /// Alerts outlive the manager: Loop's AlertStore keeps them for the whole
-    /// local-cache window (90 days in this build), and launch-time playback
-    /// rebuilds any past-due `.delayed` alert as `.immediate` and presents it
-    /// again. So an alert left standing when the sensor is discarded or the CGM
-    /// is deleted re-fires on *every* app launch until the user acknowledges it.
-    /// Retract the whole set at both of those points — keep this list complete
-    /// when adding an alert.
+    /// Anything left standing in Loop's AlertStore replays on every app launch,
+    /// so this must list every alert we can issue.
     static var allAlertIdentifiers: [Alert.AlertIdentifier] {
         LibreLoopExpiryAlerts.allIdentifiers + [sensorAttentionAlertID, needsReScanAlertID]
     }
@@ -345,8 +338,6 @@ public final class LibreLoopCGMManager: CGMManager {
         monitor = nil
         isReconnecting = false
         recentSamples = []
-        // Every standing alert belongs to the sensor we're discarding — the
-        // expiry schedule, and any sensor-attention / re-scan notice.
         hasIssuedReScanAlert = false
         lastSensorAttention = nil
         retractAllAlerts()
@@ -826,16 +817,9 @@ public final class LibreLoopCGMManager: CGMManager {
                 scanner.cancelConnection(peripheral)
             }
         }
-        // Alerts outlive the manager. Anything still standing in Loop's
-        // AlertStore is replayed at every launch — a deleted CGM's expiry
-        // reminder re-firing days later is exactly the bug this prevents.
-        // Retract before notifying the delegate, while our delegate reference
-        // is still good.
+        // Retract while the delegate reference is still good: notifying it
+        // releases this manager.
         retractAllAlerts()
-        // Notify last: `cgmManagerWantsDeletion` is what actually drops this
-        // manager from Loop, and it releases us. The LoopKit default `delete`
-        // does only this; we override it to add the teardown above, so the
-        // notification has to be re-issued here or the manager is never removed.
         notifyDelegateOfDeletion(completion: completion)
     }
 }
