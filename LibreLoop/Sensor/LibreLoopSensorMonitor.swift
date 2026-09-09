@@ -78,13 +78,6 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
     private var lastPatchStatusAt: Date?
     /// Last time a glucose frame arrived.
     private var lastGlucoseAt: Date?
-    /// Stuck-value detector state: the last raw current-glucose word, the
-    /// lifeCount it arrived at, and the count of consecutive *advancing* frames
-    /// that repeated it. Catches a held/frozen glucose (e.g. after a DQ error) —
-    /// the repeats carry no error flag, so they look valid and get forwarded.
-    private var lastGlucoseWord: UInt16?
-    private var lastGlucoseWordLifeCount: UInt16?
-    private var stuckGlucoseRun: Int = 0
     private var readingHandler: ReadingHandler?
     private var disconnectHandler: DisconnectHandler?
     private var statusHandler: StatusHandler?
@@ -521,25 +514,10 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
                 // to warmup when applicable (and report remaining warmup minutes).
                 let lifecycle = SensorLifecycle(currentLifeCountMinutes: Int(reading.lifeCount))
                 let assessment = reading.currentGlucoseQualityAssessment(lifecycle: lifecycle)
-                // Log trendAndStatusByte (byte 14 of the realtime frame)
-                // alongside the decoded fields. LibreCRKit's live-capture
-                // fixture shows 0x0b for a stable+actionable reading on
-                // Libre 3 (trend=3 | bit3 actionable | rest=0). If we
-                // see byte 14 with bit 3 clear but other upper bits set,
-                // it would suggest a sensor variant has the flag in a
-                // different position than the test data assumed.
-                //
-                // Also log the full 29-byte decrypted plaintext as hex --
-                // dropped straight into RealtimeGlucoseReading(plaintext:)
-                // it reproduces the exact frame for the LibreCRKit
-                // developer to inspect.
+                // The plaintext hex replays the exact frame through
+                // RealtimeGlucoseReading(plaintext:) when reviewing a report.
                 let byte14 = String(format: "0x%02x", reading.trendAndStatusByte)
                 let plaintextHex = packet.plaintext.map { String(format: "%02x", $0) }.joined()
-                // Surface the decoded data-quality evidence on every frame: the
-                // raw current-glucose word (the field that froze in the stuck-53
-                // case), the DQ error (0x8000 family), sensor condition, and
-                // actionability. Previously these were only visible when they
-                // escalated to a blocking issue — but a held value reports clean.
                 let mgdlStr = reading.currentGlucoseMgDL.map(String.init) ?? "nil"
                 let word = String(format: "0x%04x", reading.currentWord)
                 let dqInfo = "word=\(word) dq=\(reading.dqError) cond=\(reading.sensorCondition) act=\(reading.actionability)"
@@ -555,24 +533,7 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
                 lock.lock()
                 let lcHandler = lifeCountHandler
                 lastGlucoseAt = event.receivedAt   // feed the silence watchdog
-                // Stuck-value detector: count consecutive *advancing* frames that
-                // repeat the raw current-glucose word. A same-minute resend
-                // (lifeCount unchanged) doesn't count; a new lifeCount carrying
-                // an identical word is a held/frozen value.
-                if reading.lifeCount == lastGlucoseWordLifeCount {
-                    // same-minute resend — ignore for the stuck run
-                } else if lastGlucoseWord == reading.currentWord {
-                    stuckGlucoseRun += 1
-                } else {
-                    stuckGlucoseRun = 0
-                }
-                lastGlucoseWord = reading.currentWord
-                lastGlucoseWordLifeCount = reading.lifeCount
-                let stuckRun = stuckGlucoseRun
                 lock.unlock()
-                if stuckRun >= 3 {
-                    llog("STUCK: current glucose word \(String(format: "0x%04x", reading.currentWord)) unchanged across \(stuckRun + 1) advancing frames (lifeCount=\(reading.lifeCount) mgdl=\(mgdlStr) dq=\(reading.dqError))")
-                }
                 lcHandler?(reading.lifeCount)
                 if let sample = Self.makeSample(from: reading, assessment: assessment, receivedAt: event.receivedAt) {
                     lock.lock()

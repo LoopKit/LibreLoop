@@ -9,7 +9,7 @@ import UIKit
 
 public final class LibreLoopCGMManager: CGMManager {
     public static let pluginIdentifier = "LibreLoopCGMManager"
-    public static let localizedTitle = "FreeStyle Libre 3"
+    public static let localizedTitle = "FreeStyle Libre 3 / 3+"
     public static let healthKitStorageDelay: TimeInterval = 0
 
     public var localizedTitle: String { Self.localizedTitle }
@@ -251,6 +251,12 @@ public final class LibreLoopCGMManager: CGMManager {
     /// One-shot guard so the re-scan alert fires once per failure run, not every
     /// failed attempt.
     var hasIssuedReScanAlert = false
+
+    /// Anything left standing in Loop's AlertStore replays on every app launch,
+    /// so this must list every alert we can issue.
+    static var allAlertIdentifiers: [Alert.AlertIdentifier] {
+        LibreLoopExpiryAlerts.allIdentifiers + [sensorAttentionAlertID, needsReScanAlertID]
+    }
     /// Cap on the exponential reconnect backoff (seconds) so a persistently
     /// failing/marginal link doesn't hammer the radio and drain the battery.
     static let maxReconnectBackoff: TimeInterval = 300
@@ -332,7 +338,9 @@ public final class LibreLoopCGMManager: CGMManager {
         monitor = nil
         isReconnecting = false
         recentSamples = []
-        retractExpiryAlerts()
+        hasIssuedReScanAlert = false
+        lastSensorAttention = nil
+        retractAllAlerts()
         // Emit .sensorEnd before we blank state so the event's
         // deviceIdentifier still resolves to the session that's ending.
         // Matches the .sensorStart we emitted at pairing time so Loop's
@@ -809,7 +817,10 @@ public final class LibreLoopCGMManager: CGMManager {
                 scanner.cancelConnection(peripheral)
             }
         }
-        completion()
+        // Retract while the delegate reference is still good: notifying it
+        // releases this manager.
+        retractAllAlerts()
+        notifyDelegateOfDeletion(completion: completion)
     }
 }
 
