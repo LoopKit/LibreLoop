@@ -1,4 +1,5 @@
 import XCTest
+import LoopKit
 @testable import LibreLoop
 
 final class LibreLoopCGMManagerStateTests: XCTestCase {
@@ -66,5 +67,112 @@ final class LibreLoopSensorLifecycleTests: XCTestCase {
             compute(activatedDaysAgo: 11, needsReplacement: true, endedNormally: false, wearDurationMinutes: 10 * 24 * 60),
             .expired
         )
+    }
+}
+
+/// `cgmManagerDelegate` is weak, so tests must hold this strongly.
+private nonisolated final class RetractionRecordingDelegate: CGMManagerDelegate {
+    private let lock = NSLock()
+    private var _retracted: [Alert.Identifier] = []
+    var retracted: [Alert.Identifier] {
+        lock.lock()
+        defer { lock.unlock() }
+        return _retracted
+    }
+
+    private let retractionExpectation: XCTestExpectation
+    private let deletionExpectation: XCTestExpectation?
+
+    init(retractionExpectation: XCTestExpectation, deletionExpectation: XCTestExpectation? = nil) {
+        self.retractionExpectation = retractionExpectation
+        self.deletionExpectation = deletionExpectation
+    }
+
+    @MainActor func retractAlert(identifier: Alert.Identifier) async {
+        lock.lock()
+        _retracted.append(identifier)
+        lock.unlock()
+        retractionExpectation.fulfill()
+    }
+
+    func cgmManagerWantsDeletion(_ manager: CGMManager) async {
+        deletionExpectation?.fulfill()
+    }
+
+    @MainActor func issueAlert(_ alert: Alert) async {}
+    func doesIssuedAlertExist(identifier: Alert.Identifier) async throws -> Bool { false }
+    func lookupAllUnretracted(managerIdentifier: String) async throws -> [PersistedAlert] { [] }
+    func lookupAllUnacknowledgedUnretracted(managerIdentifier: String) async throws -> [PersistedAlert] { [] }
+    func recordRetractedAlert(_ alert: Alert, at date: Date) async throws {}
+    func deviceManager(_ manager: DeviceManager, logEventForDeviceIdentifier deviceIdentifier: String?, type: DeviceLogEntryType, message: String, completion: ((Error?) -> Void)?) {}
+    func cgmManager(_ manager: CGMManager, hasNew readingResult: CGMReadingResult) {}
+    func cgmManager(_ manager: CGMManager, hasNew events: [PersistedCgmEvent]) {}
+    func cgmManagerDidUpdateState(_ manager: CGMManager) {}
+    func cgmManager(_ manager: CGMManager, didUpdate status: CGMManagerStatus) {}
+    func startDateToFilterNewData(for manager: CGMManager) -> Date? { nil }
+    func credentialStoragePrefix(for manager: CGMManager) -> String { "test" }
+}
+
+/// An alert left standing in Loop's AlertStore is replayed on every app launch,
+/// so both exit paths must clear them.
+final class LibreLoopAlertRetractionTests: XCTestCase {
+    private func makeManager(delegate: CGMManagerDelegate) -> LibreLoopCGMManager {
+        let manager = LibreLoopCGMManager()
+        manager.delegateQueue = DispatchQueue(label: "LibreLoopAlertRetractionTests")
+        manager.cgmManagerDelegate = delegate
+        return manager
+    }
+
+    private func expectRetractions() -> XCTestExpectation {
+        let expectation = expectation(description: "every alert identifier retracted")
+        expectation.expectedFulfillmentCount = LibreLoopCGMManager.allAlertIdentifiers.count
+        return expectation
+    }
+
+    private func assertRetractedEverything(_ delegate: RetractionRecordingDelegate) {
+        XCTAssertEqual(Set(delegate.retracted.map(\.alertIdentifier)),
+                       Set(LibreLoopCGMManager.allAlertIdentifiers))
+        XCTAssertTrue(delegate.retracted.allSatisfy {
+            $0.managerIdentifier == LibreLoopCGMManager.pluginIdentifier
+        })
+    }
+
+    func testDeleteRetractsEveryAlertAndNotifiesDelegate() {
+        let retractions = expectRetractions()
+        let deletion = expectation(description: "delegate notified of deletion")
+        let completed = expectation(description: "delete completion called")
+        let delegate = RetractionRecordingDelegate(retractionExpectation: retractions,
+                                                   deletionExpectation: deletion)
+        let manager = makeManager(delegate: delegate)
+
+        manager.delete { completed.fulfill() }
+
+        wait(for: [retractions, deletion, completed], timeout: 5)
+        assertRetractedEverything(delegate)
+    }
+
+    func testDiscardSensorRetractsEveryAlert() {
+        let retractions = expectRetractions()
+        let delegate = RetractionRecordingDelegate(retractionExpectation: retractions)
+        let manager = makeManager(delegate: delegate)
+        manager.hasIssuedReScanAlert = true
+
+        manager.discardSensor()
+
+        wait(for: [retractions], timeout: 5)
+        assertRetractedEverything(delegate)
+        XCTAssertFalse(manager.hasIssuedReScanAlert)
+        XCTAssertNil(manager.lastSensorAttention)
+    }
+
+    func testAllAlertIdentifiersCoversEveryIssuableAlert() {
+        let identifiers = Set(LibreLoopCGMManager.allAlertIdentifiers)
+        for expiryIdentifier in LibreLoopExpiryAlerts.allIdentifiers {
+            XCTAssertTrue(identifiers.contains(expiryIdentifier), "missing \(expiryIdentifier)")
+        }
+        XCTAssertTrue(identifiers.contains(LibreLoopCGMManager.sensorAttentionAlertID))
+        XCTAssertTrue(identifiers.contains(LibreLoopCGMManager.needsReScanAlertID))
+        XCTAssertEqual(identifiers.count, LibreLoopCGMManager.allAlertIdentifiers.count,
+                       "duplicate identifiers in allAlertIdentifiers")
     }
 }

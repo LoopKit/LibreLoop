@@ -47,12 +47,14 @@ extension LibreLoopCGMManager {
         return activatedAt
     }
 
-    func retractExpiryAlerts() {
+    /// Captures the delegate strongly so the retraction still lands if this
+    /// manager is released immediately afterwards.
+    func retractAllAlerts() {
         let delegate = cgmManagerDelegate
-        let identifiers = LibreLoopExpiryAlerts.allIdentifiers.map {
+        let identifiers = Self.allAlertIdentifiers.map {
             Alert.Identifier(managerIdentifier: pluginIdentifier, alertIdentifier: $0)
         }
-        llog("expiry alerts: retracting \(identifiers.count) identifier(s)")
+        llog("alerts: retracting \(identifiers.count) identifier(s)")
         Task {
             for identifier in identifiers {
                 await delegate?.retractAlert(identifier: identifier)
