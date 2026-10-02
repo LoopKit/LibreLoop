@@ -30,13 +30,25 @@ final class LibreLoopUICoordinator: UINavigationController, CGMManagerOnboarding
         super.viewDidLoad()
         navigationBar.prefersLargeTitles = false
         if cgmManager == nil {
-            setViewControllers([applySensorViewController()], animated: false)
+            let first = LibreLoopRuntimeTables.isInstalled ? applySensorViewController() : runtimeTablesViewController()
+            setViewControllers([first], animated: false)
         } else {
             setViewControllers([settingsViewController()], animated: false)
         }
     }
 
     // MARK: - Onboarding flow
+
+    private func runtimeTablesViewController() -> UIViewController {
+        let view = LibreLoopRuntimeTablesView(
+            onFinished: { [weak self] in
+                guard let self else { return }
+                self.setViewControllers([self.applySensorViewController()], animated: true)
+            },
+            onCancel: { [weak self] in self?.cancelOnboarding() }
+        )
+        return DismissibleHostingController(content: view, colorPalette: colorPalette)
+    }
 
     private func applySensorViewController() -> UIViewController {
         let view = LibreLoopApplySensorView(

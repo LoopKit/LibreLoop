@@ -1,8 +1,8 @@
 import Foundation
 
-/// A glucose reading produced by the LibreLoop CGM. Wraps LibreCRKit's
+/// A glucose reading produced by the LibreLoop CGM. Wraps RoundWhiteDiscKit's
 /// realtime reading so callers (UI, the manager itself, tests) don't need
-/// to import LibreCRKit.
+/// to import RoundWhiteDiscKit.
 public struct LibreLoopGlucoseSample: Equatable, Sendable {
     public enum Trend: Equatable, Sendable {
         case notDetermined

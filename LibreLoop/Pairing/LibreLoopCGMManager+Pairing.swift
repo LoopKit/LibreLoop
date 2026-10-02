@@ -1,6 +1,6 @@
 import Foundation
 import HealthKit
-import LibreCRKit
+import RoundWhiteDiscKit
 import LoopAlgorithm
 import LoopKit
 import os.log
@@ -63,7 +63,7 @@ extension LibreLoopCGMManager {
     }
 
     /// Saves the NFC half of pairing the instant it completes successfully,
-    /// before any BLE work. Per LibreCRKit author guidance: a successful A8
+    /// before any BLE work. Per RoundWhiteDiscKit author guidance: a successful A8
     /// burns the previous BLE PIN and issues a new one in the response, so
     /// the new PIN MUST be persisted before we touch BLE -- a crash or
     /// handshake failure must not leave the sensor stranded.
@@ -339,7 +339,7 @@ extension LibreLoopCGMManager {
     private func notifySensorAttentionIfNeeded(_ status: PatchStatus) {
         // A code-7 "transmission error" (`Libre3SensorError.transmissionError`)
         // is a transient comms fault, not a terminal replace condition — the
-        // sensor keeps producing valid glucose. LibreCRKit's coarse attention
+        // sensor keeps producing valid glucose. RoundWhiteDiscKit's coarse attention
         // mapping lumps code 7 in with code 8 (terminated) as `.replaceSensor`;
         // downgrade it here to a soft, retractable `.checkSensor` notice so it
         // never marks the sensor inoperable or stops Loop.
@@ -711,7 +711,7 @@ extension LibreLoopCGMManager {
         let realtimeLifeCounts = Set(recentSamples.map { $0.lifeCount })
 
         // Forward only the per-minute `currentGlucoseMgDL` at
-        // `record.lifeCount`. Per upstream LibreCRKit guidance:
+        // `record.lifeCount`. Per upstream RoundWhiteDiscKit guidance:
         // `currentGlucose` is keyed at lifeCount (offset 0) and safe
         // to plot at its own time, while `historicGlucoseRaw` is
         // redundant with the historical samples embedded in realtime

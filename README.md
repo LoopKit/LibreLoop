@@ -1,6 +1,6 @@
 # LibreLoop
 
-FreeStyle Libre 3 CGMManager plugin for [Loop](https://github.com/LoopKit/Loop), built on the reverse-engineered Libre 3 protocol via [LibreCRKit](https://github.com/airedev326/LibreCRKit).
+FreeStyle Libre 3 CGMManager plugin for [Loop](https://github.com/LoopKit/Loop), built on the reverse-engineered Libre 3 protocol via [RoundWhiteDiscKit](https://github.com/airedev326/RoundWhiteDiscKit). The package ships without its lookup tables; LibreLoop downloads them once from Arweave when the plugin is added.
 
 ## Status
 

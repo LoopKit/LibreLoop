@@ -26,7 +26,7 @@ enum LibreLoopKeychain {
         let kEnc: Data
         let ivEnc: Data
         /// Phase 5 raw key from the first-pair handshake. When present, the
-        /// reconnect flow can use LibreCRKit's `runCachedReconnectHandshake`
+        /// reconnect flow can use RoundWhiteDiscKit's `runCachedReconnectHandshake`
         /// fast path. Nil for sensors paired before this field was persisted.
         let phase5RawKey: Data?
         /// Receiver ID this sensor was last paired under. Persisting it here

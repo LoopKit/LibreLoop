@@ -1,14 +1,14 @@
 {
-  "originHash": "81cc9aefffe5df833cec0e3f4d4db42268bf0b3f14788633798394959b7a010a",
-  "pins": [
+  "originHash" : "a42e597317a797447cc28dbf2e020cf040bbfa45dbc21bd89fb77c9cbd4381fc",
+  "pins" : [
     {
-      "identity": "librecrkit",
-      "kind": "remoteSourceControl",
-      "location": "https://github.com/airedev326/LibreCRKit.git",
-      "state": {
-        "revision": "66920c6d5a0d13c3047a1920d514c26b19e87cb4"
+      "identity" : "roundwhitedisckit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/airedev326/RoundWhiteDiscKit.git",
+      "state" : {
+        "revision" : "f5be7c7903d84967d728933a869465a1cae0f6be"
       }
     }
   ],
-  "version": 3
+  "version" : 3
 }

@@ -1,14 +1,14 @@
 import Foundation
 import CoreBluetooth
 import Security
-import LibreCRKit
+import RoundWhiteDiscKit
 
 /// Orchestrates a fresh Libre 3 sensor pairing:
 ///   1. CoreNFC activation (provides bleAddress + blePIN + sensor serial)
 ///   2. BLE scan + connect to the just-activated sensor
 ///   3. Cryptographic first-pair handshake (yields kEnc + ivEnc)
 ///
-/// Hides LibreCRKit from upper layers (UI, CGMManager) so we can swap
+/// Hides RoundWhiteDiscKit from upper layers (UI, CGMManager) so we can swap
 /// implementations later without rewriting callers.
 public final class LibreLoopPairingService {
 
@@ -29,7 +29,7 @@ public final class LibreLoopPairingService {
 
     /// Intermediate state captured immediately after a successful NFC
     /// activation / switch-receiver. Must be persisted before BLE
-    /// authentication is attempted (per LibreCRKit author guidance: each A8
+    /// authentication is attempted (per RoundWhiteDiscKit author guidance: each A8
     /// burns the previous BLE PIN; losing this one strands the sensor).
     public struct NFCResponse: Sendable, Equatable {
         public let receiverID: UInt32
@@ -95,7 +95,7 @@ public final class LibreLoopPairingService {
     /// Re-establish a BLE session against an already-paired sensor.
     ///
     /// If `phase5RawKey` is non-nil (saved from a prior successful pair on
-    /// this app), tries LibreCRKit's `runCachedReconnectHandshake` first:
+    /// this app), tries RoundWhiteDiscKit's `runCachedReconnectHandshake` first:
     /// `0x11 StartAuthorization` → `R1/nonce notify` → Phase 5 (using the
     /// cached raw key) → `0x08` → Phase 6. Skips cert + ephemeral exchange,
     /// trimming the handshake from 8 BLE commands to 2.
@@ -114,6 +114,7 @@ public final class LibreLoopPairingService {
         scanTimeout: TimeInterval = 120,
         onStage: @Sendable @escaping (Stage) -> Void = { _ in }
     ) async throws -> ReconnectOutcome {
+        try await Self.ensureRuntimeTables()
         onStage(.bleSearching)
         try await Self.awaitReady(scanner: scanner)
 
@@ -302,7 +303,7 @@ public final class LibreLoopPairingService {
         /// Brand-new sensor, never paired before. Generates a fresh receiverID.
         case fresh
         /// Reconnect to a sensor that's already been paired with this app
-        /// (or with the LibreCRKit PoC) under a known receiverID. The sensor
+        /// (or with the upstream PoC app) under a known receiverID. The sensor
         /// only accepts switch-receiver from the same receiverID it remembers.
         case recovery(receiverID: UInt32)
     }
@@ -313,6 +314,10 @@ public final class LibreLoopPairingService {
         onNFCResponse: @Sendable @escaping (NFCResponse) -> Void = { _ in },
         onStage: @Sendable @escaping (Stage) -> Void = { _ in }
     ) async throws -> PairOutcome {
+        // Before NFC: activation starts the sensor's wear clock, so don't
+        // activate one we couldn't then authorize.
+        try await Self.ensureRuntimeTables()
+
         // 1. NFC activation. Switch-receiver only succeeds when the receiverID
         // matches what the sensor remembers; pass-through here, the sensor
         // validates server-side.
@@ -404,9 +409,9 @@ public final class LibreLoopPairingService {
 
         // 3. Handshake -- candidate path with phone_cert_162b (03 03 family).
         //
-        // phone_cert_firstpair.bin (the LibreCRKit-shipped default) has known
-        // live-sensor rejection, so we vendor phone_cert_162b.bin from the
-        // upstream PoC and follow the PoC's candidate Phase 5 flow:
+        // phone_cert_firstpair (the 03 00 default) has known live-sensor
+        // rejection, so we use phone_cert_162b and follow the PoC's candidate
+        // Phase 5 flow:
         //   - native ephemeral derived via SessionKey.makeFirstPairNativeEphemeral
         //   - maxEntropyAttempts: 1
         //   - Phase 5 entropy = nativeEphemeral.nullEntropy11A
@@ -460,6 +465,14 @@ public final class LibreLoopPairingService {
             ivEnc: material.ivEnc
         )
         return PairOutcome(result: result, monitor: monitor, peripheralID: sensor.id)
+    }
+
+    private static func ensureRuntimeTables() async throws {
+        do {
+            try await LibreLoopRuntimeTables.ensureInstalled()
+        } catch {
+            throw Failure.underlying("Couldn't download the sensor data LibreLoop needs. Check your internet connection and try again. (\(error.localizedDescription))")
+        }
     }
 
     // MARK: - SensorScannerNG event-stream adapters
@@ -712,24 +725,9 @@ public final class LibreLoopPairingService {
         return Data(buffer)
     }
 
-    /// The 03 03 first-pair cert. Prefer the copy bundled in LibreCRKit (the
-    /// canonical source as of upstream e69dbd6) so we automatically track any
-    /// upstream cert update; fall back to LibreLoop's vendored copy if the
-    /// package resource isn't loadable in this build configuration.
+    /// The 03 03 first-pair cert, from the installed runtime tables.
     private static func loadFirstPairCert() throws -> PhoneCert {
-        if let cert = try? PhoneCert.bundled162b() {
-            return cert
-        }
-        llog("PhoneCert.bundled162b() unavailable; falling back to vendored phone_cert_162b.bin")
-        return try loadBundled162bCert()
-    }
-
-    private static func loadBundled162bCert() throws -> PhoneCert {
-        let bundle = Bundle(for: LibreLoopCGMManager.self)
-        guard let url = bundle.url(forResource: "phone_cert_162b", withExtension: "bin") else {
-            throw Failure.underlying("phone_cert_162b.bin missing from LibreLoop.framework. Rebuild required.")
-        }
-        return try PhoneCert(raw: try Data(contentsOf: url))
+        try PhoneCert.bundled162b()
     }
 }
 
