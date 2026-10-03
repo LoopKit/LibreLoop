@@ -10,7 +10,7 @@ public enum LibreLoopRuntimeTables {
     /// Any gateway is safe: the package rejects a blob whose digest doesn't match.
     static let gateways = ["https://arweave.net", "https://turbo-gateway.com"]
 
-    public static var isInstalled: Bool {
+    static var isInstalled: Bool {
         RoundWhiteDiscKit.runtimeTablesInstalled
     }
 
