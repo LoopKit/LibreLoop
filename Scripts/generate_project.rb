@@ -161,54 +161,41 @@ libreloop = add_framework_target(proj, 'LibreLoop', 'LibreLoop', nil, [loopkit_r
 libreloop_product_ref = libreloop.product_reference
 
 # ---------------------------------------------------------------------------
-# SwiftPM dependency: LibreCRKit (reverse-engineered Libre 3 NFC/BLE stack)
-# Pin to a commit SHA since the upstream has no tags yet. Bump as needed.
+# SwiftPM dependency: RoundWhiteDiscKit (Libre 3 NFC/BLE stack). It ships no
+# lookup tables; LibreLoopRuntimeTables downloads them at runtime. Pin to a
+# commit SHA since the upstream has no tags yet, and keep it in step with the
+# blob: the package pins the blob's digest.
 # ---------------------------------------------------------------------------
-librecrkit_pkg = proj.new(Xcodeproj::Project::Object::XCRemoteSwiftPackageReference)
-# Back on upstream main after the refresh-data-plane-notifications PR
-# landed (as e9f8b21), plus the f690013 quality-assessment API we now
-# consume in LibreLoopSensorMonitor.
-librecrkit_pkg.repositoryURL = 'https://github.com/loopkitdev/LibreCRKit.git'
-librecrkit_pkg.requirement = {
+rwdk_pkg = proj.new(Xcodeproj::Project::Object::XCRemoteSwiftPackageReference)
+rwdk_pkg.repositoryURL = 'https://github.com/airedev326/RoundWhiteDiscKit.git'
+rwdk_pkg.requirement = {
   'kind' => 'revision',
-  'revision' => '1507954f3d4a2258a38b47fe05d76eb7590de1c0',
+  'revision' => 'dccf013622cc6f6fa67751894d5255e09dc3b2a6',
 }
-proj.root_object.package_references << librecrkit_pkg
+proj.root_object.package_references << rwdk_pkg
 
-librecrkit_product = proj.new(Xcodeproj::Project::Object::XCSwiftPackageProductDependency)
-librecrkit_product.package = librecrkit_pkg
-librecrkit_product.product_name = 'LibreCRKit'
+rwdk_product = proj.new(Xcodeproj::Project::Object::XCSwiftPackageProductDependency)
+rwdk_product.package = rwdk_pkg
+rwdk_product.product_name = 'RoundWhiteDiscKit'
 
-# Link LibreCRKit into LibreLoop's binary (static linkage; framework stays
-# self-contained for the plugin).
-libreloop.package_product_dependencies << librecrkit_product
-librecrkit_build_file = proj.new(Xcodeproj::Project::Object::PBXBuildFile)
-librecrkit_build_file.product_ref = librecrkit_product
-libreloop.frameworks_build_phase.files << librecrkit_build_file
+# Link RoundWhiteDiscKit into LibreLoop's binary (static linkage; framework
+# stays self-contained for the plugin).
+libreloop.package_product_dependencies << rwdk_product
+rwdk_build_file = proj.new(Xcodeproj::Project::Object::PBXBuildFile)
+rwdk_build_file.product_ref = rwdk_product
+libreloop.frameworks_build_phase.files << rwdk_build_file
 
-# LibreCRKit ships a resource bundle (Resources/RuntimeTables → phone certs).
-# SwiftPM emits it as LibreCRKit_LibreCRKit.bundle in BUILT_PRODUCTS_DIR but
-# does NOT auto-embed it into a framework that statically links the package.
-# Without this, Bundle.module fatalErrors at first use ("unable to find bundle
-# named LibreCRKit_LibreCRKit"). Copy it into LibreLoop.framework so the
-# accessor finds it via Bundle(for: BundleFinder.self).resourceURL.
-librecrkit_bundle_ref = frameworks_group.new_reference('LibreCRKit_LibreCRKit.bundle')
-librecrkit_bundle_ref.source_tree = 'BUILT_PRODUCTS_DIR'
-librecrkit_bundle_ref.last_known_file_type = 'wrapper.cfbundle'
-librecrkit_bundle_ref.include_in_index = '0'
-libreloop.resources_build_phase.add_file_reference(librecrkit_bundle_ref)
-
-# Vendor phone_cert_162b.bin (MIT, from Apps/LibreCR/Sources/Resources). The
-# package-shipped phone_cert_firstpair.bin has documented live-sensor rejection.
-libreloop_resources_group = libreloop_group_or_main(proj, libreloop).new_group('Resources', 'Resources') rescue nil
-resources_dir = File.join(REPO_ROOT, 'LibreLoop', 'Resources')
-Dir.glob(File.join(resources_dir, '*.bin')).sort.each do |resource_path|
-  parent_group = proj.main_group.find_subpath('LibreLoop/Resources', true)
-  parent_group.set_source_tree('SOURCE_ROOT')
-  parent_group.path = 'LibreLoop/Resources'
-  res_ref = parent_group.new_reference(File.basename(resource_path))
-  libreloop.resources_build_phase.add_file_reference(res_ref)
-end
+# RoundWhiteDiscKit ships a resource bundle (localizations). SwiftPM emits it
+# as RoundWhiteDiscKit_RoundWhiteDiscKit.bundle in BUILT_PRODUCTS_DIR but does
+# NOT auto-embed it into a framework that statically links the package.
+# Without this, Bundle.module fatalErrors at first use. Copy it into
+# LibreLoop.framework so the accessor finds it via
+# Bundle(for: BundleFinder.self).resourceURL.
+rwdk_bundle_ref = frameworks_group.new_reference('RoundWhiteDiscKit_RoundWhiteDiscKit.bundle')
+rwdk_bundle_ref.source_tree = 'BUILT_PRODUCTS_DIR'
+rwdk_bundle_ref.last_known_file_type = 'wrapper.cfbundle'
+rwdk_bundle_ref.include_in_index = '0'
+libreloop.resources_build_phase.add_file_reference(rwdk_bundle_ref)
 
 # ---------------------------------------------------------------------------
 # Target: LibreLoopUI (UI framework — depends on LibreLoop, LoopKitUI)

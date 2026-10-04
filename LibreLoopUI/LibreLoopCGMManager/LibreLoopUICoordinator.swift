@@ -30,13 +30,27 @@ final class LibreLoopUICoordinator: UINavigationController, CGMManagerOnboarding
         super.viewDidLoad()
         navigationBar.prefersLargeTitles = false
         if cgmManager == nil {
-            setViewControllers([applySensorViewController()], animated: false)
+            // Always start here: it moves on at once when the tables are already
+            // saved. Checking first from LibreLoopUI would let the optimizer inline
+            // a call into RoundWhiteDiscKit, which only LibreLoop links.
+            setViewControllers([runtimeTablesViewController()], animated: false)
         } else {
             setViewControllers([settingsViewController()], animated: false)
         }
     }
 
     // MARK: - Onboarding flow
+
+    private func runtimeTablesViewController() -> UIViewController {
+        let view = LibreLoopRuntimeTablesView(
+            onFinished: { [weak self] in
+                guard let self else { return }
+                self.setViewControllers([self.applySensorViewController()], animated: false)
+            },
+            onCancel: { [weak self] in self?.cancelOnboarding() }
+        )
+        return DismissibleHostingController(content: view, colorPalette: colorPalette)
+    }
 
     private func applySensorViewController() -> UIViewController {
         let view = LibreLoopApplySensorView(

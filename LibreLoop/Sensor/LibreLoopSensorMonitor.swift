@@ -1,6 +1,6 @@
 import Foundation
 import CoreBluetooth
-import LibreCRKit
+import RoundWhiteDiscKit
 import os.log
 
 
@@ -305,7 +305,7 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
     /// the BLE session stays open but no glucose notifications arrive, and
     /// eventually iOS or the sensor drops the link.
     ///
-    /// Delegated to LibreCRKit's `SensorSession.refreshDataPlaneNotifications()`
+    /// Delegated to RoundWhiteDiscKit's `SensorSession.refreshDataPlaneNotifications()`
     /// (added in the refresh-data-plane-notifications branch); LibreLoop
     /// previously implemented this inline.
     private func refreshPostAuthNotifications() async -> Bool {
@@ -366,7 +366,7 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
     }
 
     /// Diagnostic: also ask the sensor for the clinical stream. Same decode
-    /// shape as historical but delivered on `clinicalData`. LibreCRKit's
+    /// shape as historical but delivered on `clinicalData`. RoundWhiteDiscKit's
     /// protocol notes don't ground what's in it; we send the request,
     /// subscribe to the CCCD, and route the pages with `source: .clinical`
     /// so the manager can compare them against historical/realtime.
