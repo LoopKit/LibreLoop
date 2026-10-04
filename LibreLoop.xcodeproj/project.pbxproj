@@ -28,6 +28,7 @@
 		75DE5549CD1B188D7FCB2E63 /* RoundWhiteDiscKit_RoundWhiteDiscKit.bundle in Resources */ = {isa = PBXBuildFile; fileRef = C28EA778E3C9C6EEDC638766 /* RoundWhiteDiscKit_RoundWhiteDiscKit.bundle */; };
 		7C95FF87C6E06C6A23D9DFA4 /* LibreLoop.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B556C4EB4504CA4CFCF51EA2 /* LibreLoop.framework */; };
 		8826F317E30CFA27B8D1B531 /* RoundWhiteDiscKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3BCF8A4D19616F87A259E2A7 /* RoundWhiteDiscKit */; };
+		D7A1C3E5F70912B4C6D8E0F4 /* RoundWhiteDiscKit in Frameworks */ = {isa = PBXBuildFile; productRef = D7A1C3E5F70912B4C6D8E0F2 /* RoundWhiteDiscKit */; };
 		BBFA712380AAB1FC572D3EFE /* FSL3-sensor.png in Resources */ = {isa = PBXBuildFile; fileRef = BBFA712375B13A9543390BC5 /* FSL3-sensor.png */; };
 		BBFA712680AAB1FC572D3F00 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BBFA712575B13A9543390BC7 /* Assets.xcassets */; };
 		A11CE5005700000000000002 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A11CE5005700000000000001 /* Localizable.xcstrings */; };
@@ -184,6 +185,7 @@
 				7C95FF87C6E06C6A23D9DFA4 /* LibreLoop.framework in Frameworks */,
 				AE16E0F3A62344D974DF129C /* LoopKit.framework in Frameworks */,
 				00D19DA04F4C34144C6D8964 /* LoopKitUI.framework in Frameworks */,
+				D7A1C3E5F70912B4C6D8E0F4 /* RoundWhiteDiscKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -444,6 +446,9 @@
 				86958500B91D8FD14BE0537D /* PBXTargetDependency */,
 			);
 			name = LibreLoopUI;
+			packageProductDependencies = (
+				D7A1C3E5F70912B4C6D8E0F2 /* RoundWhiteDiscKit */,
+			);
 			productName = LibreLoopUI;
 			productReference = 5155F4E87FAA05CC59E43F47 /* LibreLoopUI.framework */;
 			productType = "com.apple.product-type.framework";
@@ -1054,6 +1059,11 @@
 
 /* Begin XCSwiftPackageProductDependency section */
 		3BCF8A4D19616F87A259E2A7 /* RoundWhiteDiscKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 830716FE330C1EE3A3796BFF /* XCRemoteSwiftPackageReference "RoundWhiteDiscKit" */;
+			productName = RoundWhiteDiscKit;
+		};
+		D7A1C3E5F70912B4C6D8E0F2 /* RoundWhiteDiscKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 830716FE330C1EE3A3796BFF /* XCRemoteSwiftPackageReference "RoundWhiteDiscKit" */;
 			productName = RoundWhiteDiscKit;
