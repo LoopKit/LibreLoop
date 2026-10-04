@@ -5,7 +5,7 @@ import RoundWhiteDiscKit
 /// published on Arweave. It is downloaded once, kept in Application Support,
 /// and installed before any pairing or authorization.
 public enum LibreLoopRuntimeTables {
-    static let transactionID = "z3kaLNxR0tXJohEPnq9Qs8CBRdTmXHwabext8uy9qmk"
+    static let transactionID = "8ran9sd_2k7dvzVPPRGs3sVq5mgP74UZ4A0V-mr2ag0"
 
     /// Any gateway is safe: the package rejects a blob whose digest doesn't match.
     static let gateways = ["https://arweave.net", "https://turbo-gateway.com"]
