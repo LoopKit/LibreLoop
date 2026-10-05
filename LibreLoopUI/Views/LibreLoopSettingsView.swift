@@ -1,7 +1,8 @@
-import SwiftUI
+import HealthKit
 import LibreLoop
 import LoopAlgorithm
 import LoopKitUI
+import SwiftUI
 
 struct LibreLoopSettingsView: View {
     @ObservedObject var viewModel: LibreLoopSettingsViewModel
@@ -244,7 +245,7 @@ struct LibreLoopSettingsView: View {
             if let sample = viewModel.latestSample {
                 HStack(alignment: .firstTextBaseline) {
                     Text(displayGlucosePreference.format(
-                            LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: sample.valueMgDL),
+                            HKQuantity(unit: .milligramsPerDeciliter, doubleValue: sample.valueMgDL),
                             includeUnit: false))
                         .font(.system(size: 44, weight: .semibold, design: .rounded))
                         .monospacedDigit()
@@ -263,7 +264,7 @@ struct LibreLoopSettingsView: View {
                     Spacer()
                     if let rate = sample.rateOfChangeMgDLPerMinute {
                         Text(displayGlucosePreference.formatMinuteRate(
-                                LoopQuantity(unit: .milligramsPerDeciliterPerMinute, doubleValue: rate)))
+                                HKQuantity(unit: .milligramsPerDeciliterPerMinute, doubleValue: rate)))
                             .foregroundStyle(.secondary)
                             .monospacedDigit()
                     }
@@ -579,7 +580,7 @@ struct LibreLoopReadingRow: View {
                 .monospacedDigit()
                 .frame(width: 72, alignment: .leading)
             Text(displayGlucosePreference.format(
-                    LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: sample.valueMgDL),
+                    HKQuantity(unit: .milligramsPerDeciliter, doubleValue: sample.valueMgDL),
                     includeUnit: false))
                 .font(.body.weight(.semibold))
                 .monospacedDigit()
@@ -587,7 +588,7 @@ struct LibreLoopReadingRow: View {
                 .frame(width: 48, alignment: .trailing)
             if let rate = sample.rateOfChangeMgDLPerMinute {
                 Text(displayGlucosePreference.formatMinuteRate(
-                        LoopQuantity(unit: .milligramsPerDeciliterPerMinute, doubleValue: rate),
+                        HKQuantity(unit: .milligramsPerDeciliterPerMinute, doubleValue: rate),
                         includeUnit: false))
                     .foregroundStyle(.secondary)
                     .monospacedDigit()

@@ -416,9 +416,13 @@ public final class LibreLoopCGMManager: CGMManager {
         case .warmup, .pairingWarmup: inWarmup = true
         default: inWarmup = false
         }
+        // loopandlearn's LoopKit doesn't expose `inSensorWarmup` /
+        // `isInoperable`. Trio's home view sniffs warmup from
+        // `localizedMessage`; replacement state is reflected via
+        // `hasValidSensorSession`.
+        _ = inWarmup
+        _ = isInoperable
         return CGMManagerStatus(hasValidSensorSession: state.sensorSerial != nil && !state.sensorNeedsReplacement,
-                                inSensorWarmup: inWarmup,
-                                isInoperable: isInoperable,
                                 lastCommunicationDate: state.latestReadingTimestamp,
                                 device: device)
     }
@@ -805,7 +809,9 @@ public final class LibreLoopCGMManager: CGMManager {
 
     // AlertResponder. Tidepool-sync's LoopKit replaced the completion-handler
     // signature with async/throws.
-    public func acknowledgeAlert(alertIdentifier: Alert.AlertIdentifier) async throws {}
+    public func acknowledgeAlert(alertIdentifier: Alert.AlertIdentifier, completion: @escaping (Error?) -> Void) {
+        completion(nil)
+    }
 
     // AlertSoundVendor.
     public func getSoundBaseURL() -> URL? { nil }
@@ -888,9 +894,9 @@ struct LibreLoopGlucoseDisplay: GlucoseDisplayable {
         }
     }
 
-    var trendRate: LoopQuantity? {
+    var trendRate: HKQuantity? {
         sample.rateOfChangeMgDLPerMinute.map {
-            LoopQuantity(unit: .milligramsPerDeciliterPerMinute, doubleValue: $0)
+            HKQuantity(unit: .milligramsPerDeciliterPerMinute, doubleValue: $0)
         }
     }
 }

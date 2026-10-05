@@ -88,22 +88,25 @@ private nonisolated final class RetractionRecordingDelegate: CGMManagerDelegate 
         self.deletionExpectation = deletionExpectation
     }
 
-    @MainActor func retractAlert(identifier: Alert.Identifier) async {
+    func retractAlert(identifier: Alert.Identifier) {
         lock.lock()
         _retracted.append(identifier)
         lock.unlock()
         retractionExpectation.fulfill()
     }
 
-    func cgmManagerWantsDeletion(_ manager: CGMManager) async {
+    func cgmManagerWantsDeletion(_ manager: CGMManager) {
         deletionExpectation?.fulfill()
     }
 
-    @MainActor func issueAlert(_ alert: Alert) async {}
-    func doesIssuedAlertExist(identifier: Alert.Identifier) async throws -> Bool { false }
-    func lookupAllUnretracted(managerIdentifier: String) async throws -> [PersistedAlert] { [] }
-    func lookupAllUnacknowledgedUnretracted(managerIdentifier: String) async throws -> [PersistedAlert] { [] }
-    func recordRetractedAlert(_ alert: Alert, at date: Date) async throws {}
+    func issueAlert(_ alert: Alert) {}
+    func doesIssuedAlertExist(identifier: Alert.Identifier,
+                              completion: @escaping (Swift.Result<Bool, Error>) -> Void) { completion(.success(false)) }
+    func lookupAllUnretracted(managerIdentifier: String,
+                              completion: @escaping (Swift.Result<[PersistedAlert], Error>) -> Void) { completion(.success([])) }
+    func lookupAllUnacknowledgedUnretracted(managerIdentifier: String,
+                                            completion: @escaping (Swift.Result<[PersistedAlert], Error>) -> Void) { completion(.success([])) }
+    func recordRetractedAlert(_ alert: Alert, at date: Date) {}
     func deviceManager(_ manager: DeviceManager, logEventForDeviceIdentifier deviceIdentifier: String?, type: DeviceLogEntryType, message: String, completion: ((Error?) -> Void)?) {}
     func cgmManager(_ manager: CGMManager, hasNew readingResult: CGMReadingResult) {}
     func cgmManager(_ manager: CGMManager, hasNew events: [PersistedCgmEvent]) {}

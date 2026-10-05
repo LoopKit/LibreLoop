@@ -123,7 +123,7 @@ extension LibreLoopCGMManager: CGMManagerUI {
         }
     }
 
-    public func glucoseRangeCategory(for glucose: GlucoseSampleValue) -> GlucoseRangeCategory? { nil }
+    public func glucoseRangeCategory(for glucose: LoopKit.GlucoseSampleValue) -> LoopKit.GlucoseRangeCategory? { nil }
 
     public func unitDidChange(to displayGlucoseUnit: HKUnit) { }
 }
