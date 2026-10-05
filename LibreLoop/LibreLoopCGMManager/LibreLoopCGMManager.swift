@@ -434,13 +434,19 @@ public final class LibreLoopCGMManager: CGMManager {
                  udiDeviceIdentifier: nil)
     }
 
-    public var debugDescription: String {
+    /// "app identity ROW", "whitebox", or nil when no session keys are saved.
+    public var pairedWith: String? {
         let keys = state.sensorSerial.flatMap { try? LibreLoopKeychain.load(forSensorSerial: $0) }
-        let pairing = keys.map { $0.appIdentity.map { "app identity \($0)" } ?? "whitebox" } ?? "unknown"
-        return """
+        return keys.map { $0.appIdentity.map { "app identity \($0)" } ?? "whitebox" }
+    }
+
+    public var debugDescription: String {
+        """
         ## LibreLoopCGMManager
         * sensorSerial: \(state.sensorSerial ?? "nil")
-        * pairedWith: \(pairing)
+        * pairedWith: \(pairedWith ?? "unknown")
+        * securityVersion: \(state.securityVersion.map(String.init) ?? "unknown")
+        * region: \(state.region.map(String.init) ?? "unknown")
         * appIdentitiesInstalled: \(AppIdentities.isInstalled)
         * appIdentityPairingEnabled: \(LibreLoopDebugSettings.appIdentityPairingEnabled)
         * activatedAt: \(String(describing: state.activatedAt))
