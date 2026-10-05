@@ -180,7 +180,11 @@ final class LibreLoopUICoordinator: UINavigationController, CGMManagerOnboarding
         )
         .environmentObject(displayGlucosePreference)
         .environment(\.appName, Bundle.main.bundleDisplayName)
-        return DismissibleHostingController(content: view, colorPalette: colorPalette)
+        let hostingController = DismissibleHostingController(content: view, colorPalette: colorPalette)
+        // Set on the VC as well as in SwiftUI: `.navigationTitle` doesn't reliably
+        // reach navigationItem for the root VC of a modally-presented nav stack.
+        hostingController.title = LocalizedString("FreeStyle Libre 3 / 3+", comment: "Settings screen title")
+        return hostingController
     }
 
     // MARK: - Replacement pairing
