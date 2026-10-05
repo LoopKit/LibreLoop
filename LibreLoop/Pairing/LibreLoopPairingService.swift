@@ -25,6 +25,9 @@ public final class LibreLoopPairingService {
         /// callers must persist this alongside kEnc/ivEnc. Nil only on
         /// legacy/cached reconnect outcomes where the value isn't re-derived.
         public let phase5RawKey: Data?
+        /// Label of the `AppIdentity` that paired, making `phase5RawKey` a
+        /// standard-AES kAuth. Nil when the whitebox path paired.
+        public let appIdentity: String?
     }
 
     /// Intermediate state captured immediately after a successful NFC
@@ -110,6 +113,7 @@ public final class LibreLoopPairingService {
         scanner: SensorScannerNG,
         blePIN: Data,
         phase5RawKey: Data? = nil,
+        appIdentity: String? = nil,
         expectedPeripheralID: UUID? = nil,
         scanTimeout: TimeInterval = 120,
         onStage: @Sendable @escaping (Stage) -> Void = { _ in }
@@ -215,10 +219,12 @@ public final class LibreLoopPairingService {
             // persisted), whose only option it is.
             if let phase5RawKey {
                 let cachedFlow = PairingFlow(transport: transport, eventLogger: { message in llog(message) })
+                llog("reconnect: cached key from \(appIdentity.map { "app identity \($0), standard AES" } ?? "whitebox")")
                 let cached = try await cachedFlow.runCachedReconnectHandshake(
                     tail4: blePIN,
                     phase5RawKey: phase5RawKey,
-                    r2Provider: { try Self.secureRandomBytes(count: 16) }
+                    r2Provider: { try Self.secureRandomBytes(count: 16) },
+                    phase5Cipher: appIdentity == nil ? LibAES.phase5BlockEncryptor : AppIdentity.phase5Cipher
                 )
                 let material = cached.sessionMaterial
                 let monitor = try LibreLoopSensorMonitor.make(
@@ -396,15 +402,67 @@ public final class LibreLoopPairingService {
         let sensor = try await Self.scanForAnyPeripheralNG(scanner: scanner, timeout: 120)
 
         onStage(.bleConnecting)
-        let session: SensorSession
-        do {
-            session = try await Self.connectAndBuildSession(
-                scanner: scanner,
-                peripheral: sensor.peripheral,
-                timeout: 120
-            )
-        } catch {
-            throw Failure.underlying("BLE connection failed: \(error.localizedDescription)")
+        func connect() async throws -> SensorSession {
+            do {
+                return try await Self.connectAndBuildSession(
+                    scanner: scanner,
+                    peripheral: sensor.peripheral,
+                    timeout: 120
+                )
+            } catch {
+                throw Failure.underlying("BLE connection failed: \(error.localizedDescription)")
+            }
+        }
+        var session = try await connect()
+
+        // 3a. Handshake with a plain-key app identity, chosen from the NFC
+        // patch info. Each identity is tried in turn, then the whitebox below.
+        if LibreLoopDebugSettings.appIdentityPairingEnabled {
+            onStage(.handshaking)
+            let patchInfo = scanResult.patchInfo
+            let attempts = await Self.appIdentityAttempts(for: patchInfo)
+            for (index, identity) in attempts.enumerated() {
+                if index > 0 {
+                    scanner.cancelConnection(sensor.peripheral)
+                    session = try await connect()
+                }
+                do {
+                    let (handshake, authKey) = try await Self.appIdentityHandshake(identity, session: session, blePIN: activation.blePIN)
+                    if index > 0 {
+                        llog("app identity: GUESS WRONG — sensor securityVersion=\(patchInfo.securityVersion) region=\(patchInfo.region) paired with \(identity.label), not \(attempts[0].label)")
+                    }
+                    llog("app identity: paired with \(identity.label)")
+                    let material = handshake.sessionMaterial
+                    let result = Result(
+                        receiverID: receiverID,
+                        sensorSerial: patchInfo.serialNumber,
+                        bleAddress: activation.bleAddressDisplay,
+                        blePIN: activation.blePIN,
+                        activatedAt: nfcResponse.activatedAt ?? Date(),
+                        kEnc: material.kEnc,
+                        ivEnc: material.ivEnc,
+                        phase5RawKey: authKey,
+                        appIdentity: identity.label
+                    )
+                    let monitor = try LibreLoopSensorMonitor.make(
+                        scanner: scanner,
+                        session: session,
+                        kEnc: material.kEnc,
+                        ivEnc: material.ivEnc
+                    )
+                    return PairOutcome(result: result, monitor: monitor, peripheralID: sensor.id)
+                } catch PairingFlowError.writeTimeout(label: "SendCertificateLoadDone", _) {
+                    // The sensor drops the link on a certificate it won't accept.
+                    llog("app identity: \(identity.label) certificate rejected — sensor disconnected after receiving it")
+                } catch {
+                    llog("app identity: \(identity.label) rejected — \(error)")
+                }
+            }
+            if !attempts.isEmpty {
+                llog("app identity: no identity accepted for securityVersion=\(patchInfo.securityVersion) region=\(patchInfo.region); falling back to whitebox")
+                scanner.cancelConnection(sensor.peripheral)
+                session = try await connect()
+            }
         }
 
         // 3. Handshake -- candidate path with phone_cert_162b (03 03 family).
@@ -456,7 +514,8 @@ public final class LibreLoopPairingService {
             activatedAt: nfcResponse.activatedAt ?? Date(),
             kEnc: material.kEnc,
             ivEnc: material.ivEnc,
-            phase5RawKey: handshake.phase5Material.rawKey
+            phase5RawKey: handshake.phase5Material.rawKey,
+            appIdentity: nil
         )
         let monitor = try LibreLoopSensorMonitor.make(
             scanner: scanner,
@@ -726,6 +785,51 @@ public final class LibreLoopPairingService {
     }
 
     /// The 03 03 first-pair cert, from the installed runtime tables.
+    /// The selected identity first, then the rest; empty if none load.
+    private static func appIdentityAttempts(for patchInfo: Libre3NFCPatchInfo) async -> [AppIdentity] {
+        do {
+            try await LibreLoopAppIdentities.ensureInstalled()
+            let identities = try AppIdentities.installed()
+            let selection = try AppIdentities.select(from: identities, for: patchInfo)
+            let how = selection.matched ? "matched" : "NO MATCH, using default"
+            let raw = patchInfo.raw.map { String(format: "%02x", $0) }.joined()
+            llog("app identity: productType=\(patchInfo.productType) securityVersion=\(patchInfo.securityVersion) region=\(patchInfo.region) -> \(selection.identity.label) (\(how)) patchInfo=\(raw)")
+            return [selection.identity] + identities.filter { $0.label != selection.identity.label }
+        } catch {
+            llog("app identity: unavailable (\(error)); whitebox only")
+            return []
+        }
+    }
+
+    private static func appIdentityHandshake(
+        _ identity: AppIdentity,
+        session: SensorSession,
+        blePIN: Data
+    ) async throws -> (FirstPairHandshakeResult, authKey: Data) {
+        let phoneEph = EphemeralKeyPair()
+        let flow = PairingFlow(
+            transport: SensorSessionTransport(session: session),
+            phoneCert: identity.certificate,
+            phoneEph: phoneEph,
+            eventLogger: { message in llog(message) }
+        )
+        var authKey = Data()
+        let handshake = try await flow.runCommandGatedFirstPairHandshake(
+            blePIN: blePIN,
+            phase5RawKeyProvider: { preamble in
+                authKey = try identity.authKey(
+                    phoneEphemeral: phoneEph.privateKey,
+                    sensorEphemeral: preamble.phaseHandshake.sensorEphPub,
+                    sensorStatic: EphemeralExchange.parsePeerPubkey(preamble.phaseHandshake.sensorCert.staticPub)
+                )
+                return authKey
+            },
+            r2Provider: { try secureRandomBytes(count: 16) },
+            phase5Cipher: AppIdentity.phase5Cipher
+        )
+        return (handshake, authKey)
+    }
+
     private static func loadFirstPairCert() throws -> PhoneCert {
         try PhoneCert.bundled162b()
     }

@@ -17,10 +17,14 @@ import Security
 ///                           is what the sensor remembers as its current
 ///                           receiver; needed to issue switchReceiver after
 ///                           a CGMManager rawState wipe.
+///   v4:                     v3 with `0x04` magic, followed by the UTF-8 label of
+///                           the `AppIdentity` that paired. phase5RawKey is then
+///                           a standard-AES kAuth rather than a whitebox key.
 enum LibreLoopKeychain {
     private static let service = "org.loopkit.LibreLoop.sessionKeys"
     private static let v2Magic: UInt8 = 0x02
     private static let v3Magic: UInt8 = 0x03
+    private static let v4Magic: UInt8 = 0x04
 
     struct SessionKeys: Equatable {
         let kEnc: Data
@@ -34,6 +38,7 @@ enum LibreLoopKeychain {
         /// after a rawState wipe by issuing switchReceiver with the stored
         /// ID. Nil for sensors paired before this field was persisted.
         let receiverID: UInt32?
+        var appIdentity: String? = nil
     }
 
     static func save(_ keys: SessionKeys, forSensorSerial serial: String) throws {
@@ -45,7 +50,11 @@ enum LibreLoopKeychain {
                 ridLE[1] = UInt8(truncatingIfNeeded: receiverID >> 8)
                 ridLE[2] = UInt8(truncatingIfNeeded: receiverID >> 16)
                 ridLE[3] = UInt8(truncatingIfNeeded: receiverID >> 24)
-                payload = Data([v3Magic]) + keys.kEnc + keys.ivEnc + phase5RawKey + ridLE
+                if let label = keys.appIdentity {
+                    payload = Data([v4Magic]) + keys.kEnc + keys.ivEnc + phase5RawKey + ridLE + Data(label.utf8)
+                } else {
+                    payload = Data([v3Magic]) + keys.kEnc + keys.ivEnc + phase5RawKey + ridLE
+                }
             } else {
                 payload = Data([v2Magic]) + keys.kEnc + keys.ivEnc + phase5RawKey
             }
@@ -83,7 +92,7 @@ enum LibreLoopKeychain {
         guard status == errSecSuccess, let data = item as? Data else {
             throw LibreLoopKeychainError.osStatus(status)
         }
-        if data.count == 45 && data.first == v3Magic {
+        if (data.count == 45 && data.first == v3Magic) || (data.count > 45 && data.first == v4Magic) {
             // v3: 0x03 || kEnc(16) || ivEnc(8) || phase5RawKey(16) || receiverID(4 LE)
             let kEnc = data.subdata(in: 1..<17)
             let ivEnc = data.subdata(in: 17..<25)
@@ -93,7 +102,8 @@ enum LibreLoopKeychain {
                 | (UInt32(ridLE[1]) << 8)
                 | (UInt32(ridLE[2]) << 16)
                 | (UInt32(ridLE[3]) << 24)
-            return SessionKeys(kEnc: kEnc, ivEnc: ivEnc, phase5RawKey: phase5RawKey, receiverID: receiverID)
+            let label = data.first == v4Magic ? String(decoding: data.suffix(from: data.startIndex + 45), as: UTF8.self) : nil
+            return SessionKeys(kEnc: kEnc, ivEnc: ivEnc, phase5RawKey: phase5RawKey, receiverID: receiverID, appIdentity: label)
         }
         if data.count == 41 && data.first == v2Magic {
             // v2: 0x02 || kEnc(16) || ivEnc(8) || phase5RawKey(16)
