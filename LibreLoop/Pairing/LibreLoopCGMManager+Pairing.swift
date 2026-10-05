@@ -90,6 +90,12 @@ extension LibreLoopCGMManager {
         if let gen = response.generation {
             newState.generation = gen
         }
+        if let securityVersion = response.securityVersion {
+            newState.securityVersion = securityVersion
+        }
+        if let region = response.region {
+            newState.region = region
+        }
         if let fw = response.firmwareVersion {
             newState.firmwareVersion = fw
         }
