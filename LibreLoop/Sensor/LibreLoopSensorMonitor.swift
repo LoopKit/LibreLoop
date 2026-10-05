@@ -16,6 +16,12 @@ public enum LibreLoopDebugSettings {
         get { UserDefaults.standard.bool(forKey: continuousClinicalKey) }
         set { UserDefaults.standard.set(newValue, forKey: continuousClinicalKey) }
     }
+
+    /// Pair with a plain-key `AppIdentity` before falling back to the whitebox.
+    public static let appIdentityPairingKey = "org.loopkit.LibreLoop.appIdentityPairing"
+    public static var appIdentityPairingEnabled: Bool {
+        UserDefaults.standard.object(forKey: appIdentityPairingKey) as? Bool ?? true
+    }
 }
 
 

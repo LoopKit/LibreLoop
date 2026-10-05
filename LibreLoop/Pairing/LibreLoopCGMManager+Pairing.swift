@@ -106,7 +106,8 @@ extension LibreLoopCGMManager {
                 kEnc: outcome.result.kEnc,
                 ivEnc: outcome.result.ivEnc,
                 phase5RawKey: outcome.result.phase5RawKey,
-                receiverID: Self.receiverIDFromState(state.receiverID)
+                receiverID: Self.receiverIDFromState(state.receiverID),
+                appIdentity: outcome.result.appIdentity
             ),
             forSensorSerial: outcome.result.sensorSerial
         )
@@ -994,7 +995,8 @@ extension LibreLoopCGMManager {
         }
         // Pull whatever we previously persisted, but reconnect can still run
         // if Keychain has nothing — it'll just use the full handshake path.
-        let cachedPhase5 = (try? LibreLoopKeychain.load(forSensorSerial: serial))?.phase5RawKey
+        let cachedKeys = try? LibreLoopKeychain.load(forSensorSerial: serial)
+        let cachedPhase5 = cachedKeys?.phase5RawKey
         if cachedPhase5 != nil {
             llog("reconnect: cached phase5RawKey available; will try fast path first")
         } else {
@@ -1005,6 +1007,7 @@ extension LibreLoopCGMManager {
                 scanner: scanner,
                 blePIN: blePIN,
                 phase5RawKey: cachedPhase5,
+                appIdentity: cachedKeys?.appIdentity,
                 expectedPeripheralID: expectedPeripheral
             ) { [weak self] stage in
                 llog("reconnect stage: \(String(describing: stage))")
@@ -1018,7 +1021,8 @@ extension LibreLoopCGMManager {
                     kEnc: outcome.kEnc,
                     ivEnc: outcome.ivEnc,
                     phase5RawKey: phase5ToPersist,
-                    receiverID: Self.receiverIDFromState(state.receiverID)
+                    receiverID: Self.receiverIDFromState(state.receiverID),
+                    appIdentity: outcome.phase5RawKey == nil ? cachedKeys?.appIdentity : nil
                 ),
                 forSensorSerial: serial
             )

@@ -19,7 +19,14 @@ public final class LibreLoopCGMManager: CGMManager {
     public var pluginIdentifier: String { Self.pluginIdentifier }
     public func markAsDepedency(_ isDependency: Bool) {}
 
-    public weak var cgmManagerDelegate: CGMManagerDelegate?
+    public weak var cgmManagerDelegate: CGMManagerDelegate? {
+        didSet { flushPendingDeviceLog() }
+    }
+
+    /// First-time pairing runs on a manager Loop hasn't adopted yet, so its
+    /// device-log lines are held until the delegate arrives.
+    private let pendingDeviceLogLock = NSLock()
+    private var pendingDeviceLog: [(identifier: String?, type: DeviceLogEntryType, message: String)] = []
     public var delegateQueue: DispatchQueue!
 
     public internal(set) var state: LibreLoopCGMManagerState
@@ -428,9 +435,14 @@ public final class LibreLoopCGMManager: CGMManager {
     }
 
     public var debugDescription: String {
-        """
+        let keys = state.sensorSerial.flatMap { try? LibreLoopKeychain.load(forSensorSerial: $0) }
+        let pairing = keys.map { $0.appIdentity.map { "app identity \($0)" } ?? "whitebox" } ?? "unknown"
+        return """
         ## LibreLoopCGMManager
         * sensorSerial: \(state.sensorSerial ?? "nil")
+        * pairedWith: \(pairing)
+        * appIdentitiesInstalled: \(AppIdentities.isInstalled)
+        * appIdentityPairingEnabled: \(LibreLoopDebugSettings.appIdentityPairingEnabled)
         * activatedAt: \(String(describing: state.activatedAt))
         * latestReadingTimestamp: \(String(describing: state.latestReadingTimestamp))
         """
@@ -647,7 +659,7 @@ public final class LibreLoopCGMManager: CGMManager {
             guard let self else { return }
             let lower = message.lowercased()
             let type: DeviceLogEntryType
-            if lower.contains("error") || lower.contains("fail") {
+            if lower.contains("error") || lower.contains("fail") || lower.contains("reject") {
                 type = .error
             } else if lower.contains("connect") || lower.contains("disconnect") {
                 type = .connection
@@ -655,15 +667,39 @@ public final class LibreLoopCGMManager: CGMManager {
                 type = .receive
             }
             let identifier = self.state.sensorSerial
-            let forward = { [weak self] in
-                guard let self else { return }
-                self.cgmManagerDelegate?.deviceManager(self, logEventForDeviceIdentifier: identifier, type: type, message: message, completion: nil)
+            let held: Bool = self.pendingDeviceLogLock.withLock {
+                guard self.cgmManagerDelegate == nil else { return false }
+                if self.pendingDeviceLog.count < 1000 {
+                    self.pendingDeviceLog.append((identifier, type, message))
+                }
+                return true
             }
-            if let queue = self.delegateQueue {
-                queue.async(execute: forward)
-            } else {
-                forward()
+            if !held {
+                self.forwardDeviceLog(identifier: identifier, type: type, message: message)
             }
+        }
+    }
+
+    private func flushPendingDeviceLog() {
+        guard cgmManagerDelegate != nil else { return }
+        let pending = pendingDeviceLogLock.withLock {
+            defer { pendingDeviceLog.removeAll() }
+            return pendingDeviceLog
+        }
+        for entry in pending {
+            forwardDeviceLog(identifier: entry.identifier, type: entry.type, message: entry.message)
+        }
+    }
+
+    private func forwardDeviceLog(identifier: String?, type: DeviceLogEntryType, message: String) {
+        let forward = { [weak self] in
+            guard let self else { return }
+            self.cgmManagerDelegate?.deviceManager(self, logEventForDeviceIdentifier: identifier, type: type, message: message, completion: nil)
+        }
+        if let queue = delegateQueue {
+            queue.async(execute: forward)
+        } else {
+            forward()
         }
     }
 
