@@ -188,7 +188,7 @@ struct LibreLoopSettingsView: View {
                         .textSelection(.enabled)
                 }
                 if let pairedWith = viewModel.pairedWith {
-                    LabeledContent(LocalizedString("Paired With", comment: "Row label: pairing method, an app identity or the whitebox"), value: pairedWith)
+                    LabeledContent(LocalizedString("Paired With", comment: "Row label: the app credential the sensor was paired with"), value: pairedWith)
                         .monospaced()
                         .font(.footnote)
                         .textSelection(.enabled)

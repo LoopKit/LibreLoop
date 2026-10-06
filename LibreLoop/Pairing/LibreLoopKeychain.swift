@@ -18,8 +18,7 @@ import Security
 ///                           receiver; needed to issue switchReceiver after
 ///                           a CGMManager rawState wipe.
 ///   v4:                     v3 with `0x04` magic, followed by the UTF-8 label of
-///                           the `AppIdentity` that paired. phase5RawKey is then
-///                           a standard-AES kAuth rather than a whitebox key.
+///                           the `AppIdentity` that paired.
 enum LibreLoopKeychain {
     private static let service = "org.loopkit.LibreLoop.sessionKeys"
     private static let v2Magic: UInt8 = 0x02
