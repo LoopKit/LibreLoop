@@ -18,7 +18,6 @@ import LibreLoop
 struct LibreLoopStreamDebugView: View {
     @StateObject private var viewModel: LibreLoopStreamDebugViewModel
     @AppStorage(LibreLoopDebugSettings.continuousClinicalKey) private var continuousClinical = false
-    @AppStorage(LibreLoopDebugSettings.appIdentityPairingKey) private var appIdentityPairing = true
 
     init(viewModel: LibreLoopStreamDebugViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -36,12 +35,6 @@ struct LibreLoopStreamDebugView: View {
                 Toggle("Continuous clinical stream", isOn: $continuousClinical)
             } footer: {
                 Text("Keeps the clinical channel subscribed so the clinical/raw charts update every minute. Off by default — only needed for stream inspection, and it adds per-reconnect clinical traffic. Takes effect on the next reconnect.")
-            }
-
-            Section {
-                Toggle("Pair with app identity", isOn: $appIdentityPairing)
-            } footer: {
-                Text("Tries the plain-key app identities before the whitebox when pairing. Takes effect on the next sensor scan.")
             }
 
             glucoseSection
