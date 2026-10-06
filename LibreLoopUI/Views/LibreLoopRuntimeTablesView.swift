@@ -1,7 +1,7 @@
 import SwiftUI
 import LibreLoop
 
-/// First onboarding step: download the runtime tables once, before any sensor
+/// First onboarding step: download the app credentials once, before any sensor
 /// is applied, so a missing download can't strand a freshly activated sensor.
 struct LibreLoopRuntimeTablesView: View {
     let onFinished: () -> Void
@@ -16,12 +16,12 @@ struct LibreLoopRuntimeTablesView: View {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: 44))
                     .foregroundStyle(.orange)
-                Text(LocalizedString("Couldn't download the sensor data LibreLoop needs. Check your internet connection and try again.", comment: "Runtime tables download failure message"))
+                Text(LocalizedString("Couldn't download the sensor data LibreLoop needs. Check your internet connection and try again.", comment: "App credentials download failure message"))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
             } else {
                 ProgressView()
-                Text(LocalizedString("Downloading sensor data…", comment: "Shown while downloading the runtime tables during setup"))
+                Text(LocalizedString("Downloading sensor data…", comment: "Shown while downloading the app credentials during setup"))
                     .foregroundStyle(.secondary)
             }
             Spacer()
@@ -52,7 +52,7 @@ struct LibreLoopRuntimeTablesView: View {
     private func download() async {
         failed = false
         do {
-            try await LibreLoopRuntimeTables.ensureInstalled()
+            try await LibreLoopAppIdentities.ensureInstalled()
             onFinished()
         } catch {
             failed = true
