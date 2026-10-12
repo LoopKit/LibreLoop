@@ -93,6 +93,11 @@ public struct LibreLoopCGMManagerState: RawRepresentable, Equatable {
     /// and mark the CGM inoperable. Persisted alongside `sensorNeedsReplacement`.
     public var sensorEndedNormally: Bool = false
 
+    /// The sensor state last sent to Loop as a `sensorIssue`, nil while healthy, and whether
+    /// this sensor's `sensorEnd` has been sent.
+    public var reportedSensorIssue: String?
+    public var sensorEndRecorded: Bool = false
+
     /// Human-readable sensor model. Derived from `generation` when
     /// available (preferred), falling back to the wear-duration heuristic
     /// for state paired before generation was captured.
@@ -139,6 +144,8 @@ public struct LibreLoopCGMManagerState: RawRepresentable, Equatable {
         self.expiryAlertsScheduledForActivatedAt = rawValue["expiryAlertsScheduledForActivatedAt"] as? Date
         self.sensorNeedsReplacement = rawValue["sensorNeedsReplacement"] as? Bool ?? false
         self.sensorEndedNormally = rawValue["sensorEndedNormally"] as? Bool ?? false
+        self.reportedSensorIssue = rawValue["reportedSensorIssue"] as? String
+        self.sensorEndRecorded = rawValue["sensorEndRecorded"] as? Bool ?? false
     }
 
     public var rawValue: RawValue {
@@ -173,6 +180,10 @@ public struct LibreLoopCGMManagerState: RawRepresentable, Equatable {
         }
         if sensorEndedNormally {
             raw["sensorEndedNormally"] = true
+        }
+        raw["reportedSensorIssue"] = reportedSensorIssue
+        if sensorEndRecorded {
+            raw["sensorEndRecorded"] = true
         }
         return raw
     }

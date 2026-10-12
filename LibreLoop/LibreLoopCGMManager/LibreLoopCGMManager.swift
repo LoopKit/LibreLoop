@@ -352,14 +352,13 @@ public final class LibreLoopCGMManager: CGMManager {
         // deviceIdentifier still resolves to the session that's ending.
         // Matches the .sensorStart we emitted at pairing time so Loop's
         // CgmEventStore has a clean session boundary.
-        if let serial = state.sensorSerial {
-            let identifier = Self.deviceIdentifier(serial: serial, receiverID: state.receiverID)
+        if let serial = state.sensorSerial, !state.sensorEndRecorded {
             let event = PersistedCgmEvent(
                 date: Date(),
                 type: .sensorEnd,
-                deviceIdentifier: identifier
+                deviceIdentifier: serial
             )
-            llog("emitting CgmEvent .sensorEnd deviceIdentifier=\(identifier)")
+            llog("emitting CgmEvent .sensorEnd deviceIdentifier=\(serial)")
             delegateQueue?.async { [weak self] in
                 guard let self else { return }
                 self.cgmManagerDelegate?.cgmManager(self, hasNew: [event])
@@ -378,6 +377,8 @@ public final class LibreLoopCGMManager: CGMManager {
         blank.latestSample = nil
         blank.recentSamples = []
         blank.expiryAlertsScheduledForActivatedAt = nil
+        blank.reportedSensorIssue = nil
+        blank.sensorEndRecorded = false
         setState(blank)
     }
 

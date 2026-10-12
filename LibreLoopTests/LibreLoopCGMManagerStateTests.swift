@@ -1,5 +1,6 @@
 import XCTest
 import LoopKit
+import RoundWhiteDiscKit
 @testable import LibreLoop
 
 final class LibreLoopCGMManagerStateTests: XCTestCase {
@@ -174,5 +175,49 @@ final class LibreLoopAlertRetractionTests: XCTestCase {
         XCTAssertTrue(identifiers.contains(LibreLoopCGMManager.needsReScanAlertID))
         XCTAssertEqual(identifiers.count, LibreLoopCGMManager.allAlertIdentifiers.count,
                        "duplicate identifiers in allAlertIdentifiers")
+    }
+}
+
+final class LibreLoopSensorStateEventTests: XCTestCase {
+    private func status(errorData: Int16 = 0, patchState: Int8 = 4) throws -> PatchStatus {
+        var bytes = [UInt8](repeating: 0, count: PatchStatus.plaintextSize)
+        bytes[2] = UInt8(truncatingIfNeeded: errorData)
+        bytes[3] = UInt8(truncatingIfNeeded: errorData >> 8)
+        bytes[7] = UInt8(bitPattern: patchState)
+        return try PatchStatus(plaintext: Data(bytes))
+    }
+
+    private func manager() -> LibreLoopCGMManager {
+        let manager = LibreLoopCGMManager()
+        var state = LibreLoopCGMManagerState()
+        state.sensorSerial = "0D00ABCDEF"
+        state.activatedAt = Date().addingTimeInterval(-3 * 24 * 60 * 60)
+        manager.state = state
+        return manager
+    }
+
+    func testIssueIsTheSensorErrorOrAttention() throws {
+        XCTAssertNil(LibreLoopCGMManager.sensorIssue(for: try status()))
+        XCTAssertEqual(LibreLoopCGMManager.sensorIssue(for: try status(errorData: 7)), "transmissionError")
+        XCTAssertEqual(LibreLoopCGMManager.sensorIssue(for: try status(patchState: 3)), "checkSensor")
+    }
+
+    func testIssueIsTrackedUntilTheSensorIsHealthy() throws {
+        let manager = manager()
+        manager.handlePatchStatus(try status(errorData: 7))
+        XCTAssertEqual(manager.state.reportedSensorIssue, "transmissionError")
+        manager.handlePatchStatus(try status())
+        XCTAssertNil(manager.state.reportedSensorIssue)
+        XCTAssertFalse(manager.state.sensorEndRecorded)
+    }
+
+    func testReplacementRecordsTheSensorEndOnce() throws {
+        let manager = manager()
+        manager.handlePatchStatus(try status(errorData: 8))
+        XCTAssertEqual(manager.state.reportedSensorIssue, "terminated")
+        XCTAssertTrue(manager.state.sensorEndRecorded)
+        let restored = LibreLoopCGMManagerState(rawValue: manager.state.rawValue)
+        XCTAssertEqual(restored?.reportedSensorIssue, "terminated")
+        XCTAssertEqual(restored?.sensorEndRecorded, true)
     }
 }

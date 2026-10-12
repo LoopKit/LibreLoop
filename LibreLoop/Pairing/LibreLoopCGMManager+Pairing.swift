@@ -128,6 +128,8 @@ extension LibreLoopCGMManager {
         // New sensor — clear any prior replace/error state.
         newState.sensorNeedsReplacement = false
         newState.sensorEndedNormally = false
+        newState.reportedSensorIssue = nil
+        newState.sensorEndRecorded = false
         setState(newState)
 
         emitSensorStartEvent(for: newState)
@@ -144,13 +146,8 @@ extension LibreLoopCGMManager {
     /// data to a specific sensor session. Without it, Loop has no record
     /// of when the Libre 3 session began other than inference from the
     /// first sample timestamp.
-    ///
-    /// `deviceIdentifier` is formatted as `<sensorSerial>:<receiverIDHex>`
-    /// so a single sensor paired against different receivers produces
-    /// distinct events.
     private func emitSensorStartEvent(for newState: LibreLoopCGMManagerState) {
         guard let serial = newState.sensorSerial, let activatedAt = newState.activatedAt else { return }
-        let identifier = Self.deviceIdentifier(serial: serial, receiverID: newState.receiverID)
         let lifetime = newState.wearDurationMinutes.map { TimeInterval($0) * 60 }
             ?? LibreLoopSensorLifecycle.activeDuration
         let warmup = newState.warmupDurationMinutes.map { TimeInterval($0) * 60 }
@@ -158,23 +155,15 @@ extension LibreLoopCGMManager {
         let event = PersistedCgmEvent(
             date: activatedAt,
             type: .sensorStart,
-            deviceIdentifier: identifier,
+            deviceIdentifier: serial,
             expectedLifetime: lifetime,
             warmupPeriod: warmup
         )
-        llog("emitting CgmEvent .sensorStart deviceIdentifier=\(identifier) activatedAt=\(activatedAt)")
+        llog("emitting CgmEvent .sensorStart deviceIdentifier=\(serial) activatedAt=\(activatedAt)")
         delegateQueue?.async { [weak self] in
             guard let self else { return }
             self.cgmManagerDelegate?.cgmManager(self, hasNew: [event])
         }
-    }
-
-    /// `<sensorSerial>:<receiverIDHex>` -- matches the existing settings-view
-    /// formatting so the on-screen "Receiver ID" debug row and the
-    /// CgmEvent identifier are derivable from each other.
-    static func deviceIdentifier(serial: String, receiverID: Data?) -> String {
-        let hex = (receiverID ?? Data()).map { String(format: "%02x", $0) }.joined()
-        return hex.isEmpty ? serial : "\(serial):\(hex)"
     }
 
     func adopt(monitor: LibreLoopSensorMonitor) {
@@ -336,6 +325,51 @@ extension LibreLoopCGMManager {
     func handlePatchStatus(_ status: PatchStatus) {
         seedActivatedAtIfNeeded(currentLifeCount: status.currentLifeCount, source: "patch status")
         notifySensorAttentionIfNeeded(status)
+        recordSensorStateIfChanged(status)
+    }
+
+    /// The sensor's own name for what's wrong, or nil while it reports nothing.
+    static func sensorIssue(for status: PatchStatus) -> String? {
+        guard status.sensorAttention != .none else { return nil }
+        return status.sensorError != .none ? status.sensorError.description : status.sensorAttention.description
+    }
+
+    /// Sends a `sensorIssue` when the sensor's reported state changes, and this sensor's
+    /// `sensorEnd` once it needs replacing. Runs after `notifySensorAttentionIfNeeded`,
+    /// which decides whether the sensor ended normally or failed.
+    func recordSensorStateIfChanged(_ status: PatchStatus) {
+        guard let serial = state.sensorSerial else { return }
+        let issue = Self.sensorIssue(for: status)
+        let ends = state.sensorNeedsReplacement && !state.sensorEndRecorded
+        guard issue != state.reportedSensorIssue || ends else { return }
+
+        var events: [PersistedCgmEvent] = []
+        if let issue, issue != state.reportedSensorIssue {
+            var failed = false
+            if case .failed = sensorLifecycle { failed = true }
+            events.append(PersistedCgmEvent(
+                date: Date(),
+                type: .sensorIssue,
+                deviceIdentifier: serial,
+                error: CgmEventError(code: issue, isFatal: failed),
+                metadata: ["errorData": String(status.errorData), "patchState": String(status.patchState)]
+            ))
+        }
+        if ends {
+            events.append(PersistedCgmEvent(date: Date(), type: .sensorEnd, deviceIdentifier: serial))
+        }
+
+        var updated = state
+        updated.reportedSensorIssue = issue
+        updated.sensorEndRecorded = updated.sensorEndRecorded || ends
+        setState(updated)
+
+        guard !events.isEmpty else { return }
+        llog("emitting CgmEvents \(events.map(\.type.rawValue)) deviceIdentifier=\(serial)")
+        delegateQueue?.async { [weak self] in
+            guard let self else { return }
+            self.cgmManagerDelegate?.cgmManager(self, hasNew: events)
+        }
     }
 
     /// Surface the sensor's self-reported attention state (LibreCRKit e69dbd6's
