@@ -2,6 +2,8 @@
 
 FreeStyle Libre 3 CGMManager plugin for [Loop](https://github.com/LoopKit/Loop), built on the reverse-engineered Libre 3 protocol via [RoundWhiteDiscKit](https://github.com/airedev326/RoundWhiteDiscKit). The package ships without its lookup tables; LibreLoop downloads them once from Arweave when the plugin is added.
 
+> **LibreLoop is not an Abbott product.** It is independent open-source software, not made, endorsed, supported or reviewed by Abbott. FreeStyle Libre is a trademark of Abbott, used here only to say which sensors LibreLoop works with. Abbott does not provide support for LibreLoop; don't contact Abbott about it.
+
 ## Status
 
 Working end-to-end on iOS. The plugin pairs with a Libre 3 sensor via NFC, maintains a BLE session, and delivers glucose readings to Loop every 5 minutes. Sensor lifecycle, reconnect-on-restart, and historical backfill are all functional.
