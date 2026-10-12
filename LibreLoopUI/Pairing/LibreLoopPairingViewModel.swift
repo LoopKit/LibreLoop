@@ -63,8 +63,7 @@ final class LibreLoopPairingViewModel: ObservableObject {
             try cgmManager.applyPairingOutcome(outcome)
             state = .succeeded(serial: outcome.result.sensorSerial)
         } catch {
-            state = .failed(message: (error as? CustomStringConvertible)?.description
-                              ?? error.localizedDescription)
+            state = .failed(message: String(describing: error))
         }
     }
 

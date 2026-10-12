@@ -1074,8 +1074,7 @@ extension LibreLoopCGMManager {
             }
             llog("reconnect: succeeded via \(outcome.path == .cached ? "cached/direct" : "full") path")
         } catch {
-            let message = (error as? CustomStringConvertible)?.description
-                ?? error.localizedDescription
+            let message = String(describing: error)
             llog("reconnect: attempt failed: \(message)")
             let backoff = await MainActor.run { () -> TimeInterval in
                 self.consecutiveReconnectFailures += 1
