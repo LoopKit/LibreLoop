@@ -703,7 +703,8 @@ extension LibreLoopCGMManager {
                 // duplicate point at the same timestamp.
                 syncIdentifier: "libreloop-\(serial)-\(sample.lifeCount)",
                 syncVersion: 1,
-                device: device
+                device: device,
+                isBackfill: true
             ))
             backfillForwardedLifeCounts.insert(sample.lifeCount)
         }
@@ -806,7 +807,8 @@ extension LibreLoopCGMManager {
             wasUserEntered: false,
             syncIdentifier: "libreloop-\(serial)-\(lifeCount)",
             syncVersion: 1,
-            device: device
+            device: device,
+            isBackfill: true
         )
         backfillForwardedLifeCounts.insert(lifeCount)
         llog("forwarded clinical \(kind) sample to Loop: \(mgdl) mg/dL lifeCount=\(lifeCount) sampleDate=\(date.timeIntervalSince1970)")
