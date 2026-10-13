@@ -28,5 +28,7 @@
 	<string>LibreLoopCGMManager</string>
 	<key>com.loopkit.Loop.DeviceManufacturer</key>
 	<string>Abbott</string>
+	<key>com.loopkit.Loop.PluginSubtitle</key>
+	<string>Connects directly to the sensor</string>
 </dict>
 </plist>
