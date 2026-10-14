@@ -425,9 +425,9 @@ public final class LibreLoopCGMManager: CGMManager {
     }
 
     public var device: HKDevice? {
-        HKDevice(name: "FreeStyle Libre 3",
+        HKDevice(name: "FreeStyle \(state.sensorModel ?? "Libre 3")",
                  manufacturer: "Abbott",
-                 model: "Libre 3",
+                 model: state.sensorModel,
                  hardwareVersion: nil,
                  firmwareVersion: state.firmwareVersion,
                  softwareVersion: nil,

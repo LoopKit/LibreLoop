@@ -1151,6 +1151,7 @@ extension LibreLoopCGMManager {
         delegateQueue?.async { [weak self] in
             guard let self else { return }
             self.cgmManagerDelegate?.cgmManagerDidUpdateState(self)
+            self.cgmManagerDelegate?.cgmManager(self, didUpdate: self.cgmManagerStatus)
         }
         notifyStateObservers()
     }
