@@ -32,6 +32,10 @@ struct LibreLoopApplySensorView: View {
                         }
                     }
                     .padding(.top, 8)
+
+                    LibreLoopNotAbbottNotice(style: .compact)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 8)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.bottom, 16)

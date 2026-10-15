@@ -40,6 +40,7 @@ struct LibreLoopSettingsView: View {
             developerSection
             activitySection
             deleteSection
+            aboutSection
         }
         .navigationTitle("FreeStyle Libre 3")
         .navigationBarTitleDisplayMode(.inline)
@@ -451,6 +452,12 @@ struct LibreLoopSettingsView: View {
         }
     }
 
+    private var aboutSection: some View {
+        Section {
+            LibreLoopNotAbbottNotice(style: .full)
+        }
+    }
+
     private var deleteSection: some View {
         Section {
             Button(LocalizedString("Pair new sensor", comment: "Pair new sensor button")) {
@@ -769,6 +776,42 @@ final class LibreLoopSettingsViewModel: ObservableObject, LibreLoopStateObserver
             self.region = state.region.map(Self.regionName)
             self.pairedWith = manager.pairedWith
             self.minuteByMinuteForwardingEnabled = state.experimentalMinuteByMinuteForwarding
+        }
+    }
+}
+
+/// Abbott is not involved in LibreLoop. Shown during setup and in settings so
+/// the disclaimer reaches people who never read the README.
+struct LibreLoopNotAbbottNotice: View {
+    enum Style {
+        /// Short form, for the bottom of a setup screen.
+        case compact
+        /// Full form, for the CGM settings screen.
+        case full
+    }
+
+    let style: Style
+
+    var body: some View {
+        Text(text)
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.leading)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var text: String {
+        switch style {
+        case .compact:
+            return LocalizedString(
+                "LibreLoop is not an Abbott product. It is independent open-source software, not made, endorsed or supported by Abbott. Please don't contact Abbott about it.",
+                comment: "Short non-affiliation notice shown during sensor setup"
+            )
+        case .full:
+            return LocalizedString(
+                "LibreLoop is not an Abbott product. It is independent, community-developed open-source software, and is not made, affiliated with, endorsed, sponsored, reviewed or supported by Abbott Laboratories, Abbott Diabetes Care or any of their affiliates. FreeStyle Libre is a trademark of Abbott, used here only to say which sensors LibreLoop works with. Abbott does not provide support for LibreLoop, so please don't contact them about it.",
+                comment: "Full non-affiliation notice shown in the CGM settings screen"
+            )
         }
     }
 }
