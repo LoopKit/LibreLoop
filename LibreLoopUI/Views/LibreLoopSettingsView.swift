@@ -606,8 +606,14 @@ struct LibreLoopReadingRow: View {
                     .imageScale(.small)
             }
             Spacer()
-            Image(systemName: trendSymbol)
-                .foregroundStyle(.secondary)
+            if sample.source == .realtime {
+                Image(systemName: trendSymbol)
+                    .foregroundStyle(.secondary)
+            } else {
+                Image(systemName: "clock.arrow.circlepath")
+                    .foregroundStyle(.secondary)
+                    .accessibilityLabel(LocalizedString("Backfilled", comment: "Recent readings: backfilled reading marker"))
+            }
         }
         .font(.subheadline)
         .opacity(sample.isActionable ? 1.0 : 0.7)

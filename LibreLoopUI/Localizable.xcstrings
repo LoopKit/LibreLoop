@@ -67,6 +67,10 @@
       "comment" : "BLE PIN row label",
       "extractionState" : "manual"
     },
+    "Backfilled" : {
+      "comment" : "Recent readings: backfilled reading marker",
+      "extractionState" : "manual"
+    },
     "Bluetooth" : {
       "comment" : "Bluetooth address row label\n   Bluetooth connection row label",
       "extractionState" : "manual"
