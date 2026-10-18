@@ -674,8 +674,9 @@ extension LibreLoopCGMManager {
         // (historical and clinical can overlap, and they may not even agree
         // on values for the same lifeCount since they're different sensor
         // pipelines).
-        let realtimeLifeCounts = Set(recentSamples.map { $0.lifeCount })
+        let realtimeLifeCounts = Set(recentSamples.filter { $0.source == .realtime }.map { $0.lifeCount })
         var newSamples: [NewGlucoseSample] = []
+        var displaySamples: [LibreLoopGlucoseSample] = []
         var droppedRealtimeDup = 0
         var droppedBackfillDup = 0
         for sample in page.samples {
@@ -706,8 +707,20 @@ extension LibreLoopCGMManager {
                 device: device,
                 isBackfill: true
             ))
+            displaySamples.append(LibreLoopGlucoseSample(
+                date: date,
+                valueMgDL: Double(mgdl),
+                trend: .notDetermined,
+                rateOfChangeMgDLPerMinute: nil,
+                lifeCount: sample.lifeCount,
+                sensorTemperatureRaw: 0,
+                isActionable: true,
+                source: .historicalBackfill,
+                wasForwarded: true
+            ))
             backfillForwardedLifeCounts.insert(sample.lifeCount)
         }
+        recordBackfillSamples(displaySamples)
         if !newSamples.isEmpty {
             delegateQueue?.async { [weak self] in
                 guard let self else { return }
@@ -750,7 +763,7 @@ extension LibreLoopCGMManager {
             return
         }
         let serial = state.sensorSerial ?? "unknown"
-        let realtimeLifeCounts = Set(recentSamples.map { $0.lifeCount })
+        let realtimeLifeCounts = Set(recentSamples.filter { $0.source == .realtime }.map { $0.lifeCount })
 
         // Forward only the per-minute `currentGlucoseMgDL` at
         // `record.lifeCount`. Per upstream RoundWhiteDiscKit guidance:
@@ -811,6 +824,17 @@ extension LibreLoopCGMManager {
             isBackfill: true
         )
         backfillForwardedLifeCounts.insert(lifeCount)
+        recordBackfillSamples([LibreLoopGlucoseSample(
+            date: date,
+            valueMgDL: Double(mgdl),
+            trend: .notDetermined,
+            rateOfChangeMgDLPerMinute: nil,
+            lifeCount: lifeCount,
+            sensorTemperatureRaw: 0,
+            isActionable: true,
+            source: .clinicalBackfill,
+            wasForwarded: true
+        )])
         llog("forwarded clinical \(kind) sample to Loop: \(mgdl) mg/dL lifeCount=\(lifeCount) sampleDate=\(date.timeIntervalSince1970)")
         delegateQueue?.async { [weak self] in
             guard let self else { return }

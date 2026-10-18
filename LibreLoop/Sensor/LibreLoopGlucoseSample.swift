@@ -60,9 +60,7 @@ public struct LibreLoopGlucoseSample: Equatable, Sendable {
     /// reading actionable (e.g. "Warming up: 18 min remaining",
     /// "Sensor condition: invalid"). nil when the reading IS actionable.
     public let qualityIssue: String?
-    /// How this sample reached LibreLoop. Currently `recentSamples` only
-    /// contains `.realtime` entries; the field exists so backfill samples
-    /// can be surfaced in the same list later without a schema bump.
+    /// How this sample reached LibreLoop.
     public let source: Source
     /// True iff this sample was actually handed off to Loop's CGMManager
     /// delegate. Updated in place after the throttle/actionability gate

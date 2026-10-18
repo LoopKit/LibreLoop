@@ -62,10 +62,12 @@ struct LibreLoopSampleDetailView: View {
                     .monospacedDigit()
             }
 
-            Section(LocalizedString("Sensor diagnostics", comment: "Sample detail section: diagnostics")) {
-                LabeledContent(LocalizedString("Temperature (raw)", comment: "Sample detail: raw sensor temperature"), value: "0x\(String(sample.sensorTemperatureRaw, radix: 16, uppercase: true)) (\(sample.sensorTemperatureRaw))")
-                    .monospaced()
-                    .font(.footnote)
+            if sample.source == .realtime {
+                Section(LocalizedString("Sensor diagnostics", comment: "Sample detail section: diagnostics")) {
+                    LabeledContent(LocalizedString("Temperature (raw)", comment: "Sample detail: raw sensor temperature"), value: "0x\(String(sample.sensorTemperatureRaw, radix: 16, uppercase: true)) (\(sample.sensorTemperatureRaw))")
+                        .monospaced()
+                        .font(.footnote)
+                }
             }
         }
         .navigationTitle(LocalizedString("Sample detail", comment: "Sample detail screen title"))

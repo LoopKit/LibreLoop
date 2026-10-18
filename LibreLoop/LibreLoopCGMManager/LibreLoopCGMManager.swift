@@ -294,6 +294,7 @@ public final class LibreLoopCGMManager: CGMManager {
     }
 
     func recordSample(_ sample: LibreLoopGlucoseSample) {
+        recentSamples.removeAll { $0.lifeCount == sample.lifeCount && $0.source != .realtime }
         recentSamples.insert(sample, at: 0)
         if recentSamples.count > Self.recentSamplesCap {
             recentSamples.removeLast(recentSamples.count - Self.recentSamplesCap)
@@ -302,6 +303,18 @@ public final class LibreLoopCGMManager: CGMManager {
         // app launch can repopulate the Last Reading card immediately.
         var updated = state
         updated.latestSample = sample
+        updated.recentSamples = Array(recentSamples.prefix(LibreLoopCGMManagerState.recentSamplesPersistenceCap))
+        setState(updated)
+    }
+
+    /// Adds backfilled readings to Recent Readings, in lifeCount order, without
+    /// touching the Last Reading card.
+    func recordBackfillSamples(_ samples: [LibreLoopGlucoseSample]) {
+        let known = Set(recentSamples.map(\.lifeCount))
+        let added = samples.filter { !known.contains($0.lifeCount) }
+        guard !added.isEmpty else { return }
+        recentSamples = Array((recentSamples + added).sorted { $0.lifeCount > $1.lifeCount }.prefix(Self.recentSamplesCap))
+        var updated = state
         updated.recentSamples = Array(recentSamples.prefix(LibreLoopCGMManagerState.recentSamplesPersistenceCap))
         setState(updated)
     }

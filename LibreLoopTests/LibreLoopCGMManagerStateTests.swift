@@ -221,3 +221,42 @@ final class LibreLoopSensorStateEventTests: XCTestCase {
         XCTAssertEqual(restored?.sensorEndRecorded, true)
     }
 }
+
+final class LibreLoopRecentReadingsTests: XCTestCase {
+    private let activatedAt = Date(timeIntervalSince1970: 1_700_000_000)
+
+    private func sample(_ lifeCount: UInt16, _ mgdl: Double, source: LibreLoopGlucoseSample.Source = .realtime) -> LibreLoopGlucoseSample {
+        LibreLoopGlucoseSample(
+            date: activatedAt.addingTimeInterval(TimeInterval(lifeCount) * 60),
+            valueMgDL: mgdl,
+            trend: source == .realtime ? .stable : .notDetermined,
+            rateOfChangeMgDLPerMinute: nil,
+            lifeCount: lifeCount,
+            sensorTemperatureRaw: 0,
+            isActionable: true,
+            source: source
+        )
+    }
+
+    func testBackfillFillsTheGapInLifeCountOrder() {
+        let manager = LibreLoopCGMManager()
+        manager.recordSample(sample(100, 90))
+        manager.recordSample(sample(130, 92))
+
+        manager.recordBackfillSamples([sample(110, 93, source: .historicalBackfill), sample(100, 91, source: .historicalBackfill)])
+        manager.recordBackfillSamples([sample(120, 94, source: .clinicalBackfill)])
+
+        XCTAssertEqual(manager.recentSamples.map(\.lifeCount), [130, 120, 110, 100])
+        XCTAssertEqual(manager.recentSamples.map(\.source), [.realtime, .clinicalBackfill, .historicalBackfill, .realtime])
+        XCTAssertEqual(manager.latestSample?.lifeCount, 130)
+    }
+
+    func testRealtimeReplacesBackfillForTheSameMinute() {
+        let manager = LibreLoopCGMManager()
+        manager.recordBackfillSamples([sample(140, 95, source: .clinicalBackfill)])
+        manager.recordSample(sample(140, 96))
+
+        XCTAssertEqual(manager.recentSamples.map(\.lifeCount), [140])
+        XCTAssertEqual(manager.recentSamples.first?.source, .realtime)
+    }
+}
