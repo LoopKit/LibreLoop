@@ -30,6 +30,10 @@ public enum LibreLoopAppIdentities {
     }
 
     private static func install() async throws {
+        #if targetEnvironment(simulator)
+        try AppIdentities.install(json: await LibreLoopSimulator.appCredentials())
+        llog("app credentials: installed libre3sim's")
+        #else
         if let saved = try? Data(contentsOf: fileURL) {
             do {
                 try installBlob(saved)
@@ -59,6 +63,7 @@ public enum LibreLoopAppIdentities {
             }
         }
         throw lastError
+        #endif
     }
 
     private static func installBlob(_ blob: Data) throws {

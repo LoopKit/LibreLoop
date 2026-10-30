@@ -42,6 +42,7 @@
 		A2BF7E31EE7A24E1130871FE /* LibreLoop.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B556C4EB4504CA4CFCF51EA2 /* LibreLoop.framework */; };
 		AE16E0F3A62344D974DF129C /* LoopKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2509954985674E6150F6C160 /* LoopKit.framework */; };
 		A1B2C3D4E5F6A7B8C9D0E102 /* LibreLoopRuntimeTables.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E101 /* LibreLoopRuntimeTables.swift */; };
+		5A1B3C5D7E9F0A2B4C6D8E02 /* LibreLoopSimulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1B3C5D7E9F0A2B4C6D8E01 /* LibreLoopSimulator.swift */; };
 		B04E3C5ED32E80EEC213D178 /* LibreLoopPairingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 693CAA1DD7F8B8662B3ED42B /* LibreLoopPairingService.swift */; };
 		B793A348DB4300FC386AF780 /* LibreLoopCGMManagerStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E9D5D87695F004FCFDA5075 /* LibreLoopCGMManagerStateTests.swift */; };
 		B87069E2100DD9DD3B3B897D /* LibreLoopPairingProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 659E4212E046544D5827E2D1 /* LibreLoopPairingProgressView.swift */; };
@@ -127,6 +128,7 @@
 		651E3C856170F6BD369EA0DD /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; path = README.md; sourceTree = "<group>"; };
 		659E4212E046544D5827E2D1 /* LibreLoopPairingProgressView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopPairingProgressView.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6A7B8C9D0E101 /* LibreLoopRuntimeTables.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopRuntimeTables.swift; sourceTree = "<group>"; };
+		5A1B3C5D7E9F0A2B4C6D8E01 /* LibreLoopSimulator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopSimulator.swift; sourceTree = "<group>"; };
 		693CAA1DD7F8B8662B3ED42B /* LibreLoopPairingService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopPairingService.swift; sourceTree = "<group>"; };
 		6A64C620E258CF55CE0B0E11 /* LibreLoopCGMManager+Observers.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "LibreLoopCGMManager+Observers.swift"; sourceTree = "<group>"; };
 		6D0763A875B13A9543390BC5 /* LibreLoopSensorLifecycle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopSensorLifecycle.swift; sourceTree = "<group>"; };
@@ -366,6 +368,7 @@
 				D912C6E4A9CF07D06EEF98BA /* LibreLoopKeychain.swift */,
 				693CAA1DD7F8B8662B3ED42B /* LibreLoopPairingService.swift */,
 				A1B2C3D4E5F6A7B8C9D0E101 /* LibreLoopRuntimeTables.swift */,
+				5A1B3C5D7E9F0A2B4C6D8E01 /* LibreLoopSimulator.swift */,
 			);
 			name = Pairing;
 			path = Pairing;
@@ -604,6 +607,7 @@
 				93AC995063491BFA4B6D22C3 /* LibreLoopKeychain.swift in Sources */,
 				B04E3C5ED32E80EEC213D178 /* LibreLoopPairingService.swift in Sources */,
 				A1B2C3D4E5F6A7B8C9D0E102 /* LibreLoopRuntimeTables.swift in Sources */,
+				5A1B3C5D7E9F0A2B4C6D8E02 /* LibreLoopSimulator.swift in Sources */,
 				C558A41FBB49E4CFE8C0CD6B /* LibreLoopGlucoseSample.swift in Sources */,
 				70BCAB4E71383256521B6B16 /* LibreLoopSensorLifecycle.swift in Sources */,
 				AAEC520180AAB1FC572D3EFE /* LibreLoopExpiryAlerts.swift in Sources */,
