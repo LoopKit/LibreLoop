@@ -865,6 +865,7 @@ public final class LibreLoopCGMManager: CGMManager {
         eventListenerTask = nil
         // Drop the live monitor and its BLE link so no session of ours lingers
         // on the shared central to collide with a future re-add's handshake.
+        monitor?.stop()
         monitor = nil
         if scannerWasInitialized {
             scanner.stopScan()
