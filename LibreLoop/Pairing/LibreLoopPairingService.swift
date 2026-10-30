@@ -313,7 +313,11 @@ public final class LibreLoopPairingService {
         // matches what the sensor remembers; pass-through here, the sensor
         // validates server-side.
         onStage(.nfcScanning)
+        #if targetEnvironment(simulator)
+        let nfcReader = LibreLoopSimulatedNFCReader()
+        #else
         let nfcReader = Libre3NFCActivationReader()
+        #endif
         let scanResult: Libre3NFCScanResult
         let receiverID: UInt32
         do {
@@ -719,10 +723,16 @@ public final class LibreLoopPairingService {
         blePIN: Data
     ) async throws -> (FirstPairHandshakeResult, authKey: Data) {
         let phoneEph = EphemeralKeyPair()
+        #if targetEnvironment(simulator)
+        let signingKeys = try await LibreLoopSimulator.patchSigningKeys()
+        #else
+        let signingKeys = Libre3PatchSigningKey.known
+        #endif
         let flow = PairingFlow(
             transport: SensorSessionTransport(session: session),
             phoneCert: identity.certificate,
             phoneEph: phoneEph,
+            sensorCertSigningKeys: signingKeys,
             eventLogger: { message in llog(message) }
         )
         var authKey = Data()
