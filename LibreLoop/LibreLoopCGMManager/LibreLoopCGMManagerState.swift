@@ -98,6 +98,10 @@ public struct LibreLoopCGMManagerState: RawRepresentable, Equatable {
     public var reportedSensorIssue: String?
     public var sensorEndRecorded: Bool = false
 
+    /// The attention and event-log entry (`lifeCount.index`) of the sensor alert last
+    /// issued, so the same entry doesn't alert again after a relaunch.
+    public var alertedSensorEvent: String?
+
     /// Human-readable sensor model. Derived from `generation` when
     /// available (preferred), falling back to the wear-duration heuristic
     /// for state paired before generation was captured.
@@ -146,6 +150,7 @@ public struct LibreLoopCGMManagerState: RawRepresentable, Equatable {
         self.sensorEndedNormally = rawValue["sensorEndedNormally"] as? Bool ?? false
         self.reportedSensorIssue = rawValue["reportedSensorIssue"] as? String
         self.sensorEndRecorded = rawValue["sensorEndRecorded"] as? Bool ?? false
+        self.alertedSensorEvent = rawValue["alertedSensorEvent"] as? String
     }
 
     public var rawValue: RawValue {
@@ -185,6 +190,7 @@ public struct LibreLoopCGMManagerState: RawRepresentable, Equatable {
         if sensorEndRecorded {
             raw["sensorEndRecorded"] = true
         }
+        raw["alertedSensorEvent"] = alertedSensorEvent
         return raw
     }
 }
