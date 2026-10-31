@@ -392,6 +392,9 @@ public final class LibreLoopCGMManager: CGMManager {
         blank.expiryAlertsScheduledForActivatedAt = nil
         blank.reportedSensorIssue = nil
         blank.sensorEndRecorded = false
+        blank.sensorNeedsReplacement = false
+        blank.sensorEndedNormally = false
+        blank.alertedSensorEvent = nil
         setState(blank)
     }
 

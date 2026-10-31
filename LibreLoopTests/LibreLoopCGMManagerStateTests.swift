@@ -213,12 +213,45 @@ final class LibreLoopSensorStateEventTests: XCTestCase {
 
     func testReplacementRecordsTheSensorEndOnce() throws {
         let manager = manager()
-        manager.handlePatchStatus(try status(errorData: 8))
+        manager.handlePatchStatus(try status(errorData: 8, patchState: 6))
         XCTAssertEqual(manager.state.reportedSensorIssue, "terminated")
         XCTAssertTrue(manager.state.sensorEndRecorded)
         let restored = LibreLoopCGMManagerState(rawValue: manager.state.rawValue)
         XCTAssertEqual(restored?.reportedSensorIssue, "terminated")
         XCTAssertEqual(restored?.sensorEndRecorded, true)
+    }
+
+    func testAnErrorFromAnActiveSensorIsOnlyANotice() throws {
+        let manager = manager()
+        manager.handlePatchStatus(try status(errorData: 8))
+        manager.handlePatchStatus(try status(errorData: 8))
+        XCTAssertFalse(manager.state.sensorNeedsReplacement)
+        XCTAssertFalse(manager.state.sensorEndRecorded)
+        XCTAssertFalse(manager.isInoperable)
+        XCTAssertEqual(manager.state.reportedSensorIssue, "terminated")
+        XCTAssertEqual(manager.state.alertedSensorEvent, "checkSensor@0.0")
+        XCTAssertEqual(LibreLoopCGMManagerState(rawValue: manager.state.rawValue)?.alertedSensorEvent, "checkSensor@0.0")
+
+        manager.handlePatchStatus(try status())
+        XCTAssertNil(manager.state.alertedSensorEvent)
+        XCTAssertNil(manager.state.reportedSensorIssue)
+    }
+
+    func testTheSameErrorEndsTheSensorOnceItLeavesActive() throws {
+        let manager = manager()
+        manager.handlePatchStatus(try status(errorData: 8))
+        manager.handlePatchStatus(try status(errorData: 8, patchState: 6))
+        XCTAssertTrue(manager.state.sensorNeedsReplacement)
+        XCTAssertTrue(manager.state.sensorEndRecorded)
+    }
+
+    func testDiscardingTheSensorClearsItsReplacement() throws {
+        let manager = manager()
+        manager.handlePatchStatus(try status(errorData: 8, patchState: 6))
+        manager.discardSensor()
+        XCTAssertFalse(manager.state.sensorNeedsReplacement)
+        XCTAssertFalse(manager.state.sensorEndedNormally)
+        XCTAssertNil(manager.state.alertedSensorEvent)
     }
 }
 

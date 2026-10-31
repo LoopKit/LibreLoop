@@ -130,6 +130,7 @@ extension LibreLoopCGMManager {
         newState.sensorEndedNormally = false
         newState.reportedSensorIssue = nil
         newState.sensorEndRecorded = false
+        newState.alertedSensorEvent = nil
         setState(newState)
 
         emitSensorStartEvent(for: newState)
@@ -394,7 +395,12 @@ extension LibreLoopCGMManager {
         // mapping lumps code 7 in with code 8 (terminated) as `.replaceSensor`;
         // downgrade it here to a soft, retractable `.checkSensor` notice so it
         // never marks the sensor inoperable or stops Loop.
-        let attention: Libre3SensorAttention = status.sensorError == .transmissionError
+        //
+        // Bytes 0-6 of patch status are the sensor's latest event-log entry, and repeat
+        // until it logs another, so an error code there while the sensor is still active
+        // is history, not its live state. Only a patch state leaving active ends it.
+        let erroredWhileActive = status.isPatchStateActive && status.hasErrorData
+        let attention: Libre3SensorAttention = status.sensorError == .transmissionError || erroredWhileActive
             ? .checkSensor
             : status.sensorAttention
         guard attention != lastSensorAttention else { return }
@@ -426,6 +432,7 @@ extension LibreLoopCGMManager {
         let identifier = Alert.Identifier(managerIdentifier: pluginIdentifier,
                                           alertIdentifier: Self.sensorAttentionAlertID)
         let delegate = cgmManagerDelegate
+        let eventKey = "\(attention)@\(status.lifeCount).\(status.index)"
         let content: (title: String, body: String, level: Alert.InterruptionLevel)?
         switch attention {
         case .replaceSensor:
@@ -436,21 +443,38 @@ extension LibreLoopCGMManager {
             content = (LocalizedString("Sensor ended", comment: "Sensor ended alert title"),
                        LocalizedString("Your FreeStyle Libre 3 sensor session has ended. Replace it to resume CGM readings.", comment: "Sensor ended alert body"),
                        .timeSensitive)
-        case .checkSensor where status.sensorError == .transmissionError:
+        case .checkSensor where status.sensorError == .transmissionError && state.alertedSensorEvent != eventKey:
             // Transient comms fault (code 7). Soft, retractable notice that does
             // not interrupt or stop Loop; readings resume on their own. Retracted
             // as soon as the sensor reports a healthy status again.
             content = (LocalizedString("Check sensor", comment: "Sensor check alert title"),
                        LocalizedString("Loop is having trouble communicating with your FreeStyle Libre 3 sensor. CGM readings may pause briefly and should resume automatically. No action is needed unless this keeps happening.", comment: "Sensor check alert body (transient transmission error)"),
                        .active)
+        case .checkSensor where erroredWhileActive && state.alertedSensorEvent != eventKey:
+            content = (LocalizedString("Check sensor", comment: "Sensor check alert title"),
+                       LocalizedString("Your FreeStyle Libre 3 sensor reported a problem but is still sending readings. Loop will tell you if it stops working.", comment: "Sensor check alert body (error code from an active sensor)"),
+                       .active)
+        case .checkSensor where state.alertedSensorEvent == eventKey:
+            // Already shown for this event entry, before a relaunch or reconnect.
+            return
         case .checkSensor, .none, .unknown:
             // Other transient/cleared states — don't alert; retract any standing one.
             content = nil
         }
 
         guard let content else {
+            if state.alertedSensorEvent != nil {
+                var updated = state
+                updated.alertedSensorEvent = nil
+                setState(updated)
+            }
             Task { await delegate?.retractAlert(identifier: identifier) }
             return
+        }
+        if state.alertedSensorEvent != eventKey {
+            var updated = state
+            updated.alertedSensorEvent = eventKey
+            setState(updated)
         }
         let alert = Alert(
             identifier: identifier,
