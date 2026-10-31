@@ -180,6 +180,10 @@ extension LibreLoopCGMManager {
             let delegate = cgmManagerDelegate
             Task { await delegate?.retractAlert(identifier: id) }
         }
+        if let previous = self.monitor, previous !== monitor {
+            llog("adopt: stopping previous monitor")
+            previous.stop()
+        }
         self.monitor = monitor
         self.connectedAt = Date()
         // Fresh session: hasn't streamed a reading yet. Drives the
@@ -192,7 +196,13 @@ extension LibreLoopCGMManager {
         self.lastHistoricalPageAt = nil
         monitor.setHandlers(
             onReading: { [weak self] sample in self?.ingest(sample) },
-            onDisconnect: { [weak self] in self?.handleMonitorDisconnect() },
+            onDisconnect: { [weak self, weak monitor] in
+                guard let self, let monitor, self.monitor === monitor else {
+                    llog("disconnect from a replaced monitor; ignoring")
+                    return
+                }
+                self.handleMonitorDisconnect()
+            },
             onStatus: { [weak self] text in self?.updateStatusDetail(text) },
             onHistoricalPage: { [weak self] page in self?.handleHistoricalPage(page) },
             onClinicalRecord: { [weak self] record in self?.handleClinicalRecord(record) },

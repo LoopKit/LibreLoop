@@ -427,12 +427,24 @@ public final class LibreLoopSensorMonitor: @unchecked Sendable {
         )
     }
 
+    /// Also drops the handlers: a stopped monitor's stream ends on cancellation,
+    /// and it must not report that as a disconnect of whatever replaced it.
     public func stop() {
         lock.lock()
         let t = task
         task = nil
         let wd = silenceWatchdog
         silenceWatchdog = nil
+        readingHandler = nil
+        disconnectHandler = nil
+        statusHandler = nil
+        historicalPageHandler = nil
+        clinicalRecordHandler = nil
+        embeddedHistoricalHandler = nil
+        patchStatusHandler = nil
+        lifeCountHandler = nil
+        readyHandler = nil
+        rawReadHandler = nil
         lock.unlock()
         t?.cancel()
         wd?.cancel()
