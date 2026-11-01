@@ -1,6 +1,6 @@
 import SwiftUI
 import LibreLoop
-import LoopAlgorithm
+import LoopKit
 import LoopKitUI
 
 /// All the diagnostic data we have on one realtime glucose sample,

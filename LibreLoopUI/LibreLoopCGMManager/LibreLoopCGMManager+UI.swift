@@ -1,7 +1,6 @@
 import Foundation
 import SwiftUI
 import HealthKit
-import LoopAlgorithm
 import LoopKit
 import LoopKitUI
 import LibreLoop
