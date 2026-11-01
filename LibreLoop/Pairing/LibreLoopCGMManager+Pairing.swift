@@ -1,7 +1,6 @@
 import Foundation
 import HealthKit
 import RoundWhiteDiscKit
-import LoopAlgorithm
 import LoopKit
 import os.log
 

@@ -1,6 +1,6 @@
 import SwiftUI
 import LibreLoop
-import LoopAlgorithm
+import LoopKit
 import LoopKitUI
 
 struct LibreLoopSettingsView: View {
