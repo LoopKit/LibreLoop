@@ -46,18 +46,14 @@ extension LibreLoopCGMManager {
         return activatedAt
     }
 
-    /// Captures the delegate strongly so the retraction still lands if this
-    /// manager is released immediately afterwards.
-    func retractAllAlerts() {
+    func retractAllAlerts() async {
         let delegate = cgmManagerDelegate
         let identifiers = Self.allAlertIdentifiers.map {
             Alert.Identifier(managerIdentifier: pluginIdentifier, alertIdentifier: $0)
         }
         llog("alerts: retracting \(identifiers.count) identifier(s)")
-        Task {
-            for identifier in identifiers {
-                await delegate?.retractAlert(identifier: identifier)
-            }
+        for identifier in identifiers {
+            await delegate?.retractAlert(identifier: identifier)
         }
     }
 

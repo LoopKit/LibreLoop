@@ -359,7 +359,7 @@ public final class LibreLoopCGMManager: CGMManager {
         recentSamples = []
         hasIssuedReScanAlert = false
         lastSensorAttention = nil
-        retractAllAlerts()
+        Task { await retractAllAlerts() }
         // Emit .sensorEnd before we blank state so the event's
         // deviceIdentifier still resolves to the session that's ending.
         // Matches the .sensorStart we emitted at pairing time so Loop's
@@ -848,7 +848,7 @@ public final class LibreLoopCGMManager: CGMManager {
         }
     }
 
-    public func delete(completion: @escaping () -> Void) {
+    public func delete() async {
         // The central is shared and outlives this manager, so a deleted manager
         // must stop driving it — otherwise its event listener + reconnect loop
         // keep issuing connect/scan on the shared central and fight whatever
@@ -876,10 +876,8 @@ public final class LibreLoopCGMManager: CGMManager {
                 scanner.cancelConnection(peripheral)
             }
         }
-        // Retract while the delegate reference is still good: notifying it
-        // releases this manager.
-        retractAllAlerts()
-        notifyDelegateOfDeletion(completion: completion)
+        await retractAllAlerts()
+        await cgmManagerDelegate?.cgmManagerWantsDeletion(self)
     }
 }
 

@@ -166,15 +166,12 @@ final class LibreLoopUICoordinator: UINavigationController, CGMManagerOnboarding
                 self.completionDelegate?.completionNotifyingDidComplete(self)
             },
             replaceSensor: { [weak self] in self?.startReplacementPairing() },
-            // `delete` runs the manager's teardown and notifies the delegate
-            // itself; `notifyDelegateOfDeletion` alone skips the teardown.
             deleteCGM: { [weak self] in
-                self?.cgmManager?.delete {
-                    DispatchQueue.main.async {
-                        guard let self = self else { return }
-                        self.completionDelegate?.completionNotifyingDidComplete(self)
-                        self.dismiss(animated: true)
-                    }
+                Task {
+                    await self?.cgmManager?.delete()
+                    guard let self = self else { return }
+                    self.completionDelegate?.completionNotifyingDidComplete(self)
+                    self.dismiss(animated: true)
                 }
             }
         )
