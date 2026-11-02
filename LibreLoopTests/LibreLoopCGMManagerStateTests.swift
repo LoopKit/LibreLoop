@@ -138,17 +138,16 @@ final class LibreLoopAlertRetractionTests: XCTestCase {
         })
     }
 
-    func testDeleteRetractsEveryAlertAndNotifiesDelegate() {
+    func testDeleteRetractsEveryAlertBeforeNotifyingDelegate() async {
         let retractions = expectRetractions()
         let deletion = expectation(description: "delegate notified of deletion")
-        let completed = expectation(description: "delete completion called")
         let delegate = RetractionRecordingDelegate(retractionExpectation: retractions,
                                                    deletionExpectation: deletion)
         let manager = makeManager(delegate: delegate)
 
-        manager.delete { completed.fulfill() }
+        await manager.delete()
 
-        wait(for: [retractions, deletion, completed], timeout: 5)
+        await fulfillment(of: [retractions, deletion], timeout: 0, enforceOrder: true)
         assertRetractedEverything(delegate)
     }
 
