@@ -93,11 +93,17 @@ final class LibreLoopSimulatedNFCReader {
             receiverID: receiverID
         )
         let raw = try await LibreLoopSimulator.nfc(code: commandCode.rawValue, parameters: parameters)
+        let activation: Libre3NFCActivationResponse
+        do {
+            activation = try Libre3NFCActivationResponse(raw: raw)
+        } catch Libre3NFCError.invalidActivationResponse(let raw) {
+            throw Libre3NFCError.invalidActivationResponseForPatch(commandCode: commandCode, patchInfo: patchInfo, raw: raw)
+        }
         return Libre3NFCScanResult(
             patchInfo: patchInfo,
             commandCode: commandCode,
             commandParameters: parameters,
-            activationResponse: try Libre3NFCActivationResponse(raw: raw)
+            activationResponse: activation
         )
     }
 }
