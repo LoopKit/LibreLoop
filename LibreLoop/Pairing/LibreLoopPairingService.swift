@@ -77,6 +77,8 @@ public final class LibreLoopPairingService {
 
     public enum Failure: Error, CustomStringConvertible {
         case nfcNoActivationResponse
+        case sensorEnded
+        case sensorInsertionFailed
         case bleNoSensorDiscovered
         case entropy(OSStatus)
         case underlying(String)
@@ -85,6 +87,10 @@ public final class LibreLoopPairingService {
             switch self {
             case .nfcNoActivationResponse:
                 return "No activation response from the sensor. Try scanning again."
+            case .sensorEnded:
+                return "This sensor has ended and can't be used again. Apply a new sensor."
+            case .sensorInsertionFailed:
+                return "This sensor wasn't inserted correctly and can't be used. Apply a new sensor."
             case .bleNoSensorDiscovered:
                 return "Couldn't find the sensor over Bluetooth. Make sure the sensor is on your arm and Bluetooth is on."
             case .entropy(let status):
@@ -96,6 +102,19 @@ public final class LibreLoopPairingService {
     }
 
     public init() {}
+
+    /// A sensor that has ended rejects the switch-receiver command; its patch
+    /// info, read just before, says why.
+    static func nfcFailure(_ error: Error) -> Failure {
+        if case Libre3NFCError.invalidActivationResponseForPatch(_, let patchInfo, _) = error {
+            switch patchInfo.stateByte {
+            case 0x03: return .sensorInsertionFailed
+            case 0x05...0x08: return .sensorEnded
+            default: break
+            }
+        }
+        return .underlying("NFC scan failed: \(error.localizedDescription)")
+    }
 
     /// Re-establish a BLE session against an already-paired sensor.
     ///
@@ -343,7 +362,7 @@ public final class LibreLoopPairingService {
                 scanResult = try await nfcReader.scan(mode: .switchReceiver(receiverID: id, timeSeconds: nil))
             }
         } catch {
-            throw Failure.underlying("NFC scan failed: \(error.localizedDescription)")
+            throw Self.nfcFailure(error)
         }
         guard let activation = scanResult.activationResponse else {
             throw Failure.nfcNoActivationResponse

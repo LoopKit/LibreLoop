@@ -292,3 +292,42 @@ final class LibreLoopRecentReadingsTests: XCTestCase {
         XCTAssertEqual(manager.recentSamples.first?.source, .realtime)
     }
 }
+
+final class LibreLoopNFCFailureTests: XCTestCase {
+    // A Libre 3 Plus scanned after its wear: patch state 06, and a8 answered with a5 01 b0.
+    private static let terminatedPatchInfo = "00a50001000200010060541e020401040c0630545041304d514836fe98"
+
+    private func failure(state: UInt8) throws -> LibreLoopPairingService.Failure {
+        var bytes = [UInt8](try XCTUnwrap(Data(testHex: Self.terminatedPatchInfo)))
+        bytes[17] = state
+        let patchInfo = try Libre3NFCPatchInfo(raw: Data(bytes))
+        let error = Libre3NFCError.invalidActivationResponseForPatch(commandCode: .switchReceiver, patchInfo: patchInfo, raw: Data([0xa5, 0x01, 0xb0]))
+        return LibreLoopPairingService.nfcFailure(error)
+    }
+
+    func testAnEndedSensorSaysSo() throws {
+        for state: UInt8 in [0x05, 0x06, 0x07, 0x08] {
+            guard case .sensorEnded = try failure(state: state) else { return XCTFail("state \(state)") }
+        }
+        guard case .sensorInsertionFailed = try failure(state: 0x03) else { return XCTFail("state 3") }
+    }
+
+    func testAnyOtherRejectionKeepsTheRawError() throws {
+        guard case .underlying(let message) = try failure(state: 0x04) else { return XCTFail() }
+        XCTAssertTrue(message.hasPrefix("NFC scan failed: invalidActivationResponse(command=0xa8 raw=a501b0"), message)
+    }
+}
+
+private extension Data {
+    init?(testHex hex: String) {
+        var bytes = [UInt8]()
+        var index = hex.startIndex
+        while index < hex.endIndex {
+            let next = hex.index(index, offsetBy: 2)
+            guard let byte = UInt8(hex[index..<next], radix: 16) else { return nil }
+            bytes.append(byte)
+            index = next
+        }
+        self.init(bytes)
+    }
+}
