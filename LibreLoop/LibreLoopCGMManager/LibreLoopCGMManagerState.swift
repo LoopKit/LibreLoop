@@ -102,6 +102,16 @@ public struct LibreLoopCGMManagerState: RawRepresentable, Equatable {
     /// issued, so the same entry doesn't alert again after a relaunch.
     public var alertedSensorEvent: String?
 
+    /// A sensor started early (activated over NFC while this one keeps
+    /// working), waiting to be switched to. Not the current sensor: none of
+    /// the fields above describe it.
+    public var nextSensor: LibreLoopNextSensor?
+
+    /// The previous sensor's last reading, saved when it is discarded. The
+    /// next sensor's backfill starts after it, so its warm-up and overlap
+    /// readings never land on top of the previous sensor's.
+    public var previousSensorLastReadingAt: Date?
+
     /// Human-readable sensor model. Derived from `generation` when
     /// available (preferred), falling back to the wear-duration heuristic
     /// for state paired before generation was captured.
@@ -151,6 +161,8 @@ public struct LibreLoopCGMManagerState: RawRepresentable, Equatable {
         self.reportedSensorIssue = rawValue["reportedSensorIssue"] as? String
         self.sensorEndRecorded = rawValue["sensorEndRecorded"] as? Bool ?? false
         self.alertedSensorEvent = rawValue["alertedSensorEvent"] as? String
+        self.nextSensor = (rawValue["nextSensor"] as? LibreLoopNextSensor.RawValue).flatMap(LibreLoopNextSensor.init(rawValue:))
+        self.previousSensorLastReadingAt = rawValue["previousSensorLastReadingAt"] as? Date
     }
 
     public var rawValue: RawValue {
@@ -191,6 +203,8 @@ public struct LibreLoopCGMManagerState: RawRepresentable, Equatable {
             raw["sensorEndRecorded"] = true
         }
         raw["alertedSensorEvent"] = alertedSensorEvent
+        raw["nextSensor"] = nextSensor?.rawValue
+        raw["previousSensorLastReadingAt"] = previousSensorLastReadingAt
         return raw
     }
 }

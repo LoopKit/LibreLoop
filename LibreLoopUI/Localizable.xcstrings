@@ -1,6 +1,134 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Apply the new sensor first. Scanning it starts its warm-up and its wear time now, even if you switch to it later. Your current sensor keeps working." : {
+      "comment" : "Start next sensor early: confirmation message",
+      "extractionState" : "manual"
+    },
+    "Apply your next sensor, then scan it here. This starts its warm-up and its wear time now, and your current sensor keeps working. When you're ready, switch to the new sensor with one more scan." : {
+      "comment" : "Start next sensor early explainer",
+      "extractionState" : "manual"
+    },
+    "Couldn't start the sensor" : {
+      "comment" : "Start next sensor early: failure alert title",
+      "extractionState" : "manual"
+    },
+    "Forget" : {
+      "comment" : "Next sensor: forget button",
+      "extractionState" : "manual"
+    },
+    "Forget the next sensor?" : {
+      "comment" : "Forget next sensor: confirmation title",
+      "extractionState" : "manual"
+    },
+    "LibreLoop stops keeping track of it. This doesn't stop the sensor: it keeps running and its wear time keeps counting. To use it later, choose Pair new sensor and scan it." : {
+      "comment" : "Forget next sensor: confirmation message",
+      "extractionState" : "manual"
+    },
+    "Next Sensor" : {
+      "comment" : "Settings section: the sensor started early",
+      "extractionState" : "manual"
+    },
+    "Next sensor started" : {
+      "comment" : "Start next sensor early: success alert title",
+      "extractionState" : "manual"
+    },
+    "Pair This Sensor" : {
+      "comment" : "Pairing: continue with a sensor other than the next sensor",
+      "extractionState" : "manual"
+    },
+    "Ready" : {
+      "comment" : "Next sensor: warm-up finished",
+      "extractionState" : "manual"
+    },
+    "Remaining" : {
+      "comment" : "Next sensor: remaining wear time row label",
+      "extractionState" : "manual"
+    },
+    "Scan New Sensor" : {
+      "comment" : "Start next sensor early: confirm and scan",
+      "extractionState" : "manual"
+    },
+    "Sensor %1$@ is warming up and will be ready at about %2$@. Your current sensor keeps working until you switch." : {
+      "comment" : "Start next sensor early: success alert message (1: serial, 2: ready time)",
+      "extractionState" : "manual"
+    },
+    "Sensor not started" : {
+      "comment" : "Start next sensor early: nothing was sent to the scanned sensor (alert title)",
+      "extractionState" : "manual"
+    },
+    "Start next sensor early" : {
+      "comment" : "Start next sensor early button",
+      "extractionState" : "manual"
+    },
+    "Start the next sensor now?" : {
+      "comment" : "Start next sensor early: confirmation title",
+      "extractionState" : "manual"
+    },
+    "Started %@. Your current sensor keeps working until you switch." : {
+      "comment" : "Next sensor section footer (1: activation date and time)",
+      "extractionState" : "manual"
+    },
+    "Status" : {
+      "comment" : "Next sensor: warm-up status row label",
+      "extractionState" : "manual"
+    },
+    "Switch" : {
+      "comment" : "Switch to next sensor: confirm",
+      "extractionState" : "manual"
+    },
+    "Switch to next sensor" : {
+      "comment" : "Next sensor: switch button",
+      "extractionState" : "manual"
+    },
+    "Switch to Next Sensor" : {
+      "comment" : "Prominent action to switch to the sensor started early when the current one needs replacement",
+      "extractionState" : "manual"
+    },
+    "Switch to the next sensor?" : {
+      "comment" : "Switch to next sensor: confirmation title",
+      "extractionState" : "manual"
+    },
+    "This is sensor %1$@, not the next sensor you started early (%2$@). Pair this sensor instead? LibreLoop then forgets the sensor you started early." : {
+      "comment" : "Pairing: the scanned sensor isn't the next sensor (1: scanned serial, 2: next sensor's serial)",
+      "extractionState" : "manual"
+    },
+    "This is the sensor in use. Scan the new sensor instead." : {
+      "comment" : "Start next sensor early: the scanned sensor is the current one",
+      "extractionState" : "manual"
+    },
+    "This sensor has already been started early. Switch to it under Next Sensor." : {
+      "comment" : "Start next sensor early: the scanned sensor is the next sensor already",
+      "extractionState" : "manual"
+    },
+    "This sensor has ended and can't be used again." : {
+      "comment" : "Start next sensor early: the scanned sensor has ended",
+      "extractionState" : "manual"
+    },
+    "This sensor is already active. To use it, choose Pair new sensor." : {
+      "comment" : "Start next sensor early: the scanned sensor was activated before",
+      "extractionState" : "manual"
+    },
+    "This sensor wasn't inserted correctly and can't be used." : {
+      "comment" : "Start next sensor early: the scanned sensor failed insertion",
+      "extractionState" : "manual"
+    },
+    "This stops monitoring the current sensor and pairs the next one. Hold your phone to the next sensor when asked." : {
+      "comment" : "Switch to next sensor: confirmation message",
+      "extractionState" : "manual"
+    },
+    "Warming up · ready ≈ %@" : {
+      "comment" : "Next sensor: still warming up (1: ready time)",
+      "extractionState" : "manual"
+    },
+    "Your next sensor is ready." : {
+      "comment" : "Replace prompt when a sensor started early has warmed up",
+      "extractionState" : "manual"
+    },
+    "Your next sensor is warming up and will be ready at about %@." : {
+      "comment" : "Replace prompt when a sensor started early is still warming up (1: ready time)",
+      "extractionState" : "manual"
+    },
     "—" : {
       "comment" : "A placeholder string.",
       "isCommentAutoGenerated" : true

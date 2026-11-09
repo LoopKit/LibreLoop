@@ -266,7 +266,7 @@ public final class LibreLoopCGMManager: CGMManager {
     /// Anything left standing in Loop's AlertStore replays on every app launch,
     /// so this must list every alert we can issue.
     static var allAlertIdentifiers: [Alert.AlertIdentifier] {
-        LibreLoopExpiryAlerts.allIdentifiers + [sensorAttentionAlertID, needsReScanAlertID]
+        LibreLoopExpiryAlerts.allIdentifiers + [sensorAttentionAlertID, needsReScanAlertID, nextSensorReadyAlertID]
     }
     /// Cap on the exponential reconnect backoff (seconds) so a persistently
     /// failing/marginal link doesn't hammer the radio and drain the battery.
@@ -364,7 +364,8 @@ public final class LibreLoopCGMManager: CGMManager {
         recentSamples = []
         hasIssuedReScanAlert = false
         lastSensorAttention = nil
-        Task { await retractAllAlerts() }
+        // The next sensor outlives this one, and so does its ready alert.
+        Task { await retractAllAlerts(except: [Self.nextSensorReadyAlertID]) }
         // Emit .sensorEnd before we blank state so the event's
         // deviceIdentifier still resolves to the session that's ending.
         // Matches the .sensorStart we emitted at pairing time so Loop's
@@ -382,6 +383,8 @@ public final class LibreLoopCGMManager: CGMManager {
             }
         }
         var blank = state
+        // The next sensor's backfill must not reach back over this one's readings.
+        blank.previousSensorLastReadingAt = state.latestReadingTimestamp ?? state.previousSensorLastReadingAt
         blank.receiverID = nil
         blank.sensorSerial = nil
         blank.bleAddress = nil

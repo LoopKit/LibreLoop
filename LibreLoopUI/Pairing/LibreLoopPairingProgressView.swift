@@ -38,6 +38,12 @@ struct LibreLoopPairingProgressView: View {
                 .scaledToFit()
                 .frame(height: 88)
                 .foregroundStyle(.red)
+        } else if viewModel.isConfirmingSensor {
+            Image(systemName: "questionmark.circle.fill")
+                .resizable()
+                .scaledToFit()
+                .frame(height: 88)
+                .foregroundStyle(.orange)
         } else {
             ProgressView()
                 .controlSize(.large)
@@ -54,6 +60,23 @@ struct LibreLoopPairingProgressView: View {
                     .padding(.vertical, 14)
             }
             .buttonStyle(.borderedProminent)
+        } else if viewModel.isConfirmingSensor {
+            VStack(spacing: 12) {
+                Button {
+                    viewModel.resolveSensorConfirmation(continuePairing: true)
+                } label: {
+                    Text(LocalizedString("Pair This Sensor", comment: "Pairing: continue with a sensor other than the next sensor"))
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                }
+                .buttonStyle(.borderedProminent)
+                Button(LocalizedString("Cancel", comment: "Cancel button")) {
+                    viewModel.resolveSensorConfirmation(continuePairing: false)
+                    onCancel()
+                }
+                .font(.subheadline)
+            }
         } else if viewModel.didFail {
             VStack(spacing: 12) {
                 Button(action: onRetry) {

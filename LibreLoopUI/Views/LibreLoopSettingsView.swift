@@ -10,6 +10,7 @@ struct LibreLoopSettingsView: View {
     @Environment(\.appName) private var appName
     let didFinish: () -> Void
     let replaceSensor: () -> Void
+    let switchToNextSensor: () -> Void
     let deleteCGM: () -> Void
 
     @State private var confirmingDelete = false
@@ -19,6 +20,9 @@ struct LibreLoopSettingsView: View {
     @State private var activityFilter: ActivityFilter = .all
     @State private var showingAllActivity = false
     @State private var copyToast: String?
+    @State var confirmingStartNextSensor = false
+    @State var confirmingSwitchToNextSensor = false
+    @State var confirmingForgetNextSensor = false
 
     enum ActivityFilter: String, CaseIterable, Identifiable {
         case all = "All"
@@ -33,12 +37,14 @@ struct LibreLoopSettingsView: View {
             sensorImageHeader
             sensorSection
             replaceSensorPromptSection
+            nextSensorSection
             lastReadingSection
             recentReadingsSection
             debugInfoSection
             forwardingSection
             developerSection
             activitySection
+            startNextSensorSection
             deleteSection
             aboutSection
         }
@@ -61,6 +67,13 @@ struct LibreLoopSettingsView: View {
         } message: {
             Text(LocalizedString("This stops monitoring the current sensor and starts pairing for a new one. The CGM stays configured with Loop.", comment: "Replace sensor confirmation message"))
         }
+        .modifier(LibreLoopNextSensorDialogs(
+            viewModel: viewModel,
+            confirmingStart: $confirmingStartNextSensor,
+            confirmingSwitch: $confirmingSwitchToNextSensor,
+            confirmingForget: $confirmingForgetNextSensor,
+            onSwitch: switchToNextSensor
+        ))
         // Sheet must be attached at the List level. When it's attached inside
         // a Section, the List rebuilds its rows on the state change and
         // dismisses the sheet immediately.
@@ -220,14 +233,24 @@ struct LibreLoopSettingsView: View {
     /// current sensor is done — expired or failed. The same action also lives in
     /// the management section at the bottom for a deliberate early replace, but
     /// when the sensor needs replacing the user shouldn't have to hunt for it.
+    /// With a sensor started early it switches to that one.
     @ViewBuilder
     private var replaceSensorPromptSection: some View {
         if viewModel.lifecycle == .expired || viewModel.lifecycle == .failed {
             Section {
+                if let next = viewModel.nextSensor {
+                    nextSensorReplacePrompt(next)
+                }
                 Button {
-                    confirmingReplace = true
+                    if viewModel.nextSensor != nil {
+                        confirmingSwitchToNextSensor = true
+                    } else {
+                        confirmingReplace = true
+                    }
                 } label: {
-                    Text(LocalizedString("Pair New Sensor", comment: "Prominent action to pair a new sensor when the current one needs replacement"))
+                    Text(viewModel.nextSensor != nil
+                         ? LocalizedString("Switch to Next Sensor", comment: "Prominent action to switch to the sensor started early when the current one needs replacement")
+                         : LocalizedString("Pair New Sensor", comment: "Prominent action to pair a new sensor when the current one needs replacement"))
                         .fontWeight(.semibold)
                         .frame(maxWidth: .infinity)
                 }
@@ -673,7 +696,7 @@ struct MinuteByMinuteWarningSheet: View {
 }
 
 final class LibreLoopSettingsViewModel: ObservableObject, LibreLoopStateObserver {
-    private let cgmManager: LibreLoopCGMManager
+    let cgmManager: LibreLoopCGMManager
 
     @Published private(set) var lifecycle: LibreLoopSensorLifecycle
     @Published private(set) var connectionStatus: LibreLoopCGMManager.ConnectionStatus
@@ -694,6 +717,10 @@ final class LibreLoopSettingsViewModel: ObservableObject, LibreLoopStateObserver
     @Published private(set) var region: String?
     @Published private(set) var pairedWith: String?
     @Published private(set) var minuteByMinuteForwardingEnabled: Bool
+    @Published private(set) var nextSensor: LibreLoopNextSensor?
+    @Published private(set) var canStartNextSensorEarly: Bool
+    @Published var isStartingNextSensor = false
+    @Published var nextSensorMessage: LibreLoopNextSensorMessage?
 
     init(cgmManager: LibreLoopCGMManager) {
         self.cgmManager = cgmManager
@@ -716,6 +743,8 @@ final class LibreLoopSettingsViewModel: ObservableObject, LibreLoopStateObserver
         self.region = cgmManager.state.region.map(Self.regionName)
         self.pairedWith = cgmManager.pairedWith
         self.minuteByMinuteForwardingEnabled = cgmManager.state.experimentalMinuteByMinuteForwarding
+        self.nextSensor = cgmManager.nextSensor
+        self.canStartNextSensorEarly = cgmManager.canStartNextSensorEarly
     }
 
     /// Region codes as DiaBLE names them, with the raw code kept for reports.
@@ -782,6 +811,8 @@ final class LibreLoopSettingsViewModel: ObservableObject, LibreLoopStateObserver
             self.region = state.region.map(Self.regionName)
             self.pairedWith = manager.pairedWith
             self.minuteByMinuteForwardingEnabled = state.experimentalMinuteByMinuteForwarding
+            self.nextSensor = state.nextSensor
+            self.canStartNextSensorEarly = manager.canStartNextSensorEarly
         }
     }
 }
