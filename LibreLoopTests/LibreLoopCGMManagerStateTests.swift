@@ -119,7 +119,6 @@ private nonisolated final class RetractionRecordingDelegate: CGMManagerDelegate 
 final class LibreLoopAlertRetractionTests: XCTestCase {
     private func makeManager(delegate: CGMManagerDelegate) -> LibreLoopCGMManager {
         let manager = LibreLoopCGMManager()
-        manager.delegateQueue = DispatchQueue(label: "LibreLoopAlertRetractionTests")
         manager.cgmManagerDelegate = delegate
         return manager
     }

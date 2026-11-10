@@ -32,12 +32,11 @@ extension LibreLoopCGMManager {
             sensorActivatedAt: activatedAt,
             lifetime: sensorLifetime
         )
-        let delegate = cgmManagerDelegate
         if alerts.isEmpty {
             llog("expiry alerts: all trigger times in the past for activatedAt=\(activatedAt); marking scheduled")
         } else {
             llog("expiry alerts: scheduling \(alerts.count) alert(s) for activatedAt=\(activatedAt)")
-            Task {
+            cgmDelegate.notify { delegate in
                 for alert in alerts {
                     await delegate?.issueAlert(alert)
                 }
@@ -47,14 +46,16 @@ extension LibreLoopCGMManager {
     }
 
     func retractAllAlerts() async {
-        let delegate = cgmManagerDelegate
         let identifiers = Self.allAlertIdentifiers.map {
             Alert.Identifier(managerIdentifier: pluginIdentifier, alertIdentifier: $0)
         }
         llog("alerts: retracting \(identifiers.count) identifier(s)")
-        for identifier in identifiers {
-            await delegate?.retractAlert(identifier: identifier)
-        }
+        // After any alert still on its way, so none of them outlives the retraction.
+        await cgmDelegate.notify { delegate in
+            for identifier in identifiers {
+                await delegate?.retractAlert(identifier: identifier)
+            }
+        }.value
     }
 
     /// Saves the NFC half of pairing the instant it completes successfully,
@@ -156,9 +157,9 @@ extension LibreLoopCGMManager {
             warmupPeriod: warmup
         )
         llog("emitting CgmEvent .sensorStart deviceIdentifier=\(serial) activatedAt=\(activatedAt)")
-        delegateQueue?.async { [weak self] in
+        cgmDelegate.notify { [weak self] delegate in
             guard let self else { return }
-            self.cgmManagerDelegate?.cgmManager(self, hasNew: [event])
+            await delegate?.cgmManager(self, hasNew: [event])
         }
     }
 
@@ -173,8 +174,9 @@ extension LibreLoopCGMManager {
         if hasIssuedReScanAlert {
             hasIssuedReScanAlert = false
             let id = Alert.Identifier(managerIdentifier: pluginIdentifier, alertIdentifier: Self.needsReScanAlertID)
-            let delegate = cgmManagerDelegate
-            Task { await delegate?.retractAlert(identifier: id) }
+            cgmDelegate.notify { delegate in
+                await delegate?.retractAlert(identifier: id)
+            }
         }
         if let previous = self.monitor, previous !== monitor {
             llog("adopt: stopping previous monitor")
@@ -372,9 +374,9 @@ extension LibreLoopCGMManager {
 
         guard !events.isEmpty else { return }
         llog("emitting CgmEvents \(events.map(\.type.rawValue)) deviceIdentifier=\(serial)")
-        delegateQueue?.async { [weak self] in
+        cgmDelegate.notify { [weak self] delegate in
             guard let self else { return }
-            self.cgmManagerDelegate?.cgmManager(self, hasNew: events)
+            await delegate?.cgmManager(self, hasNew: events)
         }
     }
 
@@ -426,7 +428,6 @@ extension LibreLoopCGMManager {
 
         let identifier = Alert.Identifier(managerIdentifier: pluginIdentifier,
                                           alertIdentifier: Self.sensorAttentionAlertID)
-        let delegate = cgmManagerDelegate
         let eventKey = "\(attention)@\(status.lifeCount).\(status.index)"
         let content: (title: String, body: String, level: Alert.InterruptionLevel)?
         switch attention {
@@ -463,7 +464,9 @@ extension LibreLoopCGMManager {
                 updated.alertedSensorEvent = nil
                 setState(updated)
             }
-            Task { await delegate?.retractAlert(identifier: identifier) }
+            cgmDelegate.notify { delegate in
+                await delegate?.retractAlert(identifier: identifier)
+            }
             return
         }
         if state.alertedSensorEvent != eventKey {
@@ -478,7 +481,9 @@ extension LibreLoopCGMManager {
             trigger: .immediate,
             interruptionLevel: content.level
         )
-        Task { await delegate?.issueAlert(alert) }
+        cgmDelegate.notify { delegate in
+            await delegate?.issueAlert(alert)
+        }
     }
 
     /// Handle the per-minute lifeCount surfaced by every realtime glucose
@@ -675,9 +680,9 @@ extension LibreLoopCGMManager {
         setState(stamped)
         recordForwardingOutcome(forLifeCount: sample.lifeCount, wasForwarded: true, skipReason: nil)
 
-        delegateQueue?.async { [weak self] in
+        cgmDelegate.notify { [weak self] delegate in
             guard let self else { return }
-            self.cgmManagerDelegate?.cgmManager(self, hasNew: .newData([newSample]))
+            await delegate?.cgmManager(self, hasNew: .newData([newSample]))
         }
     }
 
@@ -751,9 +756,9 @@ extension LibreLoopCGMManager {
         }
         recordBackfillSamples(displaySamples)
         if !newSamples.isEmpty {
-            delegateQueue?.async { [weak self] in
+            cgmDelegate.notify { [weak self] delegate in
                 guard let self else { return }
-                self.cgmManagerDelegate?.cgmManager(self, hasNew: .newData(newSamples))
+                await delegate?.cgmManager(self, hasNew: .newData(newSamples))
             }
             let firstDate = newSamples.first?.date.timeIntervalSince1970 ?? 0
             let lastDate = newSamples.last?.date.timeIntervalSince1970 ?? 0
@@ -865,9 +870,9 @@ extension LibreLoopCGMManager {
             wasForwarded: true
         )])
         llog("forwarded clinical \(kind) sample to Loop: \(mgdl) mg/dL lifeCount=\(lifeCount) sampleDate=\(date.timeIntervalSince1970)")
-        delegateQueue?.async { [weak self] in
+        cgmDelegate.notify { [weak self] delegate in
             guard let self else { return }
-            self.cgmManagerDelegate?.cgmManager(self, hasNew: .newData([sample]))
+            await delegate?.cgmManager(self, hasNew: .newData([sample]))
         }
     }
 
@@ -1170,7 +1175,6 @@ extension LibreLoopCGMManager {
     /// One-time, time-sensitive alert telling the user BLE reconnect is stuck and
     /// they should re-scan (or replace) the sensor. Routed through AlertManager.
     private func issueReScanAlert() {
-        let delegate = cgmManagerDelegate
         let identifier = Alert.Identifier(managerIdentifier: pluginIdentifier,
                                           alertIdentifier: Self.needsReScanAlertID)
         let title = LocalizedString("Re-scan sensor", comment: "Reconnect-failed alert title")
@@ -1183,7 +1187,9 @@ extension LibreLoopCGMManager {
             trigger: .immediate,
             interruptionLevel: .timeSensitive
         )
-        Task { await delegate?.issueAlert(alert) }
+        cgmDelegate.notify { delegate in
+            await delegate?.issueAlert(alert)
+        }
     }
 
     private static func mapTrend(_ trend: LibreLoopGlucoseSample.Trend) -> GlucoseTrend? {
@@ -1201,10 +1207,10 @@ extension LibreLoopCGMManager {
 
     func setState(_ newState: LibreLoopCGMManagerState) {
         state = newState
-        delegateQueue?.async { [weak self] in
+        cgmDelegate.notify { [weak self] delegate in
             guard let self else { return }
-            self.cgmManagerDelegate?.cgmManagerDidUpdateState(self)
-            self.cgmManagerDelegate?.cgmManager(self, didUpdate: self.cgmManagerStatus)
+            await delegate?.cgmManagerDidUpdateState(self)
+            delegate?.cgmManager(self, didUpdate: self.cgmManagerStatus)
         }
         notifyStateObservers()
     }

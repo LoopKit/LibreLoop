@@ -18,15 +18,20 @@ public final class LibreLoopCGMManager: CGMManager {
     public var pluginIdentifier: String { Self.pluginIdentifier }
     public func markAsDepedency(_ isDependency: Bool) {}
 
-    public weak var cgmManagerDelegate: CGMManagerDelegate? {
-        didSet { flushPendingDeviceLog() }
+    public var cgmManagerDelegate: CGMManagerDelegate? {
+        get { cgmDelegate.delegate }
+        set {
+            cgmDelegate.delegate = newValue
+            flushPendingDeviceLog()
+        }
     }
+
+    let cgmDelegate = WeakSynchronizedDelegate<CGMManagerDelegate>()
 
     /// First-time pairing runs on a manager Loop hasn't adopted yet, so its
     /// device-log lines are held until the delegate arrives.
     private let pendingDeviceLogLock = NSLock()
     private var pendingDeviceLog: [(identifier: String?, type: DeviceLogEntryType, message: String)] = []
-    public var delegateQueue: DispatchQueue!
 
     public internal(set) var state: LibreLoopCGMManagerState
     public var rawState: CGMManager.RawStateValue { state.rawValue }
@@ -371,9 +376,9 @@ public final class LibreLoopCGMManager: CGMManager {
                 deviceIdentifier: serial
             )
             llog("emitting CgmEvent .sensorEnd deviceIdentifier=\(serial)")
-            delegateQueue?.async { [weak self] in
+            cgmDelegate.notify { [weak self] delegate in
                 guard let self else { return }
-                self.cgmManagerDelegate?.cgmManager(self, hasNew: [event])
+                await delegate?.cgmManager(self, hasNew: [event])
             }
         }
         var blank = state
@@ -714,15 +719,7 @@ public final class LibreLoopCGMManager: CGMManager {
     }
 
     private func forwardDeviceLog(identifier: String?, type: DeviceLogEntryType, message: String) {
-        let forward = { [weak self] in
-            guard let self else { return }
-            self.cgmManagerDelegate?.deviceManager(self, logEventForDeviceIdentifier: identifier, type: type, message: message, completion: nil)
-        }
-        if let queue = delegateQueue {
-            queue.async(execute: forward)
-        } else {
-            forward()
-        }
+        cgmManagerDelegate?.deviceManager(self, logEventForDeviceIdentifier: identifier, type: type, message: message, completion: nil)
     }
 
     private func observeAppLifecycle() {
@@ -848,6 +845,8 @@ public final class LibreLoopCGMManager: CGMManager {
         }
     }
 
+    // On the main actor, where the scanner events and reconnects that share this state run.
+    @MainActor
     public func delete() async {
         // The central is shared and outlives this manager, so a deleted manager
         // must stop driving it — otherwise its event listener + reconnect loop
