@@ -136,10 +136,17 @@ public final class LibreLoopPairingService {
         phase5RawKey: Data? = nil,
         appIdentity: String? = nil,
         expectedPeripheralID: UUID? = nil,
+        expectedBLEAddress: String? = nil,
         scanTimeout: TimeInterval = 120,
         onStage: @Sendable @escaping (Stage) -> Void = { _ in }
     ) async throws -> ReconnectOutcome {
         try await Self.ensureAppIdentities()
+        // Without either, any Libre 3 in range would do -- such as a next
+        // sensor warming up -- so take none.
+        guard expectedPeripheralID != nil || expectedBLEAddress != nil else {
+            llog("reconnect: no saved peripheral and no BLE address, so no sensor can be recognized; re-scan the sensor")
+            throw Failure.bleNoSensorDiscovered
+        }
         onStage(.bleSearching)
         try await Self.awaitReady(scanner: scanner)
 
@@ -162,10 +169,8 @@ public final class LibreLoopPairingService {
         // we don't need to scan or even reconnect at the OS level.
         if peripheral == nil {
             let connected = scanner.retrieveConnectedPeripherals()
-            if let id = expectedPeripheralID {
-                peripheral = connected.first { $0.identifier == id }
-            } else {
-                peripheral = connected.first
+            peripheral = connected.first {
+                Self.reconnectAccepts(id: $0.identifier, name: $0.name, expectedPeripheralID: expectedPeripheralID, bleAddress: expectedBLEAddress)
             }
             if peripheral != nil {
                 llog("pre-connect: recovered peripheral from retrieveConnectedPeripherals (no retrievePeripherals match)")
@@ -178,6 +183,7 @@ public final class LibreLoopPairingService {
             peripheral = try await Self.scanForPeripheralNG(
                 scanner: scanner,
                 matching: expectedPeripheralID,
+                bleAddress: expectedBLEAddress,
                 timeout: scanTimeout
             )
         }
@@ -322,6 +328,7 @@ public final class LibreLoopPairingService {
         mode: Mode = .fresh,
         scanner: SensorScannerNG,
         onNFCResponse: @Sendable @escaping (NFCResponse) -> Void = { _ in },
+        continueAfterNFC: @Sendable @escaping (NFCResponse) async -> Bool = { _ in true },
         onStage: @Sendable @escaping (Stage) -> Void = { _ in }
     ) async throws -> PairOutcome {
         // Before NFC: activation starts the sensor's wear clock, so don't
@@ -403,7 +410,9 @@ public final class LibreLoopPairingService {
             region: scanResult.patchInfo.region,
             firmwareVersion: scanResult.patchInfo.firmwareVersion
         )
-        onNFCResponse(nfcResponse)
+        // The caller may stop here first, e.g. when the scanned sensor isn't
+        // the one it expected; a declined response is never saved.
+        try await Self.handOverNFCResponse(nfcResponse, continueAfterNFC: continueAfterNFC, onNFCResponse: onNFCResponse)
 
         // 2. BLE scan + connect
         onStage(.bleSearching)
@@ -467,7 +476,7 @@ public final class LibreLoopPairingService {
         throw Failure.underlying("No app credential accepted by the sensor (securityVersion=\(patchInfo.securityVersion) region=\(patchInfo.region)).")
     }
 
-    private static func ensureAppIdentities() async throws {
+    static func ensureAppIdentities() async throws {
         do {
             try await LibreLoopAppIdentities.ensureInstalled()
         } catch {
@@ -581,11 +590,12 @@ public final class LibreLoopPairingService {
     }
 
     /// Start a scan and yield the first peripheral matching `expectedID`
-    /// (or any peripheral if `expectedID` is nil). Stops the scan on
-    /// completion.
+    /// (or, if `expectedID` is nil, the one advertising `bleAddress`). Stops
+    /// the scan on completion.
     static func scanForPeripheralNG(
         scanner: SensorScannerNG,
         matching expectedID: UUID?,
+        bleAddress: String? = nil,
         timeout: TimeInterval
     ) async throws -> CBPeripheral {
         scanner.startScan()
@@ -595,7 +605,8 @@ public final class LibreLoopPairingService {
             timeout: timeout,
             timeoutError: Failure.bleNoSensorDiscovered
         ) { event in
-            if case .didDiscover(let d) = event, expectedID == nil || d.id == expectedID {
+            if case .didDiscover(let d) = event,
+               Self.reconnectAccepts(id: d.id, name: d.advertisementData[CBAdvertisementDataLocalNameKey] ?? d.name, expectedPeripheralID: expectedID, bleAddress: bleAddress) {
                 return .done(d)
             }
             return .continue

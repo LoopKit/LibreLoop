@@ -123,15 +123,15 @@ final class LibreLoopAlertRetractionTests: XCTestCase {
         return manager
     }
 
-    private func expectRetractions() -> XCTestExpectation {
+    private func expectRetractions(except kept: Set<Alert.AlertIdentifier> = []) -> XCTestExpectation {
         let expectation = expectation(description: "every alert identifier retracted")
-        expectation.expectedFulfillmentCount = LibreLoopCGMManager.allAlertIdentifiers.count
+        expectation.expectedFulfillmentCount = LibreLoopCGMManager.allAlertIdentifiers.count - kept.count
         return expectation
     }
 
-    private func assertRetractedEverything(_ delegate: RetractionRecordingDelegate) {
+    private func assertRetractedEverything(_ delegate: RetractionRecordingDelegate, except kept: Set<Alert.AlertIdentifier> = []) {
         XCTAssertEqual(Set(delegate.retracted.map(\.alertIdentifier)),
-                       Set(LibreLoopCGMManager.allAlertIdentifiers))
+                       Set(LibreLoopCGMManager.allAlertIdentifiers).subtracting(kept))
         XCTAssertTrue(delegate.retracted.allSatisfy {
             $0.managerIdentifier == LibreLoopCGMManager.pluginIdentifier
         })
@@ -150,8 +150,10 @@ final class LibreLoopAlertRetractionTests: XCTestCase {
         assertRetractedEverything(delegate)
     }
 
+    // Except the next sensor's ready alert: that sensor outlives the discard.
     func testDiscardSensorRetractsEveryAlert() {
-        let retractions = expectRetractions()
+        let kept: Set<Alert.AlertIdentifier> = [LibreLoopCGMManager.nextSensorReadyAlertID]
+        let retractions = expectRetractions(except: kept)
         let delegate = RetractionRecordingDelegate(retractionExpectation: retractions)
         let manager = makeManager(delegate: delegate)
         manager.hasIssuedReScanAlert = true
@@ -159,7 +161,7 @@ final class LibreLoopAlertRetractionTests: XCTestCase {
         manager.discardSensor()
 
         wait(for: [retractions], timeout: 5)
-        assertRetractedEverything(delegate)
+        assertRetractedEverything(delegate, except: kept)
         XCTAssertFalse(manager.hasIssuedReScanAlert)
         XCTAssertNil(manager.lastSensorAttention)
     }
@@ -171,6 +173,7 @@ final class LibreLoopAlertRetractionTests: XCTestCase {
         }
         XCTAssertTrue(identifiers.contains(LibreLoopCGMManager.sensorAttentionAlertID))
         XCTAssertTrue(identifiers.contains(LibreLoopCGMManager.needsReScanAlertID))
+        XCTAssertTrue(identifiers.contains(LibreLoopCGMManager.nextSensorReadyAlertID))
         XCTAssertEqual(identifiers.count, LibreLoopCGMManager.allAlertIdentifiers.count,
                        "duplicate identifiers in allAlertIdentifiers")
     }

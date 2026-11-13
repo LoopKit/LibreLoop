@@ -19,6 +19,7 @@
 		494A4A08D88044AB93F3E304 /* LibreLoopCGMManagerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F8206F06769ED487520AF80 /* LibreLoopCGMManagerState.swift */; };
 		4FB7B50EA51A5EAADEAD28A4 /* LibreLoopCGMManager+Observers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A64C620E258CF55CE0B0E11 /* LibreLoopCGMManager+Observers.swift */; };
 		5FD2DEE062A70E7BC5ABAB10 /* LibreLoopSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DC2CFAC1896058703D91850 /* LibreLoopSettingsView.swift */; };
+		4E5753E50000000000000004 /* LibreLoopNextSensorViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E5753E50000000000000003 /* LibreLoopNextSensorViews.swift */; };
 		64A1E04868E3B88A24D86CA7 /* LibreLoop.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B556C4EB4504CA4CFCF51EA2 /* LibreLoop.framework */; };
 		676F0E6B6F571D21FCC90B2B /* LibreLoopPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = F724D2D5A2C640A6A76DE710 /* LibreLoopPlugin.swift */; };
 		6B0D33487C1AB1FC572D3EFE /* LibreLoopSensorMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F300289D51824D5C86B99CCE /* LibreLoopSensorMonitor.swift */; };
@@ -43,8 +44,10 @@
 		AE16E0F3A62344D974DF129C /* LoopKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2509954985674E6150F6C160 /* LoopKit.framework */; };
 		A1B2C3D4E5F6A7B8C9D0E102 /* LibreLoopRuntimeTables.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E101 /* LibreLoopRuntimeTables.swift */; };
 		5A1B3C5D7E9F0A2B4C6D8E02 /* LibreLoopSimulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1B3C5D7E9F0A2B4C6D8E01 /* LibreLoopSimulator.swift */; };
+		4E5753E50000000000000002 /* LibreLoopNextSensor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E5753E50000000000000001 /* LibreLoopNextSensor.swift */; };
 		B04E3C5ED32E80EEC213D178 /* LibreLoopPairingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 693CAA1DD7F8B8662B3ED42B /* LibreLoopPairingService.swift */; };
 		B793A348DB4300FC386AF780 /* LibreLoopCGMManagerStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E9D5D87695F004FCFDA5075 /* LibreLoopCGMManagerStateTests.swift */; };
+		4E5753E50000000000000006 /* LibreLoopNextSensorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E5753E50000000000000005 /* LibreLoopNextSensorTests.swift */; };
 		B87069E2100DD9DD3B3B897D /* LibreLoopPairingProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 659E4212E046544D5827E2D1 /* LibreLoopPairingProgressView.swift */; };
 		B9482FD22ADA801566F0AB64 /* LibreLoopUICoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B220641ECD99902008FAC25 /* LibreLoopUICoordinator.swift */; };
 		BE0A700C869F5895F33615F5 /* LibreLoopPairingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFFE6D210037B8CD2E390575 /* LibreLoopPairingViewModel.swift */; };
@@ -112,6 +115,7 @@
 		0FA01C45F49004939175846B /* LibreLoopScanSensorView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopScanSensorView.swift; sourceTree = "<group>"; };
 		109B5B3F69807E571CA28FE2 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Platforms/iPhoneOS.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		1DC2CFAC1896058703D91850 /* LibreLoopSettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopSettingsView.swift; sourceTree = "<group>"; };
+		4E5753E50000000000000003 /* LibreLoopNextSensorViews.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopNextSensorViews.swift; sourceTree = "<group>"; };
 		2509954985674E6150F6C160 /* LoopKit.framework */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.framework; path = LoopKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3B220641ECD99902008FAC25 /* LibreLoopUICoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopUICoordinator.swift; sourceTree = "<group>"; };
 		3F4B0C80B9E36B43E796748E /* HKUnit.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HKUnit.swift; sourceTree = "<group>"; };
@@ -129,12 +133,14 @@
 		659E4212E046544D5827E2D1 /* LibreLoopPairingProgressView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopPairingProgressView.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6A7B8C9D0E101 /* LibreLoopRuntimeTables.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopRuntimeTables.swift; sourceTree = "<group>"; };
 		5A1B3C5D7E9F0A2B4C6D8E01 /* LibreLoopSimulator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopSimulator.swift; sourceTree = "<group>"; };
+		4E5753E50000000000000001 /* LibreLoopNextSensor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopNextSensor.swift; sourceTree = "<group>"; };
 		693CAA1DD7F8B8662B3ED42B /* LibreLoopPairingService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopPairingService.swift; sourceTree = "<group>"; };
 		6A64C620E258CF55CE0B0E11 /* LibreLoopCGMManager+Observers.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "LibreLoopCGMManager+Observers.swift"; sourceTree = "<group>"; };
 		6D0763A875B13A9543390BC5 /* LibreLoopSensorLifecycle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopSensorLifecycle.swift; sourceTree = "<group>"; };
 		AAEC520175B13A9543390BC5 /* LibreLoopExpiryAlerts.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopExpiryAlerts.swift; sourceTree = "<group>"; };
 		89D578B09FC33C4D5080785A /* LibreLoopApplyHelpPagerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopApplyHelpPagerView.swift; sourceTree = "<group>"; };
 		8E9D5D87695F004FCFDA5075 /* LibreLoopCGMManagerStateTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopCGMManagerStateTests.swift; sourceTree = "<group>"; };
+		4E5753E50000000000000005 /* LibreLoopNextSensorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopNextSensorTests.swift; sourceTree = "<group>"; };
 		8F8206F06769ED487520AF80 /* LibreLoopCGMManagerState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopCGMManagerState.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6A7B8C9D0E103 /* LibreLoopRuntimeTablesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopRuntimeTablesView.swift; sourceTree = "<group>"; };
 		92A9E11E7F5AC7116C0961CC /* LibreLoopApplySensorView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibreLoopApplySensorView.swift; sourceTree = "<group>"; };
@@ -214,6 +220,7 @@
 				DB7D98A40E47D0CE6460DA77 /* LibreLoopScanHelpPagerView.swift */,
 				0FA01C45F49004939175846B /* LibreLoopScanSensorView.swift */,
 				1DC2CFAC1896058703D91850 /* LibreLoopSettingsView.swift */,
+				4E5753E50000000000000003 /* LibreLoopNextSensorViews.swift */,
 			);
 			name = Views;
 			path = Views;
@@ -315,6 +322,7 @@
 			isa = PBXGroup;
 			children = (
 				8E9D5D87695F004FCFDA5075 /* LibreLoopCGMManagerStateTests.swift */,
+				4E5753E50000000000000005 /* LibreLoopNextSensorTests.swift */,
 			);
 			name = LibreLoopTests;
 			path = LibreLoopTests;
@@ -369,6 +377,7 @@
 				693CAA1DD7F8B8662B3ED42B /* LibreLoopPairingService.swift */,
 				A1B2C3D4E5F6A7B8C9D0E101 /* LibreLoopRuntimeTables.swift */,
 				5A1B3C5D7E9F0A2B4C6D8E01 /* LibreLoopSimulator.swift */,
+				4E5753E50000000000000001 /* LibreLoopNextSensor.swift */,
 			);
 			name = Pairing;
 			path = Pairing;
@@ -608,6 +617,7 @@
 				B04E3C5ED32E80EEC213D178 /* LibreLoopPairingService.swift in Sources */,
 				A1B2C3D4E5F6A7B8C9D0E102 /* LibreLoopRuntimeTables.swift in Sources */,
 				5A1B3C5D7E9F0A2B4C6D8E02 /* LibreLoopSimulator.swift in Sources */,
+				4E5753E50000000000000002 /* LibreLoopNextSensor.swift in Sources */,
 				C558A41FBB49E4CFE8C0CD6B /* LibreLoopGlucoseSample.swift in Sources */,
 				70BCAB4E71383256521B6B16 /* LibreLoopSensorLifecycle.swift in Sources */,
 				AAEC520180AAB1FC572D3EFE /* LibreLoopExpiryAlerts.swift in Sources */,
@@ -633,6 +643,7 @@
 				CFB3698FB7B5CABE9B970196 /* LibreLoopScanHelpPagerView.swift in Sources */,
 				6C46C21E7598A4B841635874 /* LibreLoopScanSensorView.swift in Sources */,
 				5FD2DEE062A70E7BC5ABAB10 /* LibreLoopSettingsView.swift in Sources */,
+				4E5753E50000000000000004 /* LibreLoopNextSensorViews.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -641,6 +652,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B793A348DB4300FC386AF780 /* LibreLoopCGMManagerStateTests.swift in Sources */,
+				4E5753E50000000000000006 /* LibreLoopNextSensorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

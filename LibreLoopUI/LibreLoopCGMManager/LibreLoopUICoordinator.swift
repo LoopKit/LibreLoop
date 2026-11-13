@@ -166,6 +166,7 @@ final class LibreLoopUICoordinator: UINavigationController, CGMManagerOnboarding
                 self.completionDelegate?.completionNotifyingDidComplete(self)
             },
             replaceSensor: { [weak self] in self?.startReplacementPairing() },
+            switchToNextSensor: { [weak self] in self?.startSwitchToNextSensor() },
             deleteCGM: { [weak self] in
                 Task {
                     await self?.cgmManager?.delete()
@@ -191,6 +192,17 @@ final class LibreLoopUICoordinator: UINavigationController, CGMManagerOnboarding
         pushReplacementApplyView()
     }
 
+    /// The replace flow for a sensor started early: it is on the body already,
+    /// so go straight to the scan, and check that the scanned sensor is it.
+    /// Switches its receiver under the ID it was activated with.
+    private func startSwitchToNextSensor() {
+        guard let manager = cgmManager, let next = manager.nextSensor else { return }
+        isReplacing = true
+        let mode = manager.pairingModeForSwitch(to: next)
+        manager.discardSensor()
+        pushReplacementScanView(mode: mode, expectedSerial: next.serial)
+    }
+
     private func pushReplacementApplyView() {
         let view = LibreLoopApplySensorView(
             onNext: { [weak self] in self?.pushReplacementScanView() },
@@ -203,11 +215,11 @@ final class LibreLoopUICoordinator: UINavigationController, CGMManagerOnboarding
         pushViewController(vc, animated: true)
     }
 
-    private func pushReplacementScanView() {
+    private func pushReplacementScanView(mode: LibreLoopPairingService.Mode = .fresh, expectedSerial: String? = nil) {
         let view = LibreLoopScanSensorView(
-            onScan: { [weak self] in self?.startReplacementScan(mode: .fresh) },
+            onScan: { [weak self] in self?.startReplacementScan(mode: mode, expectedSerial: expectedSerial) },
             onShowHelp: { [weak self] in self?.presentScanHelp() },
-            onShowRecovery: { [weak self] in self?.pushReplacementRecoveryView() }
+            onShowRecovery: { [weak self] in self?.pushReplacementRecoveryView(expectedSerial: expectedSerial) }
         )
         let vc = DismissibleHostingController(content: view, colorPalette: colorPalette)
         vc.title = "FreeStyle Libre 3"
@@ -215,10 +227,10 @@ final class LibreLoopUICoordinator: UINavigationController, CGMManagerOnboarding
         pushViewController(vc, animated: true)
     }
 
-    private func pushReplacementRecoveryView() {
+    private func pushReplacementRecoveryView(expectedSerial: String? = nil) {
         let view = LibreLoopRecoveryView(
             onContinue: { [weak self] receiverID in
-                self?.startReplacementScan(mode: .recovery(receiverID: receiverID))
+                self?.startReplacementScan(mode: .recovery(receiverID: receiverID), expectedSerial: expectedSerial)
             }
         )
         .environment(\.appName, Bundle.main.bundleDisplayName)
@@ -227,9 +239,9 @@ final class LibreLoopUICoordinator: UINavigationController, CGMManagerOnboarding
         pushViewController(vc, animated: true)
     }
 
-    private func startReplacementScan(mode: LibreLoopPairingService.Mode) {
+    private func startReplacementScan(mode: LibreLoopPairingService.Mode, expectedSerial: String? = nil) {
         guard let manager = cgmManager else { return }
-        let viewModel = LibreLoopPairingViewModel(cgmManager: manager, mode: mode)
+        let viewModel = LibreLoopPairingViewModel(cgmManager: manager, mode: mode, expectedSerial: expectedSerial)
         let view = LibreLoopPairingProgressView(
             viewModel: viewModel,
             onDone: { [weak self] in self?.finishReplacement() },

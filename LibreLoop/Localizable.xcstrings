@@ -35,6 +35,10 @@
     "Loop is having trouble communicating with your FreeStyle Libre 3 sensor. CGM readings may pause briefly and should resume automatically. No action is needed unless this keeps happening." : {
       "comment" : "Sensor check alert body (transient transmission error)"
     },
+    "Next sensor ready" : {
+      "comment" : "Next-sensor-ready alert title",
+      "extractionState" : "manual"
+    },
     "No sensor" : {
       "comment" : "Sensor lifecycle: no sensor paired",
       "extractionState" : "manual"
@@ -118,6 +122,10 @@
     },
     "Your FreeStyle Libre 3 sensor session has ended. Replace it to resume CGM readings." : {
       "comment" : "Sensor ended alert body",
+      "extractionState" : "manual"
+    },
+    "Your next FreeStyle Libre 3 sensor has finished warming up. Switch to it in the CGM settings whenever you're ready." : {
+      "comment" : "Next-sensor-ready alert body",
       "extractionState" : "manual"
     }
   },

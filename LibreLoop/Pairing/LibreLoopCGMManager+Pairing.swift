@@ -45,8 +45,8 @@ extension LibreLoopCGMManager {
         return activatedAt
     }
 
-    func retractAllAlerts() async {
-        let identifiers = Self.allAlertIdentifiers.map {
+    func retractAllAlerts(except kept: Set<Alert.AlertIdentifier> = []) async {
+        let identifiers = Self.allAlertIdentifiers.filter { !kept.contains($0) }.map {
             Alert.Identifier(managerIdentifier: pluginIdentifier, alertIdentifier: $0)
         }
         llog("alerts: retracting \(identifiers.count) identifier(s)")
@@ -77,6 +77,11 @@ extension LibreLoopCGMManager {
         newState.bleAddress = response.bleAddress
         newState.blePIN = response.blePIN
         newState.activatedAt = response.activatedAt
+        // A switch-receiver doesn't date the sensor; when it is the next
+        // sensor, its activation time is known.
+        if response.activatedAt == nil, let next = state.nextSensor, next.serial == response.sensorSerial {
+            newState.activatedAt = next.activatedAt
+        }
         if let wear = response.wearDurationMinutes, wear > 0 {
             newState.wearDurationMinutes = wear
         }
@@ -130,6 +135,7 @@ extension LibreLoopCGMManager {
         setState(newState)
 
         emitSensorStartEvent(for: newState)
+        clearNextSensorAfterAdopting(serial: outcome.result.sensorSerial, switching: false)
 
         // New sensor — re-evaluate attention from scratch.
         lastSensorAttention = nil
@@ -216,17 +222,18 @@ extension LibreLoopCGMManager {
     /// Mirrors the upstream PoC's `historyBackfillStart`: if we have a saved
     /// watermark, request that minus a 10-count overlap (avoids gaps on
     /// either side of the reconnect boundary); otherwise look back 180
-    /// lifecounts (~15 hours) from the current realtime reading.
+    /// lifecounts (~15 hours) from the current realtime reading. Either way
+    /// it starts after the previous sensor's last reading.
     ///
     /// We never send `lifeCount = 0` — empirically the sensor silently
     /// ignores "give me everything" requests; it wants a bounded range.
-    private func backfillStartLifeCount(currentLifeCount: UInt16) -> UInt16 {
-        if let saved = state.lastHistoricalLifeCount {
-            let overlap: UInt16 = 10
-            return saved > overlap ? saved &- overlap : 5
-        }
-        let lookback: UInt16 = 180
-        return currentLifeCount > lookback ? currentLifeCount &- lookback : 5
+    private func backfillStartLifeCount(currentLifeCount: UInt16, readingAt: Date) -> UInt16 {
+        Self.backfillStartLifeCount(
+            currentLifeCount: currentLifeCount,
+            readingAt: readingAt,
+            watermark: state.lastHistoricalLifeCount,
+            previousSensorLastReadingAt: state.previousSensorLastReadingAt
+        )
     }
 
     /// Trigger a backfill request once per BLE session, anchored to a real
@@ -242,11 +249,11 @@ extension LibreLoopCGMManager {
     ///   fire time so it picks up exactly what embedded-historical harvest
     ///   may have missed. Combined with the embedded harvest these two
     ///   passes fully close the post-reconnect gap.
-    func requestBackfillIfNeeded(currentLifeCount: UInt16) {
+    func requestBackfillIfNeeded(currentLifeCount: UInt16, readingAt: Date = Date()) {
         guard !hasRequestedBackfillThisSession else { return }
         guard let monitor else { return }
         hasRequestedBackfillThisSession = true
-        let from = backfillStartLifeCount(currentLifeCount: currentLifeCount)
+        let from = backfillStartLifeCount(currentLifeCount: currentLifeCount, readingAt: readingAt)
         // Clinical backfill is per-minute; covering a multi-hour disconnect at
         // 1-min resolution floods Loop with points. Limit clinical to a recent
         // window (the older gap is still covered at 5-min by historical), so we
@@ -525,7 +532,7 @@ extension LibreLoopCGMManager {
         // Now that we have a confirmed realtime reading, we know the
         // sensor's current lifecount and can issue a sensible-range backfill
         // request (lifecount=0 is silently ignored by the sensor).
-        requestBackfillIfNeeded(currentLifeCount: sample.lifeCount)
+        requestBackfillIfNeeded(currentLifeCount: sample.lifeCount, readingAt: sample.date)
 
         var updated = state
         updated.latestReadingTimestamp = sample.date
@@ -587,6 +594,11 @@ extension LibreLoopCGMManager {
         // forwarded sample -- the lifecycle doesn't need to wait on it.
         if updated.firstReadingAt == nil {
             updated.firstReadingAt = sample.date
+        }
+        if let cutoff = updated.previousSensorLastReadingAt,
+           !Self.keepsPreviousSensorCutoff(cutoff, readingAt: sample.date) {
+            llog("backfill cutoff \(cutoff) cleared at reading \(sample.date)")
+            updated.previousSensorLastReadingAt = nil
         }
         setState(updated)
 
@@ -713,6 +725,7 @@ extension LibreLoopCGMManager {
         var displaySamples: [LibreLoopGlucoseSample] = []
         var droppedRealtimeDup = 0
         var droppedBackfillDup = 0
+        var droppedPreviousSensor = 0
         for sample in page.samples {
             guard let mgdl = sample.glucoseMgDL else { continue }
             if realtimeLifeCounts.contains(sample.lifeCount) {
@@ -724,6 +737,10 @@ extension LibreLoopCGMManager {
                 continue
             }
             let date = activatedAt.addingTimeInterval(TimeInterval(sample.lifeCount) * 60)
+            if isBackfillOverlappingPreviousSensor(date) {
+                droppedPreviousSensor += 1
+                continue
+            }
             newSamples.append(NewGlucoseSample(
                 date: date,
                 quantity: LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: Double(mgdl)),
@@ -766,10 +783,11 @@ extension LibreLoopCGMManager {
             var suffixParts: [String] = []
             if droppedRealtimeDup > 0 { suffixParts.append("\(droppedRealtimeDup) realtime-dup") }
             if droppedBackfillDup > 0 { suffixParts.append("\(droppedBackfillDup) backfill-dup") }
+            if droppedPreviousSensor > 0 { suffixParts.append("\(droppedPreviousSensor) before-previous-sensor-end") }
             let suffix = suffixParts.isEmpty ? "" : " (dropped \(suffixParts.joined(separator: ", ")))"
             llog("forwarded \(newSamples.count) \(sourceLabel) backfill samples to Loop: lifeCount \(page.startLifeCount)..\(page.endLifeCount), dates \(firstDate)..\(lastDate), mgdl=\(values)\(suffix)")
-        } else if droppedRealtimeDup + droppedBackfillDup > 0 {
-            llog("dropped all \(droppedRealtimeDup + droppedBackfillDup) \(sourceLabel) backfill sample(s) in page lifeCount \(page.startLifeCount)..\(page.endLifeCount) (realtime-dup=\(droppedRealtimeDup), backfill-dup=\(droppedBackfillDup))")
+        } else if droppedRealtimeDup + droppedBackfillDup + droppedPreviousSensor > 0 {
+            llog("dropped all \(droppedRealtimeDup + droppedBackfillDup + droppedPreviousSensor) \(sourceLabel) backfill sample(s) in page lifeCount \(page.startLifeCount)..\(page.endLifeCount) (realtime-dup=\(droppedRealtimeDup), backfill-dup=\(droppedBackfillDup), before-previous-sensor-end=\(droppedPreviousSensor))")
         }
         // Advance the historical watermark. Clinical pages early-returned
         // above and never reach this point.
@@ -844,6 +862,10 @@ extension LibreLoopCGMManager {
             return
         }
         let date = activatedAt.addingTimeInterval(TimeInterval(lifeCount) * 60)
+        if isBackfillOverlappingPreviousSensor(date) {
+            llog("clinical \(kind) at lifeCount=\(lifeCount) dropped: before the previous sensor's last reading")
+            return
+        }
         let sample = NewGlucoseSample(
             date: date,
             quantity: LoopQuantity(unit: .milligramsPerDeciliter, doubleValue: Double(mgdl)),
@@ -1086,6 +1108,9 @@ extension LibreLoopCGMManager {
             return
         }
         let expectedPeripheral = state.peripheralID
+        // Nothing to recognize the sensor by: no reconnect can succeed, so
+        // ask for a re-scan at once instead of after the usual failure run.
+        let unrecognizable = expectedPeripheral == nil && state.bleAddress == nil
         let receiverIDLog = Self.receiverIDFromState(state.receiverID).map { String(format: "0x%08x", $0) }
             ?? LibreLoopKeychain.loadAppReceiverID().map { String(format: "0x%08x (app)", $0) }
             ?? "nil"
@@ -1108,7 +1133,8 @@ extension LibreLoopCGMManager {
                 blePIN: blePIN,
                 phase5RawKey: cachedPhase5,
                 appIdentity: cachedKeys?.appIdentity,
-                expectedPeripheralID: expectedPeripheral
+                expectedPeripheralID: expectedPeripheral,
+                expectedBLEAddress: state.bleAddress
             ) { [weak self] stage in
                 llog("reconnect stage: \(String(describing: stage))")
                 self?.updateStatusDetail(Self.statusText(for: stage))
@@ -1144,7 +1170,7 @@ extension LibreLoopCGMManager {
                 let count = self.consecutiveReconnectFailures
                 let elapsed = self.consecutiveReconnectFailuresStartedAt
                     .map { Date().timeIntervalSince($0) } ?? 0
-                if count >= Self.reScanThresholdCount {
+                if count >= Self.reScanThresholdCount || unrecognizable {
                     // BLE reconnect is persistently failing — the cached session
                     // is being rejected and there's no full-handshake recovery for
                     // an active sensor. Tell the user the truth (re-scan) instead
